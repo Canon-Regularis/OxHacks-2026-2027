@@ -95,15 +95,16 @@ The slow case comes from re-aggregating every NDF/WINDFOR vintage on each reques
 
 ## API
 
-The frontend reads every endpoint below; all are `GET`. Examples of each response are in `gridpulse/contracts/examples/`, and a test keeps them aligned with `api/schemas.py`. Interactive docs are at `/docs` when the server runs.
+The frontend reads every endpoint below; all are `GET`. Examples of each response are in `gridpulse/contracts/examples/`, and a test keeps them aligned with `api/schemas.py`. Interactive docs are at `/docs` when the server runs. The frontend developer's reference is [FRONTEND_API.md](FRONTEND_API.md), with display rules in [ALGORITHM_DISPLAY.md](ALGORITHM_DISPLAY.md).
 
 | Endpoint | Purpose | Terminal panel |
 |---|---|---|
 | `/api/health` | Mode (`live`/`record`/`replay`), database status. Always answers | Status bar |
-| `/api/catalog` | Series (id, label, unit), raw dataset coverage from `raw.dataset_catalog`, algorithms and their latest retrospective run, limits | Boot; command-bar autocomplete |
+| `/api/catalog` | Series (id, label, unit), raw dataset coverage from `raw.dataset_catalog`, algorithms with their default params and the run served by default, limits | Boot; command-bar autocomplete |
 | `/api/snapshot?at=` | Latest settled period: each ticker series' value, previous value and change. `at` replays history | Ticker strip (poll every 60 s) |
 | `/api/series?ids=price,wind&from=&to=&resolution=auto&cutoff=` | Several series on one shared time axis | Main chart, linked crosshair |
-| `/api/analysis?algorithm=&from=&to=&resolution=auto&run_id=` | Stored per-period results of one algorithm, with run provenance, warnings and the names of its tables. Defaults to the latest retrospective run; cutoff runs are fetched by `run_id` | Indicator pane under the chart |
+| `/api/analysis?algorithm=&from=&to=&resolution=auto&params=&run_id=` | Stored per-period results of one algorithm, with run provenance, warnings and the names of its tables. Defaults to the latest retrospective run with the default params; `params` (a JSON object of overrides) selects a variant, and cutoff runs are fetched by `run_id` | Indicator pane under the chart |
+| `/api/analysis/runs?algorithm=&limit=20` | Successful runs of one algorithm, newest first, each with its `params` and `overrides` | Variant picker |
 | `/api/analysis/runs/{run_id}/tables?name=` | A run's tables, each `{description, columns, rows}` | Scorecard / diagnostics panel |
 | `/api/extremes?series=price&from=&to=&order=desc&limit=10` | Highest/lowest periods: a screener for finding events | "Top movers" table |
 | `/api/periods/{date}/{period}` | All values for one period, the forecast **vintage history**, and every algorithm output | Click-through inspector |
@@ -135,6 +136,7 @@ ALGORITHM = Algorithm(
     outputs={"my_signal": "GBP/MWh"},             # name -> unit ("" if unitless); may be {} if tables only
     tables={"metrics": "MAE/RMSE per model"},     # name -> description; may be omitted
     params={"window_periods": 96},                # defaults; CLI can override
+    param_descriptions={"window_periods": "Trailing window in periods (96 = 2 days)"},  # one per param, shown in the UI
     warmup=timedelta(days=2),                     # history needed before the range
     horizon=timedelta(0),                         # >0 if it predicts past the range
     limitations="What these numbers do NOT mean",
@@ -156,7 +158,7 @@ A backtest makes forecasts from many origins, so one target period receives one 
 
 1. **Choose the horizons** that matter, in settlement periods, e.g. `h = 2` (one hour ahead) and `h = 48` (day-ahead).
 2. **For each target period `t`**, the forecast comes from origin `o = t − h` and may use only data available at `o`. Inside `run()`, that means `frame.loc[:o]`, or a vectorised equivalent such as `shift(h + 1)` for a settled price. Fit any parameters on that history only (Orchid's `RollingOriginSplitter`/`backtest` produce exactly these folds).
-3. **Series outputs:** one column per model and horizon, e.g. `arima_forecast_h48` (and `_lower`/`_upper` for intervals), indexed by the **target** period. It shares the time axis with `price`, so the frontend overlays forecast and actual directly, and `/api/analysis` downsamples it like any series.
+3. **Series outputs:** one column per model and horizon, e.g. `arima_forecast` with `arima_lower_80`/`arima_upper_80` for intervals (put a horizon in the model name, e.g. `arima_h2_forecast`, when there are several), indexed by the **target** period. The frontend groups outputs by these names ([ALGORITHM_DISPLAY.md](ALGORITHM_DISPLAY.md#series-outputs)). It shares the time axis with `price`, so the frontend overlays forecast and actual directly, and `/api/analysis` downsamples it like any series.
 4. **Tables:** the scorecard (`model`, `horizon_periods`, `n`, `mae`, `rmse`, `mase`, coverage, …) and optionally fold detail (`origin_utc`, `target_utc`, `horizon`, `forecast`, `actual`) if it fits in 20,000 rows. Otherwise aggregate it, e.g. errors by settlement period or by month.
 5. **Declare `warmup`** as the minimum training history; the first target is `from` itself. Use `horizon` only when forecasting beyond `to`.
 
@@ -166,7 +168,7 @@ For a single live-style forecast from one origin, run with `--cutoff <origin>` a
 
 ## Running and serving analyses
 
-`gridpulse analyse` creates an `analysis_runs` row (`running`), builds the input frame for `[from − warmup, to)`, calls `run()`, checks the series and tables, then writes both with status `succeeded` **in one transaction**. A failure stores the error and marks the run `failed`. A 3.5-month run of the reference algorithm takes about 2 s. `/api/analysis` serves the newest succeeded **retrospective** run of the current version that overlaps the request, preferring one that covers the whole range. Partial coverage, cutoffs and version mismatches appear in `warnings`. Results are averaged into 1h/1d buckets in SQL to respect the point budget.
+`gridpulse analyse` creates an `analysis_runs` row (`running`), builds the input frame for `[from − warmup, to)`, calls `run()`, checks the series and tables, then writes both with status `succeeded` **in one transaction**. A failure stores the error and marks the run `failed`. A 3.5-month run of the reference algorithm takes about 2 s. `/api/analysis` serves the newest succeeded **retrospective** run of the current version **made with the default params** that overlaps the request, preferring one that covers the whole range. A run made with `--param` overrides never replaces it; it is served only when asked for with `params=` (the same overrides as JSON) or `run_id=`, and every run reports its `overrides`. The catalog's `latest_run` and the period inspector use the same rule. Partial coverage, cutoffs, version mismatches and non-default params appear in `warnings`. Results are averaged into 1h/1d buckets in SQL to respect the point budget.
 
 There is deliberately no "run" HTTP endpoint for the MVP. If the demo needs a button, add a `POST` guarded by a server-side token that calls `run_algorithm` on a small range.
 
