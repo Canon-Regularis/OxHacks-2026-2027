@@ -27,6 +27,10 @@ export interface SeriesInfo {
   id: string;
   label: string;
   unit: string;
+  /** settlement: settled market values; forecast: latest version before delivery; outturn: measured. */
+  kind: "settlement" | "forecast" | "outturn";
+  /** Raw datasets it is built from; look each up in Catalog.datasets by `dataset`. */
+  datasets: string[];
 }
 
 export interface DatasetCoverage {
@@ -47,6 +51,8 @@ export interface RunInfo {
   params: Record<string, JsonValue>;
   /** The params that differ from the algorithm's current defaults; {} for a default run. */
   overrides: Record<string, JsonValue>;
+  /** Raw dataset read -> its load time when the run started; null if not recorded (older runs). */
+  datasets: Record<string, string | null>;
   range_start_utc: string;
   /** Includes the algorithm's forecast horizon, so it can be later than the requested `to`. */
   range_end_utc: string;
@@ -60,6 +66,8 @@ export interface AlgorithmInfo {
   version: string;
   description: string;
   inputs: string[];
+  /** Raw datasets behind the inputs; look each up in Catalog.datasets. Empty for clock-only inputs. */
+  datasets: string[];
   /** Output (indicator) name -> unit; "" means unitless. Empty for tables-only algorithms. */
   outputs: Record<string, string>;
   /** Table name -> one-line description. */

@@ -15,6 +15,7 @@ from psycopg import Connection
 
 from gridpulse.analysis.contract import MAX_TABLE_ROWS, Algorithm, AlgorithmResult
 from gridpulse.analysis.features import build_input_frame
+from gridpulse.catalog import datasets_for
 from gridpulse.db import queries
 from gridpulse.settlement import bucket_starts
 
@@ -52,7 +53,8 @@ def run_algorithm(
     """Run one algorithm over [start, end) and store its results. Returns the run id."""
     params = with_params(algorithm, params)
     range_end = end + algorithm.horizon
-    run_id = queries.create_run(conn, algorithm.id, algorithm.version, params, start, range_end, cutoff)
+    loads = queries.dataset_loads(conn, datasets_for(algorithm.inputs))
+    run_id = queries.create_run(conn, algorithm.id, algorithm.version, params, start, range_end, cutoff, loads)
     try:
         frame = build_input_frame(conn, start - algorithm.warmup, end, cutoff)
         series, tables = split_result(algorithm, algorithm.run(frame[list(algorithm.inputs)].copy(), **params))
@@ -166,6 +168,7 @@ def get_results(
         warnings.append(f"Inputs limited to data available at {run['cutoff_utc']:%Y-%m-%d %H:%M} UTC.")
     if run["algorithm_version"] != algorithm.version:
         warnings.append(f"Results are from version {run['algorithm_version']}; current is {algorithm.version}.")
+    warnings += reloaded_warnings(conn, run)
     changed = overrides_of(algorithm, run["params"])
     if changed:
         settings = ", ".join(f"{name}={json.dumps(value)}" for name, value in changed.items())
@@ -173,6 +176,28 @@ def get_results(
 
     indicators = {name: [values.get(bucket) for bucket in t] for name, values in by_indicator.items()}
     return StoredResults(run, t, indicators, queries.table_names(conn, run["run_id"]), warnings)
+
+
+def run_datasets(algorithm: Algorithm | None, run: dict) -> dict[str, str | None]:
+    """Dataset -> load time (ISO string) that a run used. Runs made before loads were recorded
+    list the algorithm's current datasets with unknown (None) load times."""
+    if run["datasets"] is not None:
+        return dict(sorted(run["datasets"].items()))
+    return {name: None for name in datasets_for(algorithm.inputs)} if algorithm else {}
+
+
+def reloaded_warnings(conn: Connection, run: dict) -> list[str]:
+    """One warning per dataset loaded again after the run read it."""
+    used = {name: loaded for name, loaded in (run["datasets"] or {}).items() if loaded is not None}
+    if not used:
+        return []
+    current = queries.dataset_loads(conn, list(used))
+    return [
+        f"{name} was loaded again at {current[name]:%Y-%m-%d %H:%M} UTC, after this run; "
+        "rerun the algorithm to include any new or revised data."
+        for name, loaded in used.items()
+        if current[name] is not None and current[name] > datetime.fromisoformat(loaded)
+    ]
 
 
 def served_run(conn: Connection, algorithm: Algorithm) -> dict | None:

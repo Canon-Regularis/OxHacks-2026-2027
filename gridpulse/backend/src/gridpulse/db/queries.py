@@ -161,7 +161,7 @@ def input_rows(conn: Connection, start: datetime, end: datetime, cutoff: datetim
 # --- Analysis runs and results ----------------------------------------------------------------
 
 _RUN_COLUMNS = (
-    "run_id, algorithm_id, algorithm_version, params,"
+    "run_id, algorithm_id, algorithm_version, params, datasets,"
     " range_start_utc, range_end_utc, cutoff_utc, finished_at_utc"
 )
 
@@ -174,12 +174,14 @@ def create_run(
     start: datetime,
     end: datetime,
     cutoff: datetime | None,
+    datasets: dict[str, datetime | None],
 ) -> int:
+    loads = {name: loaded.isoformat() if loaded else None for name, loaded in datasets.items()}
     row = conn.execute(
         "INSERT INTO gridpulse.analysis_runs"
-        " (algorithm_id, algorithm_version, params, range_start_utc, range_end_utc, cutoff_utc, status)"
-        " VALUES (%s, %s, %s, %s, %s, %s, 'running') RETURNING run_id",
-        (algorithm_id, version, Jsonb(params), start, end, cutoff),
+        " (algorithm_id, algorithm_version, params, datasets, range_start_utc, range_end_utc, cutoff_utc, status)"
+        " VALUES (%s, %s, %s, %s, %s, %s, %s, 'running') RETURNING run_id",
+        (algorithm_id, version, Jsonb(params), Jsonb(loads), start, end, cutoff),
     ).fetchone()
     return row[0]
 
@@ -334,6 +336,15 @@ def coverage(conn: Connection) -> list[dict]:
         "       approximate_row_count(to_regclass('raw.' || quote_ident(table_name))) AS approx_rows"
         " FROM raw.dataset_catalog ORDER BY table_name",
     )
+
+
+def dataset_loads(conn: Connection, names: list[str]) -> dict[str, datetime | None]:
+    """When each named raw dataset was last loaded; None if it is not in raw.dataset_catalog."""
+    rows = conn.execute(
+        "SELECT table_name, loaded_at FROM raw.dataset_catalog WHERE table_name = ANY(%s)", (names,)
+    ).fetchall()
+    found = dict(rows)
+    return {name: found.get(name) for name in names}
 
 
 def data_updated_at(conn: Connection) -> datetime | None:

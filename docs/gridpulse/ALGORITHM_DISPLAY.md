@@ -8,7 +8,7 @@ The two reference algorithms are live. The eight others are planned: build them 
 
 1. **Show `limitations`** next to the results, in full or behind a clearly visible "What this does not mean" toggle. It is part of the result, not fine print.
 2. **Show `warnings`** from `/api/analysis` whenever there are any, above the chart.
-3. **Show provenance:** algorithm `version`, `run.finished_at_utc`, and the run's settings. For a default run say "default settings"; otherwise list `run.overrides` ("horizon 1 period"). Use `param_descriptions` for tooltips.
+3. **Show provenance:** algorithm `version`, `run.finished_at_utc`, the run's settings and its data. For a default run say "default settings"; otherwise list `run.overrides` ("horizon 1 period"). Use `param_descriptions` for tooltips. Name the data with each dataset's `source` from the catalog and the load time from `run.datasets` ("Elexon WINDFOR, loaded 24 Oct 14:17"); see [datasets and lineage](FRONTEND_API.md#datasets-and-lineage).
 4. **Missing is not zero.** Draw `null` as a gap in lines and an empty cell in tables. Never interpolate across it or fill it with 0.
 5. **Nothing is a probability.** Do not label any output a probability, chance, risk or likelihood, and do not render it on a 0–100% "chance" gauge. Prediction intervals are model-based ranges, not guarantees.
 6. **Units come from the API:** `outputs[name]` for series, column-name suffixes for tables (below). `""` means unitless.
@@ -163,7 +163,7 @@ These recur across algorithms. Build each once as a component.
 |---|---|
 | Overview | `price_forecast_backtest` (forecast vs actual), `price_day_ahead_forecast` (tomorrow), `price_rolling_signals` (overlays), `wind_price_correlation`, `price_naive_backtest` until the planned backtests land |
 | Explore | All backtest scorecards, by-horizon charts and fold timelines; `price_driver_correlograms`; `worst_misses` and extremes linking to the period inspector |
-| Methods | Every algorithm's `description`, `inputs`, `params` with `param_descriptions`, and `limitations`; `calendar_fourier_terms`; `price_residual_diagnostics`; dataset coverage from the catalog |
+| Methods | Every algorithm's `description`, `inputs` and `datasets` (with each dataset's source), `params` with `param_descriptions`, and `limitations`; `calendar_fourier_terms`; `price_residual_diagnostics`; dataset coverage from the catalog, with the series built from each dataset |
 
 ## States
 

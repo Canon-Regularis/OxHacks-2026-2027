@@ -8,6 +8,10 @@
       "wind_mw",
       "price_gbp_mwh"
     ],
+    "datasets": [
+      "elexon_system_prices",
+      "elexon_windfor"
+    ],
     "outputs": {
       "wind_price_corr": ""
     },
@@ -32,6 +36,10 @@
       "min_periods": 240
     },
     "overrides": {},
+    "datasets": {
+      "elexon_system_prices": "2026-10-24T14:10:00Z",
+      "elexon_windfor": "2026-10-24T14:12:00Z"
+    },
     "range_start_utc": "2026-08-31T23:00:00Z",
     "range_end_utc": "2026-10-24T23:00:00Z",
     "cutoff_utc": null,

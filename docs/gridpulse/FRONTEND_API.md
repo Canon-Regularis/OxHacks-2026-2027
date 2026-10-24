@@ -71,24 +71,24 @@ Example: [`catalog.json`](../../gridpulse/contracts/examples/catalog.json).
 
 | Field | Meaning |
 |---|---|
-| `series[]` | `{id, label, unit}` for every series `/api/series` serves |
-| `datasets[]` | Raw datasets loaded: `dataset`, `source`, `notes`, `first_utc`, `last_utc`, `loaded_at_utc`, `approx_rows`. Use for a "data coverage" panel on Explore or Methods |
+| `series[]` | `{id, label, unit, kind, datasets}` for every series `/api/series` serves; see [datasets and lineage](#datasets-and-lineage) |
+| `datasets[]` | Raw datasets loaded: `dataset` (its name), `source`, `notes`, `first_utc`, `last_utc`, `loaded_at_utc`, `approx_rows`. Use for a "data coverage" panel on Explore or Methods, and to look up the names in `series[].datasets`, `algorithms[].datasets` and `RunInfo.datasets` |
 | `algorithms[]` | One `AlgorithmInfo` per algorithm, described [below](#algorithminfo) |
 | `limits` | `max_points` (5,000) and `max_range_days` (3,660) |
 | `data_updated_at_utc` | When data was last loaded; show it as "data as of …" |
 
 Series ids:
 
-| id | Label | Unit |
-|---|---|---|
-| `price` | Imbalance price | GBP/MWh (can be negative) |
-| `price_min`, `price_max` | Lowest and highest price in each bucket | GBP/MWh |
-| `niv` | Net imbalance volume | MWh |
-| `wind` | Wind forecast (latest version published before delivery) | MW |
-| `wind_outturn` | Wind outturn | MW |
-| `demand` | National demand forecast (latest version before delivery) | MW |
-| `demand_outturn` | National demand outturn (about 21 days in arrears) | MW |
-| `residual_demand` | Demand forecast minus wind forecast | MW |
+| id | Label | Unit | `kind` | `datasets` |
+|---|---|---|---|---|
+| `price` | Imbalance price | GBP/MWh (can be negative) | settlement | `elexon_system_prices` |
+| `price_min`, `price_max` | Lowest and highest price in each bucket | GBP/MWh | settlement | `elexon_system_prices` |
+| `niv` | Net imbalance volume | MWh | settlement | `elexon_system_prices` |
+| `wind` | Wind forecast (latest version published before delivery; hourly, so both halves of an hour match) | MW | forecast | `elexon_windfor` |
+| `wind_outturn` | Wind outturn (excludes embedded wind, so not like-for-like with `wind`) | MW | outturn | `elexon_fuelhh` |
+| `demand` | National demand forecast (latest version before delivery) | MW | forecast | `elexon_ndf` |
+| `demand_outturn` | National demand outturn (about 21 days in arrears) | MW | outturn | `neso_historic_demand` |
+| `residual_demand` | Demand forecast minus wind forecast | MW | forecast | `elexon_ndf`, `elexon_windfor` |
 
 #### AlgorithmInfo
 
@@ -97,6 +97,7 @@ Series ids:
 | `id`, `version` | Stable id for requests; version string |
 | `description` | One line for headings and tooltips |
 | `inputs` | Input columns the algorithm reads; show on Methods |
+| `datasets` | Raw datasets behind those inputs, e.g. `["elexon_system_prices", "elexon_windfor"]`; empty if it only uses the clock |
 | `outputs` | Output name → unit. Each output is a time series in `/api/analysis`. Empty for tables-only algorithms |
 | `tables` | Table name → description, fetched from the tables endpoint |
 | `params` | Default parameters ([settings](#algorithm-settings-runs-and-variants)) |
@@ -183,7 +184,7 @@ The time-series outputs of one algorithm run. Example: [`analysis.json`](../../g
 | `from`, `to`, `resolution`, `t` | As in `/api/series` (no settlement arrays) |
 | `indicators` | Output name → `{label, unit, values}`. Empty `{}` for tables-only algorithms; `t` is still filled |
 | `tables` | Names of the run's tables |
-| `warnings` | Messages to **show on screen** when non-empty: the run covers only part of the range, uses a cutoff, is an older version, or uses non-default parameters |
+| `warnings` | Messages to **show on screen** when non-empty: the run covers only part of the range, uses a cutoff, is an older version, uses non-default parameters, or one of its datasets has been loaded again since it ran |
 
 Periods outside the run's range come back as `null`. A run of a forecasting algorithm can extend past the `to` it was run with, by its forecast horizon.
 
@@ -195,6 +196,7 @@ Periods outside the run's range come back as `null`. A run of a forecasting algo
 | `algorithm_id`, `algorithm_version` | What produced it |
 | `params` | Every parameter the run used |
 | `overrides` | The parameters that differ from the current defaults; `{}` for a default run |
+| `datasets` | Raw dataset → its `loaded_at_utc` when the run started: exactly which data load the run used. `null` load times mean a run made before this was recorded |
 | `range_start_utc`, `range_end_utc` | Periods the run covers; the end includes any forecast horizon |
 | `cutoff_utc` | Non-null for a run limited to data available at that instant |
 | `finished_at_utc` | When it was computed |
@@ -243,6 +245,22 @@ Algorithms are computed in batch jobs on the server, never when a page loads. Ea
 - **Cutoff runs** (`cutoff_utc` set) use only data available at that instant. They are reachable only by `run_id` and come with a warning.
 
 An unknown parameter name returns 400 `unknown_param`; a `params` value that is not a JSON object returns 400 `invalid_params`.
+
+## Datasets and lineage
+
+Three levels tell data sets apart:
+
+1. **Raw datasets** are what the loader put in the database, one per source, e.g. `elexon_windfor`. They are listed in `catalog.datasets[]` with their source, coverage and `loaded_at_utc`. Some, such as weather data for the map extension, are loaded but not used by any series yet.
+2. **Series** are what the API serves. Each names the raw datasets it is built from (`series[].datasets`) and its `kind`. Forecasts and outturns of the same quantity are always separate series.
+3. **Runs** record the raw datasets their algorithm read and each one's load time (`RunInfo.datasets`). If a dataset has been loaded again since, `/api/analysis` adds a warning, because the run may predate new or revised data.
+
+To show sources, join on the dataset name:
+
+```ts
+const byName = new Map(catalog.datasets.map((d) => [d.dataset, d]));
+const sources = algorithm.datasets.map((name) => byName.get(name)?.source ?? name);
+// e.g. ["Elexon BMRS DISEBSP - ...", "Elexon BMRS WINDFOR - /datasets/WINDFOR"]
+```
 
 ## Errors
 

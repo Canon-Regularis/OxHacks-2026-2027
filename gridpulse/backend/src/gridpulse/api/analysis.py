@@ -12,13 +12,17 @@ from gridpulse.analysis.algorithms import ALGORITHMS
 from gridpulse.analysis.contract import Algorithm
 from gridpulse.api.deps import DateRange, api_error, choose_resolution, date_range, get_conn
 from gridpulse.api.schemas import AlgorithmInfo, AnalysisResponse, Column, RunInfo, RunList, RunTables, Table
+from gridpulse.catalog import datasets_for
 
 router = APIRouter(tags=["analysis"])
 
 
 def run_info(run: dict) -> RunInfo:
-    overrides = service.overrides_of(ALGORITHMS.get(run["algorithm_id"]), run["params"])
-    return RunInfo(**run, overrides=overrides)
+    algorithm = ALGORITHMS.get(run["algorithm_id"])
+    return RunInfo(
+        **{**run, "datasets": service.run_datasets(algorithm, run)},
+        overrides=service.overrides_of(algorithm, run["params"]),
+    )
 
 
 def algorithm_info(algorithm: Algorithm, latest_run: dict | None = None) -> AlgorithmInfo:
@@ -27,6 +31,7 @@ def algorithm_info(algorithm: Algorithm, latest_run: dict | None = None) -> Algo
         version=algorithm.version,
         description=algorithm.description,
         inputs=list(algorithm.inputs),
+        datasets=datasets_for(algorithm.inputs),
         outputs=algorithm.outputs,
         tables=algorithm.tables,
         params=json.loads(json.dumps(algorithm.params)),

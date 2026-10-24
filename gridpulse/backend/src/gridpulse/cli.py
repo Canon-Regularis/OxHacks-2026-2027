@@ -12,6 +12,7 @@ from datetime import date, datetime
 
 from gridpulse.analysis.algorithms import ALGORITHMS
 from gridpulse.analysis.service import run_algorithm
+from gridpulse.catalog import datasets_for
 from gridpulse.config import MIGRATIONS_DIR, get_settings
 from gridpulse.db.connection import connect
 from gridpulse.db.migrate import run_migrations
@@ -59,7 +60,8 @@ def main(argv: list[str] | None = None) -> None:
 
     if args.command == "algorithms":
         for a in ALGORITHMS.values():
-            print(f"{a.id} v{a.version}: {a.description}\n  inputs={list(a.inputs)} outputs={a.outputs} params={a.params}")
+            print(f"{a.id} v{a.version}: {a.description}\n  inputs={list(a.inputs)} datasets={datasets_for(a.inputs)}")
+            print(f"  outputs={a.outputs} params={a.params}")
 
     elif args.command == "migrate":
         with _connect() as conn:

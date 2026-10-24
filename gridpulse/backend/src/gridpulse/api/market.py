@@ -23,7 +23,7 @@ from gridpulse.api.schemas import (
     TickerItem,
     Vintage,
 )
-from gridpulse.catalog import FORECAST_VINTAGES, SERIES, SNAPSHOT_SERIES
+from gridpulse.catalog import FORECAST_VINTAGES, SERIES, SNAPSHOT_SERIES, series_info
 from gridpulse.db import queries
 from gridpulse.settlement import PERIOD, bucket_starts, period_start_utc, settlement_period_of
 
@@ -137,7 +137,7 @@ def extremes(
         rows.append(Extreme(delivery_start_utc=bucket, settlement_date=settlement_date,
                             settlement_period=settlement_period, value=value))
     return ExtremesResponse(
-        series=SeriesInfo(id=series, label=info.label, unit=info.unit),
+        series=SeriesInfo(**series_info(series)),
         from_=dates.from_date,
         to=dates.to_date,
         order=order,

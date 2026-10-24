@@ -30,6 +30,8 @@ class SeriesInfo(Model):
     id: str
     label: str
     unit: str
+    kind: Literal["settlement", "forecast", "outturn"]
+    datasets: list[str]  # raw datasets it is built from; details in Catalog.datasets
 
 
 class DatasetCoverage(Model):
@@ -50,6 +52,7 @@ class RunInfo(Model):
     algorithm_version: str
     params: dict  # every parameter the run used
     overrides: dict  # the params that differ from the algorithm's current defaults; {} for a default run
+    datasets: dict[str, datetime | None]  # raw dataset read -> its load time then (None: not recorded)
     range_start_utc: datetime
     range_end_utc: datetime
     cutoff_utc: datetime | None
@@ -61,6 +64,7 @@ class AlgorithmInfo(Model):
     version: str
     description: str
     inputs: list[str]
+    datasets: list[str]  # raw datasets behind the inputs
     outputs: dict[str, str]  # name -> unit
     tables: dict[str, str] = {}  # name -> description
     params: dict  # default parameters

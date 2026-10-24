@@ -16,6 +16,11 @@
       "ccf_wind": "corr(price[t+k], wind_forecast[t]) at lags -K..K; k > 0 means wind leads"
     },
     "limitations": "Retrospective association over the whole range, not causation. The cross-correlation band assumes white noise, so it overstates significance between autocorrelated series.",
+    "datasets": [
+      "elexon_ndf",
+      "elexon_system_prices",
+      "elexon_windfor"
+    ],
     "version": "0.1.0",
     "params": {
       "max_lag": 96,
@@ -34,6 +39,11 @@
         "alpha": 0.05
       },
       "overrides": {},
+      "datasets": {
+        "elexon_ndf": "2026-10-24T14:18:00Z",
+        "elexon_system_prices": "2026-10-24T14:10:00Z",
+        "elexon_windfor": "2026-10-24T14:12:00Z"
+      },
       "range_start_utc": "2026-08-31T23:00:00Z",
       "range_end_utc": "2026-10-23T23:00:00Z",
       "cutoff_utc": null,
@@ -49,6 +59,11 @@
       "alpha": 0.05
     },
     "overrides": {},
+    "datasets": {
+      "elexon_ndf": "2026-10-24T14:18:00Z",
+      "elexon_system_prices": "2026-10-24T14:10:00Z",
+      "elexon_windfor": "2026-10-24T14:12:00Z"
+    },
     "range_start_utc": "2026-08-31T23:00:00Z",
     "range_end_utc": "2026-10-23T23:00:00Z",
     "cutoff_utc": null,

@@ -5,6 +5,7 @@ import json
 import pytest
 
 from gridpulse.api import schemas
+from gridpulse.catalog import datasets_for
 from gridpulse.config import APP_DIR
 
 EXAMPLES_DIR = APP_DIR / "contracts" / "examples"
@@ -61,6 +62,8 @@ def test_algorithm_example(path):
     assert analysis.tables == list(analysis.algorithm.tables)
     assert set(analysis.algorithm.param_descriptions) == set(analysis.algorithm.params)
     assert analysis.run.params == analysis.algorithm.params and analysis.run.overrides == {}
+    assert analysis.algorithm.datasets == datasets_for(analysis.algorithm.inputs)
+    assert list(analysis.run.datasets) == analysis.algorithm.datasets
 
     tables_path = path.with_name(f"{algorithm_id}.tables.json")
     if not analysis.tables:
@@ -93,6 +96,18 @@ def test_run_list_marks_overrides():
     defaults = body["algorithm"]["params"]
     for run in body["runs"]:
         assert run["overrides"] == {k: v for k, v in run["params"].items() if defaults.get(k) != v}
+
+
+def test_dataset_lineage_is_consistent():
+    catalog = load("catalog.json")
+    loaded = {d["dataset"] for d in catalog["datasets"]}
+    for series in catalog["series"]:
+        assert set(series["datasets"]) <= loaded, series["id"]
+    algorithms = catalog["algorithms"] + [load("analysis.json")["algorithm"], load("analysis_runs.json")["algorithm"]]
+    for algorithm in algorithms:
+        assert algorithm["datasets"] == datasets_for(algorithm["inputs"]), algorithm["id"]
+        if algorithm.get("latest_run"):
+            assert list(algorithm["latest_run"]["datasets"]) == algorithm["datasets"]
 
 
 def test_error_example_shape():

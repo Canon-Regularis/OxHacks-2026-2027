@@ -34,6 +34,13 @@ def test_catalog_lists_raw_datasets(client):
     assert {"elexon_system_prices", "elexon_windfor", "elexon_ndf"} <= datasets
 
 
+def test_series_datasets_are_loaded(client):
+    catalog = client.get("/api/catalog").json()
+    loaded = {d["dataset"] for d in catalog["datasets"]}
+    for series in catalog["series"]:
+        assert set(series["datasets"]) <= loaded, series["id"]
+
+
 def test_every_series_reads_on_a_clock_change_day(client):
     ids = ",".join(s["id"] for s in client.get("/api/catalog").json()["series"])
     body = client.get("/api/series", params={"ids": ids, "from": "2025-10-26", "to": "2025-10-26"}).json()

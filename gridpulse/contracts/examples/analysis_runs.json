@@ -7,6 +7,9 @@
     "inputs": [
       "price_gbp_mwh"
     ],
+    "datasets": [
+      "elexon_system_prices"
+    ],
     "outputs": {
       "persistence_forecast": "GBP/MWh",
       "seasonal_naive_forecast": "GBP/MWh"
@@ -30,6 +33,9 @@
         "horizon_periods": 48
       },
       "overrides": {},
+      "datasets": {
+        "elexon_system_prices": "2026-10-24T14:10:00Z"
+      },
       "range_start_utc": "2026-06-30T23:00:00Z",
       "range_end_utc": "2026-10-23T23:00:00Z",
       "cutoff_utc": null,
@@ -47,6 +53,9 @@
       "overrides": {
         "horizon_periods": 1
       },
+      "datasets": {
+        "elexon_system_prices": "2026-10-24T14:10:00Z"
+      },
       "range_start_utc": "2026-06-30T23:00:00Z",
       "range_end_utc": "2026-10-23T23:00:00Z",
       "cutoff_utc": null,
@@ -60,6 +69,9 @@
         "horizon_periods": 48
       },
       "overrides": {},
+      "datasets": {
+        "elexon_system_prices": "2026-10-24T14:10:00Z"
+      },
       "range_start_utc": "2026-06-30T23:00:00Z",
       "range_end_utc": "2026-10-23T23:00:00Z",
       "cutoff_utc": "2026-10-23T12:00:00Z",
@@ -73,6 +85,9 @@
         "horizon_periods": 48
       },
       "overrides": {},
+      "datasets": {
+        "elexon_system_prices": "2026-10-24T14:10:00Z"
+      },
       "range_start_utc": "2026-06-30T23:00:00Z",
       "range_end_utc": "2026-10-23T23:00:00Z",
       "cutoff_utc": null,

@@ -24,6 +24,9 @@
       "fit_warnings": "Conditions flagged while fitting, such as history spanning a clock change"
     },
     "limitations": "A forecast of the day after the range, from prices settled by its end. The selection itself is not backtested here; compare price_forecast_backtest for out-of-sample accuracy. Intervals are model-based, not probabilities of a price event.",
+    "datasets": [
+      "elexon_system_prices"
+    ],
     "version": "0.1.0",
     "params": {
       "history_periods": 1344,
@@ -80,6 +83,9 @@
         }
       },
       "overrides": {},
+      "datasets": {
+        "elexon_system_prices": "2026-10-24T14:10:00Z"
+      },
       "range_start_utc": "2026-09-25T23:00:00Z",
       "range_end_utc": "2026-10-26T00:00:00Z",
       "cutoff_utc": null,
@@ -113,6 +119,9 @@
       }
     },
     "overrides": {},
+    "datasets": {
+      "elexon_system_prices": "2026-10-24T14:10:00Z"
+    },
     "range_start_utc": "2026-09-25T23:00:00Z",
     "range_end_utc": "2026-10-26T00:00:00Z",
     "cutoff_utc": null,

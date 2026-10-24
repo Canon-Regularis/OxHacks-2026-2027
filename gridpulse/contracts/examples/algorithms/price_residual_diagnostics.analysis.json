@@ -12,6 +12,9 @@
       "tests": "Durbin-Watson, Jarque-Bera and ARCH-LM statistics with p-values per model"
     },
     "limitations": "Retrospective: parameters are estimated on the whole range, so residuals are never features. Statistics and p-values only, with no pass/fail threshold. P-values below about 1e-16 show as 0.",
+    "datasets": [
+      "elexon_system_prices"
+    ],
     "version": "0.1.0",
     "params": {
       "models": {
@@ -61,6 +64,9 @@
         "arch_lags": 12
       },
       "overrides": {},
+      "datasets": {
+        "elexon_system_prices": "2026-10-24T14:10:00Z"
+      },
       "range_start_utc": "2026-08-31T23:00:00Z",
       "range_end_utc": "2026-10-23T23:00:00Z",
       "cutoff_utc": null,
@@ -91,6 +97,9 @@
       "arch_lags": 12
     },
     "overrides": {},
+    "datasets": {
+      "elexon_system_prices": "2026-10-24T14:10:00Z"
+    },
     "range_start_utc": "2026-08-31T23:00:00Z",
     "range_end_utc": "2026-10-23T23:00:00Z",
     "cutoff_utc": null,

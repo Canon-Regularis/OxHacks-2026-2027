@@ -21,6 +21,9 @@
     },
     "tables": {},
     "limitations": "Trailing windows only, so each value was knowable at the end of its period. A window that touches a missing period gives null; the EWMA restarts after a gap. price_change_48 counts 48 elapsed half-hours, not the same clock time, across a clock change. Descriptive, not a forecast.",
+    "datasets": [
+      "elexon_system_prices"
+    ],
     "version": "0.1.0",
     "params": {
       "window": 48,
@@ -75,6 +78,9 @@
         ]
       },
       "overrides": {},
+      "datasets": {
+        "elexon_system_prices": "2026-10-24T14:10:00Z"
+      },
       "range_start_utc": "2026-08-31T23:00:00Z",
       "range_end_utc": "2026-10-23T23:00:00Z",
       "cutoff_utc": null,
@@ -106,6 +112,9 @@
       ]
     },
     "overrides": {},
+    "datasets": {
+      "elexon_system_prices": "2026-10-24T14:10:00Z"
+    },
     "range_start_utc": "2026-08-31T23:00:00Z",
     "range_end_utc": "2026-10-23T23:00:00Z",
     "cutoff_utc": null,

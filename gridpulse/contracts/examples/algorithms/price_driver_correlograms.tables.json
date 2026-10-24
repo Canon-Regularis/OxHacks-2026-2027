@@ -9,6 +9,11 @@
       "alpha": 0.05
     },
     "overrides": {},
+    "datasets": {
+      "elexon_ndf": "2026-10-24T14:18:00Z",
+      "elexon_system_prices": "2026-10-24T14:10:00Z",
+      "elexon_windfor": "2026-10-24T14:12:00Z"
+    },
     "range_start_utc": "2026-08-31T23:00:00Z",
     "range_end_utc": "2026-10-23T23:00:00Z",
     "cutoff_utc": null,

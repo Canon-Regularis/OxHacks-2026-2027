@@ -16,6 +16,7 @@
     },
     "tables": {},
     "limitations": "Deterministic functions of the clock, not data. On a 50-period day the repeated hour reuses its slots, so two periods share values; on a 46-period day the skipped hour never occurs.",
+    "datasets": [],
     "version": "0.1.0",
     "params": {
       "daily_harmonics": 2,
@@ -34,6 +35,7 @@
         "weekly_harmonics": 1
       },
       "overrides": {},
+      "datasets": {},
       "range_start_utc": "2026-10-24T23:00:00Z",
       "range_end_utc": "2026-10-26T00:00:00Z",
       "cutoff_utc": null,
@@ -49,6 +51,7 @@
       "weekly_harmonics": 1
     },
     "overrides": {},
+    "datasets": {},
     "range_start_utc": "2026-10-24T23:00:00Z",
     "range_end_utc": "2026-10-26T00:00:00Z",
     "cutoff_utc": null,
