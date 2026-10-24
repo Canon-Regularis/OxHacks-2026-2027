@@ -341,7 +341,15 @@ export function loadWidget(
     if (
       !response.run ||
       !Number.isSafeInteger(response.run.run_id) ||
-      !Array.isArray(response.warnings)
+      response.run.algorithm_id !== binding.algorithm ||
+      (binding.runId !== null && response.run.run_id !== binding.runId) ||
+      !response.run.params ||
+      !response.run.overrides ||
+      !response.run.datasets ||
+      typeof response.run.range_start_utc !== 'string' ||
+      typeof response.run.range_end_utc !== 'string' ||
+      !Array.isArray(response.warnings) ||
+      !response.warnings.every((w) => typeof w === 'string')
     )
       throw new TerminalError(
         'invalid_contract',

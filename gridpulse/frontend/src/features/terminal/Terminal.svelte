@@ -147,6 +147,11 @@
   }
   function activate(id: string) {
     if (!workspace) return;
+    if (maximised) maximised = id;
+    if (compact) {
+      focus(id);
+      return;
+    }
     const next = reveal(plain(workspace), id);
     mutate((ws) => {
       ws.layout = next.layout;
@@ -333,8 +338,15 @@
       return false;
     }
   }
-  function move(id: string, destination: string, pos: Position) {
-    dispatch([{ type: 'widget.move', id, target: destination, position: pos }]);
+  function move(
+    id: string,
+    destination: string,
+    pos: Position,
+    before?: string,
+  ) {
+    dispatch([
+      { type: 'widget.move', id, target: destination, position: pos, before },
+    ]);
   }
   function finishAdd(newTab = false) {
     if (!pending || !workspace) return;
@@ -902,7 +914,13 @@
       onlink={(group) => link(selectedWidget!, group)}
       onmove={(id, pos) => {
         const destination = findStack(workspace!.layout, id);
-        if (destination) move(selectedWidget!.id, destination, pos);
+        if (destination)
+          move(
+            selectedWidget!.id,
+            destination,
+            pos,
+            pos === 'tab' ? id : undefined,
+          );
       }}
       onduplicate={() => duplicateWidget(selectedWidget!)}
       onclose={() => {
@@ -1008,6 +1026,9 @@
             throw new Error('Maximum 16 saved presets.');
           const saved = duplicateWorkspace(ws);
           saved.name = ws.name;
+          let suffix = 2;
+          while (d.presets?.some((p) => p.name === saved.name))
+            saved.name = `${ws.name} (${suffix++})`;
           d.presets = [...(d.presets ?? []), saved];
         });
         notice = 'Saved as a reusable preset in Search / Add.';

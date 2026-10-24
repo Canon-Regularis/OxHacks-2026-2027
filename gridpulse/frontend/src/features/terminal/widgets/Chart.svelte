@@ -217,7 +217,8 @@
     >{/if}
 </div>
 {#if settings.display === 'indexed'}<p class="terminal-hint">
-    Indexed to first non-zero value = 100 · raw values retained in settings
+    Indexed to first non-zero value = 100 · raw values shown below. All-zero
+    series cannot be indexed.
   </p>{/if}
 {#if (settings.outputs.length || Object.keys(columns).length) > 12}<p
     class="terminal-hint"

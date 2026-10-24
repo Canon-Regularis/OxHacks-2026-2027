@@ -1,6 +1,6 @@
 # Eisengrau Terminal implementation plan
 
-Status: architecture and delivery plan for review; implementation has not started.
+Status: initial Terminal release implemented on `feat/terminal-workspace`. See [usage and implementation notes](TERMINAL_WORKSPACE.md) for the delivered behaviour, verification and explicit limitations.
 Branch: `feat/terminal-workspace`, based on main `7d68fc3`.
 
 This is the implementation reference for the page previously called Explore. The website remains Eisengrau; existing GridPulse folders and backend names remain unchanged. User-confirmed decisions take precedence over the earlier Explore mockup.
@@ -60,7 +60,7 @@ Transient drawer: catalogue OR focused-widget settings OR workspace manager
 - Widget-bar entries include widget type, short content description, group letter/colour and warning/loading state. Clicking reveals its tab and focuses it. Long lists scroll horizontally rather than expanding the toolbar.
 - Distinguish active workspace tabs from tabs stacked inside one tile.
 - Tooltips support hover/focus/tap. Essential units, coverage, current run and warning indicators remain discoverable without hovering.
-- Starter workspace: source-data chart, results table and period inspector. Resolve all bindings from the catalogue; when runs are absent show a useful placeholder rather than fake results.
+- Starter market workspace: source-data chart, period inspector and context/notes; algorithm workspaces contain chart, same-run results table and context/notes. Resolve all bindings from the catalogue; when runs are absent show a useful placeholder rather than fake results.
 
 ## 4. Docking and snapping rules
 
@@ -231,3 +231,9 @@ Run targeted unit/browser tests while building each stage. At each integrated mi
 The release is complete when users can discover current data/registered algorithms, open their stored results, arrange readable snapping tiles, link compatible views, inspect a selected period, compare run results, save/recover a workspace and use a compact screen without corrupting the desktop layout. Unknown future numeric outputs and tables must work with generic widgets. All visible values retain units, missingness, run identity and source/mode context.
 
 Deferred: submitting computations, job progress/cancellation, arbitrary parameter editors, registering the eight planned algorithm adapters, specialised views beyond the initial set, agent execution, cloud accounts/collaboration, unrestricted floating windows and guaranteed semantic rendering for every future output shape. Additional capabilities require explicit scope decisions rather than being silently folded into this build.
+
+## 14. Implementation record
+
+The environment template was committed separately with empty server-side credential placeholders. Implementation followed working commits for the validated document/layout engine, catalogue-driven docked UI, overlays/presets/request management, and recovery/atomic actions/large-result performance. All stages 1–6 have an initial implementation; the verification suite and live smoke evidence are documented in [TERMINAL_WORKSPACE.md](TERMINAL_WORKSPACE.md).
+
+The shared action interface is in `model/actions.ts`; UI placement uses the same pure layout engine. Source and algorithm series can coexist in one chart. The inspector uses preloaded values for hover and fetches full publication history on committed selection. This preserves the no-per-hover-request rule without prefetching hundreds of period-detail responses. Tab headers accept insertion before the target tab; keyboard-accessible move settings offer the same placement.

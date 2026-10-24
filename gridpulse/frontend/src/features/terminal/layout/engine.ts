@@ -101,11 +101,14 @@ export function place(
   target: string | null,
   position: Position,
   size?: Size,
+  before?: string,
 ): Workspace {
   if (ws.locked)
     throw new Error('Unlock the layout before moving or adding widgets.');
   if (!ws.widgets[widget]) throw new Error('Widget no longer exists.');
   const originalStack = findStack(ws.layout, widget);
+  if (target === originalStack && position === 'tab' && before === widget)
+    return ws;
   if (target === originalStack && position !== 'tab')
     throw new Error('Choose another tile to split.');
   let layout = remove(ws.layout, widget);
@@ -115,16 +118,20 @@ export function place(
   layout = mapNode(layout, target, (n) => {
     found = true;
     if (n.kind !== 'stack') throw new Error('Choose a tab stack.');
-    if (position === 'tab')
-      return { ...n, widgets: [...n.widgets, widget], active: widget };
-    const before = position === 'left' || position === 'top';
+    if (position === 'tab') {
+      const widgets = [...n.widgets];
+      const index = before ? widgets.indexOf(before) : -1;
+      widgets.splice(index < 0 ? widgets.length : index, 0, widget);
+      return { ...n, widgets, active: widget };
+    }
+    const first = position === 'left' || position === 'top';
     return {
       kind: 'split',
       id: uid(),
       axis:
         position === 'left' || position === 'right' ? 'horizontal' : 'vertical',
       step: position === 'left' || position === 'right' ? 12 : 8,
-      children: before ? [stack(widget), n] : [n, stack(widget)],
+      children: first ? [stack(widget), n] : [n, stack(widget)],
     };
   });
   if (!found) {

@@ -59,3 +59,52 @@ it('keeps linked charts and tables on one binding in a transaction', () => {
     ids.slice(0, 2).map((id) => next.workspaces[0].widgets[id].binding),
   ).toEqual([binding.id, binding.id]);
 });
+
+it('reorders tabs precisely without duplicating placement', () => {
+  const d = createDocument(range),
+    ws = d.workspaces[0],
+    ids = Object.keys(ws.widgets),
+    target = findStack(ws.layout, ids[0])!;
+  const next = applyActions(
+    d,
+    [
+      {
+        type: 'widget.move',
+        id: ids[2],
+        target,
+        position: 'tab',
+        before: ids[0],
+      },
+    ],
+    size,
+  );
+  const root = next.workspaces[0].layout!;
+  expect(root.kind).toBe('split');
+  if (root.kind === 'split' && root.children[0].kind === 'stack')
+    expect(root.children[0].widgets).toEqual([ids[2], ids[0]]);
+});
+
+it('rejects reserved identifiers before an action can modify inherited objects', () => {
+  const d = createDocument(range);
+  expect(() =>
+    applyActions(
+      d,
+      [{ type: 'widget.configure', id: '__proto__', title: 'changed' }],
+      size,
+    ),
+  ).toThrow('identifier');
+  expect(() =>
+    applyActions(
+      d,
+      [
+        {
+          type: 'context.set',
+          group: 'constructor',
+          context: { ...range, selected: null, zoom: null },
+        },
+      ],
+      size,
+    ),
+  ).toThrow('identifier');
+  expect(Object.hasOwn(Object.prototype, 'title')).toBe(false);
+});

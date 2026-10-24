@@ -19,8 +19,15 @@ export type WorkspaceAction =
       binding?: Binding;
       target: string | null;
       position: Position;
+      before?: string;
     }
-  | { type: 'widget.move'; id: string; target: string; position: Position }
+  | {
+      type: 'widget.move';
+      id: string;
+      target: string;
+      position: Position;
+      before?: string;
+    }
   | { type: 'widget.close'; id: string }
   | {
       type: 'widget.configure';
@@ -51,6 +58,41 @@ export function applyActions(
     throw new Error('Too many workspace actions in one transaction.');
   const result = JSON.parse(JSON.stringify(document)) as TerminalDocument;
   for (const action of actions) {
+    if (
+      !action ||
+      typeof action !== 'object' ||
+      typeof action.type !== 'string'
+    )
+      throw new Error('Invalid workspace action.');
+    const identifiers: unknown[] = [];
+    if ('id' in action) identifiers.push(action.id);
+    if ('target' in action && action.target !== null)
+      identifiers.push(action.target);
+    if ('before' in action && action.before !== undefined)
+      identifiers.push(action.before);
+    if ('widget' in action && typeof action.widget === 'object')
+      identifiers.push(action.widget?.id);
+    if ('binding' in action) identifiers.push(action.binding?.id);
+    if ('workspace' in action) identifiers.push(action.workspace?.id);
+    if (
+      'group' in action &&
+      action.group !== null &&
+      action.group !== undefined
+    )
+      identifiers.push(
+        typeof action.group === 'string' ? action.group : action.group.id,
+      );
+    if ('widgetIds' in action) identifiers.push(...(action.widgetIds ?? []));
+    if (
+      identifiers.some(
+        (id) =>
+          typeof id !== 'string' ||
+          !id ||
+          ['__proto__', 'constructor', 'prototype'].includes(id),
+      )
+    )
+      throw new Error('Invalid action identifier.');
+
     const ws = result.workspaces.find((w) => w.id === result.active);
     if (!ws) throw new Error('Active workspace is missing.');
     switch (action.type) {
@@ -68,6 +110,7 @@ export function applyActions(
           action.target,
           action.position,
           size,
+          action.before,
         ).layout;
         break;
       }
@@ -78,6 +121,7 @@ export function applyActions(
           action.target,
           action.position,
           size,
+          action.before,
         ).layout;
         break;
       case 'widget.close':
@@ -85,7 +129,8 @@ export function applyActions(
         break;
       case 'widget.configure': {
         const w = ws.widgets[action.id];
-        if (!w) throw new Error('Widget no longer exists.');
+        if (!Object.hasOwn(ws.widgets, action.id))
+          throw new Error('Widget no longer exists.');
         if (action.title !== undefined) w.title = action.title;
         if (action.settings)
           w.settings = { ...w.settings, ...structuredClone(action.settings) };
@@ -93,7 +138,8 @@ export function applyActions(
       }
       case 'widget.link': {
         const w = ws.widgets[action.id];
-        if (!w) throw new Error('Widget no longer exists.');
+        if (!Object.hasOwn(ws.widgets, action.id))
+          throw new Error('Widget no longer exists.');
         if (action.group && !Object.hasOwn(ws.groups, action.group))
           throw new Error('Linked group is missing.');
         if (action.group === null && w.group)
@@ -107,7 +153,8 @@ export function applyActions(
       case 'binding.set': {
         ws.bindings[action.binding.id] = structuredClone(action.binding);
         for (const id of action.widgetIds ?? []) {
-          if (!ws.widgets[id]) throw new Error('Widget no longer exists.');
+          if (!Object.hasOwn(ws.widgets, id))
+            throw new Error('Widget no longer exists.');
           ws.widgets[id].binding = action.binding.id;
         }
         break;
@@ -124,11 +171,12 @@ export function applyActions(
         ws.groups[action.group.id] = structuredClone(action.group);
         break;
       case 'context.set': {
-        const target = action.group
-          ? ws.groups[action.group]
-          : action.widget
-            ? ws.widgets[action.widget]?.context
-            : undefined;
+        const target =
+          action.group && Object.hasOwn(ws.groups, action.group)
+            ? ws.groups[action.group]
+            : action.widget && Object.hasOwn(ws.widgets, action.widget)
+              ? ws.widgets[action.widget].context
+              : undefined;
         if (!target) throw new Error('Context target is missing.');
         Object.assign(target, structuredClone(action.context));
         break;

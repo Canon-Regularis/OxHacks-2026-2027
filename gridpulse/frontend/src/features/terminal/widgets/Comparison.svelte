@@ -11,7 +11,13 @@
     ),
   );
   let m = $derived(
-    table.columns.indexOf(numeric.includes(metric) ? metric : numeric[0]),
+    table.columns.indexOf(
+      numeric.includes(metric)
+        ? metric
+        : (['mase', 'mae_gbp_mwh', 'rmse_gbp_mwh', 'score'].find((k) =>
+            numeric.includes(k),
+          ) ?? numeric[0]),
+    ),
   );
   let c = $derived(
     table.columns.indexOf(category || 'model') >= 0

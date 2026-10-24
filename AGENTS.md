@@ -61,7 +61,7 @@ Other proposed extensions include a probabilistic scenario engine, an autonomous
 
 ## Confirmed frontend and map direction
 
-**Confirmed frontend scope:** Overview, Explore and Methods are MVP pages. Overview is the current monitoring surface; a read-only About page holds the globe and animated explanations. Explore and Methods remain planned, and Investigate/Gemini and the synoptic weather map remain extensions.
+**Confirmed frontend scope:** Overview, Terminal (formerly Explore) and Methods are MVP pages. Overview and the docked Terminal are implemented; About holds the globe and animated explanations. Methods remains planned; Investigate/Gemini and the synoptic weather map remain extensions.
 
 
 Follow [FRONTEND_DESIGN.md](docs/gridpulse/FRONTEND_DESIGN.md). Preserve KCPC responsiveness/theme and requested globe/fade effects; use committee-style motion where appropriate and Software-style cards for sectioned content. Reference repos are selective reuse sources, not a requirement to copy the whole site.
@@ -82,7 +82,7 @@ Preserve `(settlement_date, settlement_period)` identities, UTC instants and 46/
 
 ## Repository layout
 
-Follow [the repository structure and request flow](docs/gridpulse/REPOSITORY_STRUCTURE.md). Frontend code lives in `gridpulse/frontend/`; Python code in `gridpulse/backend/src/gridpulse/`; SQL migrations in `gridpulse/db/migrations/`; shared API examples in `gridpulse/contracts/`. Algorithms belong in `analysis/algorithms/` and are called through `analysis/service.py`. Keep HTTP, database access and pure calculations separate. Overview is now implemented; Gemini and other pages remain unimplemented.
+Follow [the repository structure and request flow](docs/gridpulse/REPOSITORY_STRUCTURE.md). Frontend code lives in `gridpulse/frontend/`; Python code in `gridpulse/backend/src/gridpulse/`; SQL migrations in `gridpulse/db/migrations/`; shared API examples in `gridpulse/contracts/`. Algorithms belong in `analysis/algorithms/` and are called through `analysis/service.py`. Keep HTTP, database access and pure calculations separate. Overview, Terminal and About are implemented; Methods and Gemini remain unimplemented.
 
 ## Frontend presentation convention
 
@@ -91,6 +91,10 @@ When changing dashboards, follow [the compact layout and progressive-disclosure 
 ## Overview implementation guidance
 
 Before editing the frontend, read [its README](gridpulse/frontend/README.md) for commands, module responsibilities and the shared view state. Run `npm run check`, `npm run test`, `npm run build` and `npm run test:e2e` from `gridpulse/frontend` after relevant changes. Keep hover local to preloaded data and persist view preferences rather than market values. Update backend schemas, frontend types and tests together when adding weather fields. Never print credential-file contents; root `.env`, downloaded Tiger files and application `.env` are ignored and loaded only by the backend.
+
+## Terminal implementation guidance
+
+Before changing Terminal widgets, layout, linking, run selection or persistence, read [TERMINAL_WORKSPACE.md](docs/gridpulse/TERMINAL_WORKSPACE.md) and [the implementation plan](docs/gridpulse/TERMINAL_IMPLEMENTATION_PLAN.md). Discover algorithms from the catalogue, display stored runs only, and retain one run ID across companion widgets. Use the pure layout engine and validated actions for placement; keep hover local and preserve the desktop tree in compact mode. Commit tested increments regularly.
 
 ## Related project documents
 

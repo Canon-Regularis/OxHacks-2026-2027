@@ -212,6 +212,22 @@ test('placement rejects unreadable splits, supports tabbing and undo', async ({
   await page.getByLabel('Placement position').selectOption('tab');
   await page.getByRole('button', { name: 'Place widget', exact: true }).click();
   await expect(page.locator('.terminal-widget-bar > button')).toHaveCount(4);
+  await expect(page.locator('.terminal-status')).toContainText('Saved locally');
+  const desktopLayout = await page.evaluate(
+    () =>
+      JSON.parse(localStorage.getItem('eisengrau:terminal:v1')!).workspaces[0]
+        .layout,
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator('.terminal-widget-bar > button').first().click();
+  await page.setViewportSize({ width: 1366, height: 768 });
+  expect(
+    await page.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem('eisengrau:terminal:v1')!).workspaces[0]
+          .layout,
+    ),
+  ).toEqual(desktopLayout);
   await page.getByRole('button', { name: 'Undo workspace change' }).click();
   await expect(page.locator('.terminal-widget-bar > button')).toHaveCount(3);
   expect(
@@ -296,6 +312,15 @@ test('native drag previews reject small splits and keyboard dividers snap discre
   );
   await page.keyboard.press('Escape');
   await expect(page.locator('.terminal-drop-preview')).toHaveCount(0);
+  const targetTab = page.getByRole('tab', { name: 'Time series', exact: true });
+  await source.dispatchEvent('dragstart', { dataTransfer: dt });
+  await targetTab.dispatchEvent('dragover', { dataTransfer: dt });
+  await targetTab.dispatchEvent('drop', { dataTransfer: dt });
+  await expect(
+    page.locator('.terminal-widget-tabs').first().getByRole('tab'),
+  ).toHaveText(['Context & notes', 'Time series']);
+  await page.getByRole('button', { name: 'Undo workspace change' }).click();
+  await expect(page.locator('.terminal-tile')).toHaveCount(3);
 });
 
 test('algorithm overlays retain source data and shared units', async ({

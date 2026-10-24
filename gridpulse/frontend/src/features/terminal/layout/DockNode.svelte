@@ -27,7 +27,12 @@
     onfocus: (id: string) => void;
     onactivate: (id: string) => void;
     ondrag: (id: string | null) => void;
-    onmove: (id: string, target: string, position: Position) => void;
+    onmove: (
+      id: string,
+      target: string,
+      position: Position,
+      before?: string,
+    ) => void;
     onresize: (id: string, step: number) => void;
     onsettings: (id: string) => void;
     onmaximise: (id: string) => void;
@@ -202,6 +207,22 @@
             aria-selected={id === node.active}
             aria-controls={`widget-${id}`}
             draggable={!workspace.locked}
+            ondragover={(e) => {
+              if (dragging && !workspace.locked) {
+                e.preventDefault();
+                e.stopPropagation();
+                preview = 'tab';
+                allowed = canPlace(dragging, node.id, 'tab');
+              }
+            }}
+            ondrop={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (dragging && !workspace.locked)
+                onmove(dragging, node.id, 'tab', id);
+              preview = null;
+              ondrag(null);
+            }}
             ondragstart={(e) => {
               e.dataTransfer?.setData('text/plain', id);
               ondrag(id);

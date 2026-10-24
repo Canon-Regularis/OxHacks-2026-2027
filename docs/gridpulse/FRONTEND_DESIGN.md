@@ -6,13 +6,13 @@ For the approved evolution of Explore into Terminal, read [the Terminal implemen
 
 ## Confirmed pages and immediate focus
 
-The frontend MVP includes **Overview, Explore and Methods**. Work currently focuses only on **Overview**; Explore and Methods remain in MVP scope for subsequent implementation. **Investigate** and the synoptic/weather-map view remain extensions, not MVP delivery requirements.
+The frontend MVP includes **Overview, Terminal (formerly Explore) and Methods**. Overview and Terminal are implemented; Methods remains planned. **Investigate** and the synoptic/weather-map view remain extensions, not MVP delivery requirements.
 
 - **Overview:** summarise electricity prices, wind/demand forecasts and available analysis for a selected timeframe.
-- **Explore:** inspect datasets, time ranges and supporting records in more detail.
+- **Terminal:** inspect datasets and stored algorithm results through docked, linked widgets and saved workspaces.
 - **Methods:** explain source data, algorithm inputs/outputs, assumptions and limitations.
 
-The mockups are visual references. The Overview is now implemented; Explore and Methods remain unimplemented. The Gemini panel shown in the overview concept is an extension and is not required for the first Overview build.
+The mockups are visual references. Overview and Terminal (the renamed Explore page) are implemented; Methods remains unimplemented. The Gemini panel shown in the overview concept is an extension and is not required for the first Overview build.
 
 ## Overview: “Scan the day” interaction
 
@@ -85,7 +85,7 @@ This is an extension, not an expansion of the 25-hour core acceptance criteria. 
 - Use existing stored Open-Meteo archived forecasts, labelled retrospective; no new weather ingestion.
 - Seven-day rolling correlation of hourly price changes versus temperature/pressure changes, minimum 24 valid pairs; show source, location, units and sample counts.
 - Default to latest priced settlement day, but preserve user-selected date, location, properties and scan property in browser storage for reload and future cross-page synchronisation.
-- Explore and Methods appear disabled; About is a working read-only page. Investigate is omitted from MVP navigation.
+- Terminal is an active navigation link; Methods appears disabled; About is a working read-only page. Investigate is omitted from MVP navigation.
 
 ## Scope boundary
 
