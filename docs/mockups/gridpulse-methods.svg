@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1170" viewBox="0 0 1440 1170">
+<title>GridPulse Methods — synthetic design concept</title>
+<circle cx="43" cy="39" r="13" fill="#111111" stroke="#e4b47a"/>
+<polyline points="35,40 40,40 43,32 47,46 51,38" fill="none" stroke="#e4b47a" stroke-width="2" stroke-linejoin="round"/>
+<text x="65" y="44.86" font-family="DM Sans, Arial, sans-serif" font-size="23" fill="#efeee9" font-weight="700">GridPulse</text>
+<text x="320" y="43.48" font-family="DM Sans, Arial, sans-serif" font-size="14" fill="#9c9c98" font-weight="400">Overview</text>
+<text x="445" y="43.48" font-family="DM Sans, Arial, sans-serif" font-size="14" fill="#9c9c98" font-weight="400">Explore</text>
+<text x="550" y="43.48" font-family="DM Sans, Arial, sans-serif" font-size="14" fill="#9c9c98" font-weight="400">Investigate</text>
+<text x="688" y="43.48" font-family="DM Sans, Arial, sans-serif" font-size="14" fill="#efeee9" font-weight="400">Methods</text>
+<polyline points="688,69 744,69" fill="none" stroke="#e4b47a" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1100" y="25" width="155" height="28" rx="14" fill="#191919" stroke="#303030"/>
+<text x="1112" y="41.019999999999996" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="400">Illustrative concept</text>
+<text x="1280" y="43.019999999999996" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#9c9c98" font-weight="400">GB / UTC</text>
+<polyline points="28,79 1412,79" fill="none" stroke="#303030" stroke-width="1" stroke-linejoin="round"/>
+<text x="40" y="116.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="700">METHODS / GRIDPULSE</text>
+<text x="40" y="171.16" font-family="DM Serif Text, Georgia, serif" font-size="38" fill="#efeee9" font-weight="400">Know what sits behind the signal.</text>
+<text x="42" y="205.48" font-family="DM Sans, Arial, sans-serif" font-size="14" fill="#9c9c98" font-weight="400">Inspect the data, algorithm interfaces and limitations before interpreting an output.</text>
+<polyline points="40,1104 1400,1104" fill="none" stroke="#303030" stroke-width="1" stroke-linejoin="round"/>
+<text x="42" y="1135.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">GRIDPULSE / OXHACK 2026</text>
+<text x="420" y="1136.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="400">Design exploration · synthetic data · not a working application</text>
+<rect x="40" y="233" width="114" height="28" rx="14" fill="#191919" stroke="#303030"/>
+<text x="52" y="249.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="400">Data sources</text>
+<rect x="168" y="233" width="120" height="28" rx="14" fill="#191919" stroke="#303030"/>
+<text x="180" y="249.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#9c9c98" font-weight="400">Algorithms</text>
+<rect x="302" y="233" width="149" height="28" rx="14" fill="#191919" stroke="#303030"/>
+<text x="314" y="249.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#9c9c98" font-weight="400">Reproducibility</text>
+<rect x="1203" y="233" width="197" height="28" rx="14" fill="#191919" stroke="#303030"/>
+<text x="1215" y="249.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#9c9c98" font-weight="400">Documentation concept</text>
+<rect x="40" y="283" width="1360" height="126" rx="12" fill="#191919" stroke="#303030"/>
+<text x="63" y="314.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="400">01</text>
+<text x="100" y="316.58" font-family="DM Serif Text, Georgia, serif" font-size="19" fill="#efeee9" font-weight="400">Source data</text>
+<text x="100" y="349.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#9c9c98" font-weight="400">Elexon → CSV</text>
+<text x="348" y="335.4" font-family="DM Sans, Arial, sans-serif" font-size="20" fill="#9c9c98" font-weight="400">→</text>
+<text x="400" y="314.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="400">02</text>
+<text x="437" y="316.58" font-family="DM Serif Text, Georgia, serif" font-size="19" fill="#efeee9" font-weight="400">Tiger Data</text>
+<text x="437" y="349.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#9c9c98" font-weight="400">Versioned records</text>
+<text x="685" y="335.4" font-family="DM Sans, Arial, sans-serif" font-size="20" fill="#9c9c98" font-weight="400">→</text>
+<text x="738" y="314.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="400">03</text>
+<text x="775" y="316.58" font-family="DM Serif Text, Georgia, serif" font-size="19" fill="#efeee9" font-weight="400">Analysis backend</text>
+<text x="775" y="349.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#9c9c98" font-weight="400">Existing algorithm adapters</text>
+<text x="1023" y="335.4" font-family="DM Sans, Arial, sans-serif" font-size="20" fill="#9c9c98" font-weight="400">→</text>
+<text x="1080" y="314.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="400">04</text>
+<text x="1117" y="316.58" font-family="DM Serif Text, Georgia, serif" font-size="19" fill="#efeee9" font-weight="400">Dashboard</text>
+<text x="1117" y="349.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#9c9c98" font-weight="400">Inspect and investigate</text>
+<text x="42" y="462.32" font-family="DM Serif Text, Georgia, serif" font-size="26" fill="#efeee9" font-weight="400">Source catalogue</text>
+<text x="1186" y="460.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#e4b47a" font-weight="400">Browse by dataset ↗</text>
+<rect x="40" y="485" width="434" height="272" rx="12" fill="#191919" stroke="#303030"/>
+<text x="60" y="525.86" font-family="DM Serif Text, Georgia, serif" font-size="23" fill="#efeee9" font-weight="400">Wind forecasts</text>
+<rect x="60" y="549" width="164" height="28" rx="14" fill="#191919" stroke="#303030"/>
+<text x="72" y="565.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="400">VERSIONED</text>
+<text x="60" y="607.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">Source</text>
+<text x="60" y="626.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#efeee9" font-weight="400">Elexon / WINDFOR</text>
+<text x="60" y="650.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">Key distinction</text>
+<text x="60" y="669.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#efeee9" font-weight="400">Publish time vs delivery time</text>
+<text x="60" y="693.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">Interpretation</text>
+<text x="60" y="712.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#efeee9" font-weight="400">Forecast MW, not observed wind</text>
+<rect x="503" y="485" width="434" height="272" rx="12" fill="#191919" stroke="#303030"/>
+<text x="523" y="525.86" font-family="DM Serif Text, Georgia, serif" font-size="23" fill="#efeee9" font-weight="400">Demand forecasts</text>
+<rect x="523" y="549" width="164" height="28" rx="14" fill="#191919" stroke="#303030"/>
+<text x="535" y="565.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="400">NATIONAL</text>
+<text x="523" y="607.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">Source</text>
+<text x="523" y="626.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#efeee9" font-weight="400">Elexon / agreed export</text>
+<text x="523" y="650.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">Geography</text>
+<text x="523" y="669.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#efeee9" font-weight="400">GB national series</text>
+<text x="523" y="693.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">Interpretation</text>
+<text x="523" y="712.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#efeee9" font-weight="400">Regional data requires a source</text>
+<rect x="966" y="485" width="434" height="272" rx="12" fill="#191919" stroke="#303030"/>
+<text x="986" y="525.86" font-family="DM Serif Text, Georgia, serif" font-size="23" fill="#efeee9" font-weight="400">Settlement prices</text>
+<rect x="986" y="549" width="164" height="28" rx="14" fill="#191919" stroke="#303030"/>
+<text x="998" y="565.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="400">RETROSPECTIVE</text>
+<text x="986" y="607.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">Source</text>
+<text x="986" y="626.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#efeee9" font-weight="400">Elexon / system prices</text>
+<text x="986" y="650.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">Unit</text>
+<text x="986" y="669.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#efeee9" font-weight="400">GBP per MWh</text>
+<text x="986" y="693.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">Interpretation</text>
+<text x="986" y="712.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#efeee9" font-weight="400">Later settlement revisions possible</text>
+<rect x="40" y="780" width="870" height="295" rx="12" fill="#191919" stroke="#303030"/>
+<text x="62" y="821.5" font-family="DM Serif Text, Georgia, serif" font-size="25" fill="#efeee9" font-weight="400">Algorithm explorer</text>
+<text x="62" y="851.66" font-family="DM Sans, Arial, sans-serif" font-size="13" fill="#9c9c98" font-weight="400">Browse an implementation and inspect its integration contract.</text>
+<text x="62" y="896.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#e4b47a" font-weight="400">01</text>
+<text x="102" y="898.48" font-family="DM Sans, Arial, sans-serif" font-size="14" fill="#efeee9" font-weight="400">Inputs &amp; publication history</text>
+<text x="102" y="920.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#9c9c98" font-weight="400">Columns, units, ordering, cutoff support</text>
+<text x="870" y="899.3" font-family="DM Sans, Arial, sans-serif" font-size="15" fill="#e4b47a" font-weight="400">↗</text>
+<text x="62" y="955.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#e4b47a" font-weight="400">02</text>
+<text x="102" y="957.48" font-family="DM Sans, Arial, sans-serif" font-size="14" fill="#efeee9" font-weight="400">Calculation &amp; parameters</text>
+<text x="102" y="979.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#9c9c98" font-weight="400">Owner-supplied implementation; no invented score</text>
+<text x="870" y="958.3" font-family="DM Sans, Arial, sans-serif" font-size="15" fill="#e4b47a" font-weight="400">↗</text>
+<text x="62" y="1014.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#e4b47a" font-weight="400">03</text>
+<text x="102" y="1016.48" font-family="DM Sans, Arial, sans-serif" font-size="14" fill="#efeee9" font-weight="400">Outputs &amp; limitations</text>
+<text x="102" y="1038.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#9c9c98" font-weight="400">Version, meaning, missingness and reproducibility</text>
+<text x="870" y="1017.3" font-family="DM Sans, Arial, sans-serif" font-size="15" fill="#e4b47a" font-weight="400">↗</text>
+<rect x="930" y="780" width="470" height="295" rx="12" fill="#23231e" stroke="#303030"/>
+<text x="953" y="820.86" font-family="DM Serif Text, Georgia, serif" font-size="23" fill="#efeee9" font-weight="400">Read the result correctly</text>
+<text x="953" y="861.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#9c9c98" font-weight="400">An indicator is not automatically a probability.</text>
+<text x="953" y="899.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#9c9c98" font-weight="400">Historical association does not establish cause.</text>
+<text x="953" y="937.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#9c9c98" font-weight="400">Missing data is not a zero measurement.</text>
+<text x="953" y="975.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#9c9c98" font-weight="400">Weather maps need verified spatial sources.</text>
+<rect x="953" y="1019" width="244" height="28" rx="14" fill="#191919" stroke="#303030"/>
+<text x="965" y="1035.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="400">Open assumptions &amp; limitations ↗</text>
+</svg>

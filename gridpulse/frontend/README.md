@@ -1,5 +1,9 @@
 # Frontend work area
 
+MVP pages: **Overview, Explore, Methods**. Build **Overview first**; current work should not expand into other pages. Investigate/Gemini and weather mapping remain extensions.
+
+Follow the [confirmed frontend design brief](../../docs/gridpulse/FRONTEND_DESIGN.md) for reuse patterns and extension boundaries. Reference checkouts now exist at workspace level in `../www/` and `../components/` relative to the repository root.
+
 Frontend/product owner works here. Framework setup is pending inspection of WWW and Components; no runnable frontend or dependency manifest exists yet. Preserve this responsibility split when adding framework entry points and build configuration.
 
 - `src/pages/`: dashboard screens and loading/error/result state.

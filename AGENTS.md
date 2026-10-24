@@ -17,12 +17,12 @@ Use this file as repository-wide guidance when working on GridPulse. It records 
 
 | Source | Intended use | Location / status |
 |---|---|---|
-| **Orchid** | Backend algorithm implementations, adapted behind GridPulse interfaces | Repository URL and local path pending; not available locally when this file was created |
-| **WWW** | Main website template, page structure and layout reference | Team-provided reference: <https://kcpc.orthant.co.uk/>; source repository URL and local path pending |
-| **Components** | Reusable styling and UI components for frontend polish | Repository URL and local path pending |
+| **Orchid** | Backend algorithm implementations, adapted behind GridPulse interfaces | [Orchid](https://github.com/Orthant-Research-Group/orchid), local `../orchid/`, cloned revision `ca8fc92` |
+| **WWW** | Main website template, page structure and layout reference | [WWW](https://github.com/orthant-kcpc/www), local `../www/`, cloned revision `b16a659`; KCPC app: `apps/kcpc/` |
+| **Components** | Reusable styling and UI components for frontend polish | [Components](https://github.com/orthant-kcpc/components), local `../components/`, cloned revision `9626af5` |
 | **Existing exporter** | Fetch Elexon data and write CSVs for ingestion | Being implemented by a teammate; sample files, schema and code location pending |
 
-The team plans to pull the reference repositories locally. Once available, record their exact paths, upstream URLs, revisions, licences and the files actually reused. Inspect compatibility and dependencies before choosing components. Preserve applicable attribution and licence notices.
+The three reference repositories are cloned as siblings of this repository under `/home/david/Documents/Oxhack/`. Revisions above identify the completed clones, not a guarantee that these checkouts will remain unchanged. No source files have yet been reused in the application. Licence/attribution review remains pending; record applicable terms and exact reused files when integration begins. Inspect compatibility and dependencies before choosing components.
 
 ## Orchid inventory supplied by the team
 
@@ -36,7 +36,7 @@ The shared integration-plan description names these five files:
 
 Referenced document: `Orchid_GridPulse_HRT_Algorithm_Architecture.md`. Only its title and summary were supplied in chat; the full document is not currently in this repository. The list above is not a verified inventory of Orchid's public symbols or dependencies.
 
-**LightGBM status:** not verified. No Orchid implementation is available locally to inspect. The team's candidate list explicitly includes LightGBM classification and logistic regression, both of which require fitted models for predictive use. Library reuse alone does not eliminate fitting. If the MVP must avoid training, omit these methods unless suitable already-fitted artifacts exist and their applicability is established. No such artifacts have been confirmed.
+**LightGBM status:** not verified. Orchid is now cloned locally, but its relevant implementations and dependencies have not yet been audited for GridPulse. The team's candidate list explicitly includes LightGBM classification and logistic regression, both of which require fitted models for predictive use. Library reuse alone does not eliminate fitting. If the MVP must avoid training, omit these methods unless suitable already-fitted artifacts exist and their applicability is established. No such artifacts have been confirmed.
 
 ## Candidate algorithms and scope checks
 
@@ -57,6 +57,15 @@ These are proposals from the team, not a list of implemented features.
 
 Other proposed extensions include a probabilistic scenario engine, an autonomous research agent and decision stress testing. These are ideas for after the core flow works. State-space, autoregressive and related statistical methods may also estimate parameters; inspect actual implementations before assuming they require no fitting.
 
+## Confirmed frontend and map direction
+
+**Confirmed frontend scope:** Overview, Explore and Methods are MVP pages. The immediate implementation focus is Overview only. Investigate/Gemini and the synoptic weather map remain extensions.
+
+
+Follow [FRONTEND_DESIGN.md](docs/gridpulse/FRONTEND_DESIGN.md). Preserve KCPC responsiveness/theme and requested globe/fade effects; use committee-style motion where appropriate and Software-style cards for sectioned content. Reference repos are selective reuse sources, not a requirement to copy the whole site.
+
+The Gemini extension should support animated view changes during investigations. The synoptic-map extension should represent wind, pressure, fronts and isobars correctly and allow a separate UK electricity-use/forecast overlay. Exact tools, weather providers and regional-data sources are not selected. Do not promote proposed layouts, API recommendations or scenario-engine ideas into confirmed scope.
+
 ## Integration agreements still needed
 
 1. Obtain real CSV samples and agree identifiers, units, publication/delivery timestamps and revision handling.
@@ -73,6 +82,7 @@ Follow [the repository structure and request flow](docs/gridpulse/REPOSITORY_STR
 
 ## Related project documents
 
+- [Frontend design brief](docs/gridpulse/FRONTEND_DESIGN.md)
 - [Overview](docs/gridpulse/README.md)
 - [Data pipeline](docs/gridpulse/DATA_PIPELINE.md)
 - [Algorithms and analysis contracts](docs/gridpulse/ALGORITHMS_AND_ANALYSIS.md)

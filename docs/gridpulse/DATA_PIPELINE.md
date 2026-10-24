@@ -8,6 +8,22 @@ Expected datasets are imbalance settlement prices, wind forecasts and demand for
 
 Source catalogue: [Elexon Insights API](https://bmrs.elexon.co.uk/api-documentation/endpoint). Existing candidate datasets are DISEBSP (system prices), WINDFOR (wind forecasts), NDF (demand) and optionally FUELHH (outturn). These are source candidates; verify mappings against actual exports during implementation.
 
+## Weather and regional data for the map extension
+
+The confirmed extension calls for synoptic weather layers plus a separately selectable electricity-use/forecast heatmap. Its external providers and endpoints have not been selected. The Discord mention of the Royal Meteorological Society is a source lead, not a verified API or streaming integration.
+
+Before implementing the layers, establish:
+
+- A spatial pressure field, including coordinates, valid time and units, from which meaningful isobars can be rendered. Isolated city samples alone do not define a synoptic chart.
+- Wind speed/direction and relevant height, spatial resolution, forecast valid time and run/publication metadata.
+- A source of meteorological front geometry, or a separately validated derivation. Wind arrows and pressure contours are not themselves fronts.
+- Genuine regional electricity-use and forecast data with region boundaries/identifiers and coverage. Do not present the existing national series as measured regional demand.
+- A common time selection and explicit handling of differing spatial and temporal resolutions. Record source, provenance and freshness for each layer.
+
+Weather forecasts must remain distinguishable from observations/reanalysis. For historical investigations, establish what was available at the claimed cutoff; weather-model initialisation time alone does not prove publication availability. Wind speed is not electrical generation and must not be labelled MW without an explicit supported conversion.
+
+No new weather table schema, provider dependency or regional-demand endpoint is approved by this brief. Agree those contracts after verifying source data. See the [frontend brief](FRONTEND_DESIGN.md) for the display requirements.
+
 ## Ingestion flow
 
 1. Read a completed CSV file and validate its required columns and types.
