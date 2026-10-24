@@ -1,6 +1,7 @@
 # Repository structure and ownership
 
-This is the agreed layout. The backend, the P0 algorithm layer and the Vultr deployment are implemented; frontend framework setup remains (see [implementation status](#implementation-status)). Avoid introducing parallel locations for the same responsibility.
+This is the agreed layout. The backend, P0 algorithm layer, weather API, SvelteKit Overview and Vultr deployment configuration are implemented. Explore, Methods and agent features remain to be implemented. Avoid introducing parallel locations for the same responsibility.
+
 
 ## Layout
 
@@ -124,4 +125,10 @@ Synthetic API examples belong in `gridpulse/contracts/examples/` and must be vis
 
 ## Implementation status
 
-The backend infrastructure runs end to end against Tiger Data. That covers the API, the `gridpulse` views over the loader's `raw` schema, the algorithm runner, result storage and the demo cache, with example algorithms. GitHub Actions tests each change and deploys `main` to development and `production` to production on Vultr ([deployment](../../gridpulse/deploy/README.md)). The Orchid P0 methods (issue #6) are implemented and tested as pure adapters in `analysis/algorithms/`, but no registered algorithm uses them yet. Data modelling, Gemini and the frontend are not implemented; see [BACKEND_DESIGN.md](BACKEND_DESIGN.md#open-items). Do not present stubs or fixtures as implemented functionality. Add meaningful tests as each real implementation lands.
+The backend infrastructure runs end to end against Tiger Data. That covers the API, the `gridpulse` views over the loader's `raw` schema, the algorithm runner, result storage and the demo cache, with example algorithms. GitHub Actions tests each change and deploys `main` to development and `production` to production on Vultr ([deployment](../../gridpulse/deploy/README.md)). The Orchid P0 methods (issue #6) are implemented and tested as pure adapters in `analysis/algorithms/`, but no registered algorithm uses them yet. Data modelling and Gemini remain unimplemented; see [BACKEND_DESIGN.md](BACKEND_DESIGN.md#open-items). Do not present stubs or fixtures as implemented functionality. Add meaningful tests as each real implementation lands.
+
+## Current frontend entry points
+
+SvelteKit owns routing in `gridpulse/frontend/src/routes/`; the Overview route delegates to `src/features/overview/Overview.svelte`. Root layout context owns shared view preferences; browser storage persists the chosen date/location. Source charts are under `src/components/charts/`, and selected KCPC components are recorded in `src/lib/vendor/kcpc/README.md`. The same-origin GET API proxy is `src/routes/api/[...path]/+server.ts`.
+
+Weather requests follow that proxy to backend `api/weather.py`, which reads the `gridpulse.weather_hourly` view through `db/queries.py` and calls `analysis/weather.py`. The entire day's weather statistics are returned at once; hover selects them locally. See the frontend README for exact run/check commands.

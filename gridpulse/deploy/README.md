@@ -29,16 +29,16 @@ internet ─ 80/443 ─► │ Caddy: HTTPS, routes by host │
                gridpulse-edge network│
           ┌──────────────────────────┴───────────────────────┐
   gridpulse-production                              gridpulse-development
-  web (Caddy + frontend) ─► backend (uvicorn)       web ─► backend
+  web (SvelteKit Node) ─► backend (uvicorn)       web ─► backend
 ```
 
 | Container | Defined in | Role |
 |---|---|---|
 | proxy `caddy` | [`proxy/docker-compose.yml`](proxy/docker-compose.yml), [`proxy/Caddyfile`](proxy/Caddyfile) | Shared by both environments. Gets the HTTPS certificates and routes each host name to that environment's `web`. |
-| `web` | [`frontend/Dockerfile`](../frontend/Dockerfile), [`Caddyfile`](Caddyfile) | Serves the frontend's static build and proxies `/api/*`, `/docs` and `/openapi.json` to its own backend. Same origin, so no CORS. |
+| `web` | [`frontend/Dockerfile`](../frontend/Dockerfile) | Runs the SvelteKit Node server on port 80 and proxies `/api/*`, `/docs` and `/openapi.json` to its backend. Same origin, so no CORS. |
 | `backend` | [`backend/Dockerfile`](../backend/Dockerfile) | `uvicorn gridpulse.main:app` with two workers, configured by the environment's `.env`. Not public: only its `web` and a localhost port on the VPS reach it. |
 
-Until the frontend framework is set up (no `frontend/package.json`), `web` serves a placeholder page.
+The frontend image builds with adapter-node and runs `node build`. `API_PROXY_TARGET` defaults to `http://backend:8000`; the shared edge Caddy still terminates HTTPS. `deploy/Caddyfile` is the earlier static-server reference and is not baked into the Node image.
 
 **Separate databases.** Each environment has its own Tiger Cloud service, set by `DATABASE_URL` in its `.env`: production uses `prod-koxford-terminator`, development the original `koxford-terminator`. Each deploy runs `gridpulse migrate` against its own environment's database, so migrations reach production only when the code does. Production's copy of the `raw` data does not follow loads into development's service; load new data into both. To stop an environment from migrating, set its GitHub environment variable `RUN_MIGRATIONS=false`.
 
