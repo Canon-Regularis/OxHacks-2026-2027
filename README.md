@@ -2,7 +2,11 @@
 
 An electricity-market analysis dashboard combining GB wind forecasts, demand forecasts and imbalance settlement prices with the team's existing analysis algorithms.
 
-**Team:** Matthew, Mark, David. **Build window:** 25 hours. **Status:** repository skeleton created; application services and features are not yet implemented.
+**Team:** Matthew, Mark, David. **Build window:** 25 hours. **Status:** FastAPI backend over Tiger Data, deployed to Vultr by CI/CD, with a tested Orchid P0 algorithm layer (issue #6). The frontend is not yet bootstrapped.
+
+Development deployment: https://dev.78-141-242-126.sslip.io
+
+Production  deployment: https://78-141-242-126.sslip.io
 
 ## MVP
 
@@ -48,8 +52,11 @@ Follow the [full layout, ownership boundaries and request flow](docs/gridpulse/R
 
 The backend (FastAPI over Tiger Data) runs end to end against the team's Tiger Cloud instance, reading the loader's `raw` schema through `gridpulse.*` views; data modelling is still to come. Its design is in [BACKEND_DESIGN.md](docs/gridpulse/BACKEND_DESIGN.md), and the migrate, analyse, test and serve commands are in the [backend README](gridpulse/backend/README.md). Put the Tiger Cloud credentials file in the repository root, or a `DATABASE_URL` in root `.env` or `gridpulse/.env`; both are loaded automatically and gitignored. Keep database credentials and service keys server-side. The Overview frontend is implemented in SvelteKit/Svelte, with modular cards, a configurable chart with 1–5 properties and up to two unit axes, a hover-synchronised property scan, browser-persisted selections and weather-change correlations. The read-only About page holds the globe and animated explanations.
 
-From `gridpulse/frontend`, run `npm ci` then `npm run dev` and open <http://localhost:5173>. Run the backend separately on port 8000. See [frontend setup and checks](gridpulse/frontend/README.md); `API_PROXY_TARGET` changes the server-side backend target. The frontend reads actual API responses, not mockup data. Vultr deployment remains to be configured.
+From `gridpulse/frontend`, run `npm ci` then `npm run dev` and open <http://localhost:5173>. Run the backend separately on port 8000. See [frontend setup and checks](gridpulse/frontend/README.md); `API_PROXY_TARGET` changes the server-side backend target. The frontend reads actual API responses, not mockup data.
 
 Apply database migration `004_weather_view.sql` via `gridpulse migrate` on a new environment to expose stored archived weather forecasts. The existing development database has this view applied.
+
+Pushes that change the application are tested and deployed to the Vultr VPS by GitHub Actions: `main` to the development site, `production` to the production site; the one-time VPS and repository setup is in [gridpulse/deploy/README.md](gridpulse/deploy/README.md).
+
 
 The demo must show which data is cached, its source and freshness, algorithm version and limitations. This is analysis of electricity prices and forecasts; indicators are not claims of grid failure or guaranteed future outcomes.

@@ -42,7 +42,7 @@ Visual polish is a core goal. Prioritise a coherent overview and useful interact
 
 ## Analysis scope
 
-No model training is part of this build. Do not promise classifier probabilities, learned thresholds, calibration, SHAP explanations or model comparisons. The algorithm owner defines supported calculations, required history, parameters, score meanings and runtime constraints. Suggested dashboard signals are candidates until that contract is confirmed.
+No ML model training is part of this build: the classical forecasters (issue #6) re-estimate their statistical parameters (up to 64 regression coefficients) on every call, and no fitted model is persisted or reused. Do not promise classifier probabilities, learned thresholds, calibration or SHAP explanations. The algorithm owner defines supported calculations, required history, parameters, score meanings and runtime constraints. Suggested dashboard signals are candidates until that contract is confirmed.
 
 Keep retrospective observations distinguishable from forecasts. If presenting an alert as having been available historically, use only inputs published by its declared analysis cutoff. Otherwise label the view as retrospective analysis.
 
@@ -55,6 +55,8 @@ Keep retrospective observations distinguishable from forecasts. If presenting an
 ## Document map
 
 - [FRONTEND_DESIGN.md](FRONTEND_DESIGN.md): confirmed reuse patterns, agent-driven view changes and synoptic-map requirements.
+- [FRONTEND_API.md](FRONTEND_API.md): every endpoint, field, parameter and error the frontend uses.
+- [ALGORITHM_DISPLAY.md](ALGORITHM_DISPLAY.md): how to present each algorithm's outputs and tables.
 
 - [REPOSITORY_STRUCTURE.md](REPOSITORY_STRUCTURE.md): agreed folders, ownership and frontend-to-backend request flow.
 

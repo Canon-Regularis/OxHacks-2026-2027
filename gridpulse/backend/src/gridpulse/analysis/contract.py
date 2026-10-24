@@ -62,6 +62,7 @@ class Algorithm:
     outputs: dict[str, str]  # output column -> unit ("" if unitless); may be empty if tables are declared
     tables: dict[str, str] = field(default_factory=dict)  # table name -> one-line description
     params: dict[str, Any] = field(default_factory=dict)  # defaults; `gridpulse analyse --param` overrides
+    param_descriptions: dict[str, str] = field(default_factory=dict)  # every param -> meaning and unit, for the UI
     warmup: timedelta = timedelta(0)  # history needed before the requested range
     horizon: timedelta = timedelta(0)  # how far past the range outputs may extend (predictions)
     limitations: str = ""  # shown next to results; say what the numbers do NOT mean

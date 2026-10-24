@@ -1,0 +1,30 @@
+# One environment's stack on the Vultr VPS: production in /opt/gridpulse, development in
+# /opt/gridpulse-dev. The deploy workflow copies this file and deploy.sh there; settings and
+# secrets live beside them in .env. The shared proxy (proxy/) terminates HTTPS for both.
+name: gridpulse-${DEPLOY_ENV:?set DEPLOY_ENV in .env}
+
+services:
+  backend:
+    image: ${REGISTRY:-ghcr.io/canon-regularis}/gridpulse-backend:${IMAGE_TAG:?set IMAGE_TAG in .env}
+    env_file: .env
+    restart: unless-stopped
+    ports:
+      # Only for curl on the VPS itself; the public reaches the API through the proxy.
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
+
+  web:
+    image: ${REGISTRY:-ghcr.io/canon-regularis}/gridpulse-frontend:${IMAGE_TAG:?set IMAGE_TAG in .env}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      default: {}
+      edge:
+        # The proxy routes this environment's host name to this alias.
+        aliases:
+          - gridpulse-${DEPLOY_ENV}-web
+
+networks:
+  edge:
+    name: gridpulse-edge
+    external: true

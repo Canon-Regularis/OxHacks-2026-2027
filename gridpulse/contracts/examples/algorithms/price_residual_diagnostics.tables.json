@@ -1,0 +1,159 @@
+{
+  "_fixture": "Synthetic example for UI development; not real data. ljung_box truncated to 4 lags per model.",
+  "run": {
+    "run_id": 24,
+    "algorithm_id": "price_residual_diagnostics",
+    "algorithm_version": "0.1.0",
+    "params": {
+      "models": {
+        "ets": {
+          "seasonal": "additive",
+          "season_length": 48,
+          "model_df": 0
+        },
+        "arima": {
+          "p": 2,
+          "d": 0,
+          "q": 1,
+          "seasonal_differencing": 1,
+          "season_length": 48,
+          "model_df": 3
+        }
+      },
+      "ljung_box_lags": 48,
+      "arch_lags": 12
+    },
+    "overrides": {},
+    "datasets": {
+      "elexon_system_prices": "2026-10-24T14:10:00Z"
+    },
+    "range_start_utc": "2026-08-31T23:00:00Z",
+    "range_end_utc": "2026-10-23T23:00:00Z",
+    "cutoff_utc": null,
+    "finished_at_utc": "2026-10-24T20:46:00Z"
+  },
+  "tables": {
+    "ljung_box": {
+      "description": "Ljung-Box Q statistic, degrees of freedom and p-value per model at lags 1..K",
+      "columns": [
+        "model",
+        "lag",
+        "statistic",
+        "df",
+        "p_value"
+      ],
+      "rows": [
+        [
+          "ets",
+          1,
+          18.4,
+          1,
+          1.8e-05
+        ],
+        [
+          "ets",
+          2,
+          21.0,
+          2,
+          2.8e-05
+        ],
+        [
+          "ets",
+          24,
+          96.7,
+          24,
+          1.1e-10
+        ],
+        [
+          "ets",
+          48,
+          241.3,
+          48,
+          0.0
+        ],
+        [
+          "arima",
+          1,
+          0.9,
+          null,
+          null
+        ],
+        [
+          "arima",
+          4,
+          5.2,
+          1,
+          0.023
+        ],
+        [
+          "arima",
+          24,
+          41.8,
+          21,
+          0.0045
+        ],
+        [
+          "arima",
+          48,
+          133.6,
+          45,
+          2.1e-10
+        ]
+      ]
+    },
+    "tests": {
+      "description": "Durbin-Watson, Jarque-Bera and ARCH-LM statistics with p-values per model",
+      "columns": [
+        "model",
+        "test",
+        "statistic",
+        "p_value",
+        "notes"
+      ],
+      "rows": [
+        [
+          "ets",
+          "durbin_watson",
+          1.86,
+          null,
+          "Near 2 means little lag-1 autocorrelation"
+        ],
+        [
+          "ets",
+          "jarque_bera",
+          15420.0,
+          0.0,
+          "skew 2.9, excess kurtosis 21.4"
+        ],
+        [
+          "ets",
+          "arch_lm",
+          612.5,
+          0.0,
+          "12 lags"
+        ],
+        [
+          "arima",
+          "durbin_watson",
+          1.98,
+          null,
+          "Near 2 means little lag-1 autocorrelation"
+        ],
+        [
+          "arima",
+          "jarque_bera",
+          14980.0,
+          0.0,
+          "skew 2.8, excess kurtosis 21.0"
+        ],
+        [
+          "arima",
+          "arch_lm",
+          598.1,
+          0.0,
+          "12 lags"
+        ]
+      ]
+    }
+  }
+}

@@ -47,7 +47,7 @@ Keep `DATABASE_URL`, `GEMINI_API_KEY` and any optional Snowflake credentials on 
 
 ## Repository layout
 
-Follow the [repository structure and request flow](REPOSITORY_STRUCTURE.md). The skeleton now exists, with frontend, backend, database migrations, shared contracts, data, scripts and deployment areas. Base modules are stubs; framework setup and application behaviour remain to be implemented.
+Follow the [repository structure and request flow](REPOSITORY_STRUCTURE.md). The skeleton now exists, with frontend, backend, database migrations, shared contracts, data, scripts and deployment areas. The backend, the P0 algorithm layer and the Vultr deployment are implemented; the frontend framework is not yet set up.
 
 The algorithm integration location is `gridpulse/backend/src/gridpulse/analysis/algorithms/`. The shared frontend HTTP boundary is `gridpulse/frontend/src/lib/api.ts`; backend routes live in `gridpulse/backend/src/gridpulse/api/`. Keep one repository and avoid extra services beyond the frontend, backend and database.
 

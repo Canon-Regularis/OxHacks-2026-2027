@@ -1,0 +1,147 @@
+{
+  "_fixture": "Synthetic example for UI development; not real data. First six periods of the 50-period day 2026-10-25: periods 3-4 (01:00, 01:30 BST) and 5-6 (01:00, 01:30 GMT) share clock slots, so their values repeat.",
+  "algorithm": {
+    "id": "calendar_fourier_terms",
+    "description": "Sine and cosine terms of each period's Europe/London clock time (daily and weekly harmonics), the seasonal basis behind the calendar regression.",
+    "inputs": [
+      "settlement_period"
+    ],
+    "outputs": {
+      "daily_sin_1": "",
+      "daily_cos_1": "",
+      "daily_sin_2": "",
+      "daily_cos_2": "",
+      "weekly_sin_1": "",
+      "weekly_cos_1": ""
+    },
+    "tables": {},
+    "limitations": "Deterministic functions of the clock, not data. On a 50-period day the repeated hour reuses its slots, so two periods share values; on a 46-period day the skipped hour never occurs.",
+    "datasets": [],
+    "version": "0.1.0",
+    "params": {
+      "daily_harmonics": 2,
+      "weekly_harmonics": 1
+    },
+    "param_descriptions": {
+      "daily_harmonics": "Sine/cosine pairs per day of the Europe/London clock",
+      "weekly_harmonics": "Sine/cosine pairs per week; ones duplicating a daily harmonic are omitted"
+    },
+    "latest_run": {
+      "run_id": 27,
+      "algorithm_id": "calendar_fourier_terms",
+      "algorithm_version": "0.1.0",
+      "params": {
+        "daily_harmonics": 2,
+        "weekly_harmonics": 1
+      },
+      "overrides": {},
+      "datasets": {},
+      "range_start_utc": "2026-10-24T23:00:00Z",
+      "range_end_utc": "2026-10-26T00:00:00Z",
+      "cutoff_utc": null,
+      "finished_at_utc": "2026-10-24T20:45:00Z"
+    }
+  },
+  "run": {
+    "run_id": 27,
+    "algorithm_id": "calendar_fourier_terms",
+    "algorithm_version": "0.1.0",
+    "params": {
+      "daily_harmonics": 2,
+      "weekly_harmonics": 1
+    },
+    "overrides": {},
+    "datasets": {},
+    "range_start_utc": "2026-10-24T23:00:00Z",
+    "range_end_utc": "2026-10-26T00:00:00Z",
+    "cutoff_utc": null,
+    "finished_at_utc": "2026-10-24T20:45:00Z"
+  },
+  "from": "2026-10-25",
+  "to": "2026-10-25",
+  "resolution": "30m",
+  "t": [
+    "2026-10-24T23:00:00Z",
+    "2026-10-24T23:30:00Z",
+    "2026-10-25T00:00:00Z",
+    "2026-10-25T00:30:00Z",
+    "2026-10-25T01:00:00Z",
+    "2026-10-25T01:30:00Z"
+  ],
+  "indicators": {
+    "daily_sin_1": {
+      "label": "daily_sin_1",
+      "unit": "",
+      "values": [
+        0.0,
+        0.1305,
+        0.2588,
+        0.3827,
+        0.2588,
+        0.3827
+      ]
+    },
+    "daily_cos_1": {
+      "label": "daily_cos_1",
+      "unit": "",
+      "values": [
+        1.0,
+        0.9914,
+        0.9659,
+        0.9239,
+        0.9659,
+        0.9239
+      ]
+    },
+    "daily_sin_2": {
+      "label": "daily_sin_2",
+      "unit": "",
+      "values": [
+        0.0,
+        0.2588,
+        0.5,
+        0.7071,
+        0.5,
+        0.7071
+      ]
+    },
+    "daily_cos_2": {
+      "label": "daily_cos_2",
+      "unit": "",
+      "values": [
+        1.0,
+        0.9659,
+        0.866,
+        0.7071,
+        0.866,
+        0.7071
+      ]
+    },
+    "weekly_sin_1": {
+      "label": "weekly_sin_1",
+      "unit": "",
+      "values": [
+        -0.7818,
+        -0.77,
+        -0.758,
+        -0.7456,
+        -0.758,
+        -0.7456
+      ]
+    },
+    "weekly_cos_1": {
+      "label": "weekly_cos_1",
+      "unit": "",
+      "values": [
+        0.6235,
+        0.638,
+        0.6523,
+        0.6663,
+        0.6523,
+        0.6663
+      ]
+    }
+  },
+  "warnings": [],
+  "tables": []
+}

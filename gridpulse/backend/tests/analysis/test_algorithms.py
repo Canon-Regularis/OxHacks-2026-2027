@@ -33,6 +33,12 @@ def test_declares_known_inputs_and_some_result(algorithm):
 
 
 @algorithms
+def test_describes_every_param(algorithm):
+    assert set(algorithm.param_descriptions) == set(algorithm.params), "the UI describes each param"
+    json.dumps(algorithm.params)  # stored with each run and compared as JSON
+
+
+@algorithms
 def test_output_honours_contract(algorithm, input_frame):
     frame = input_frame[list(algorithm.inputs)]
     before = frame.copy()

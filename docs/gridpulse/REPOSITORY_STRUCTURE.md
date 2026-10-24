@@ -1,6 +1,7 @@
 # Repository structure and ownership
 
-This is the agreed layout. The FastAPI backend, weather integration and SvelteKit Overview are implemented. Explore, Methods and agent features remain to be implemented. Avoid introducing parallel locations for the same responsibility.
+This is the agreed layout. The backend, P0 algorithm layer, weather API, SvelteKit Overview and Vultr deployment configuration are implemented. Explore, Methods and agent features remain to be implemented. Avoid introducing parallel locations for the same responsibility.
+
 
 ## Layout
 
@@ -11,6 +12,7 @@ AGENTS.md                         # Repository-wide guidance and reuse sources
 README.md                         # Project overview and setup status
 LICENSE
 .gitignore
+.github/workflows/deploy.yml      # CI/CD: tests, images, Vultr deploy
 docs/                             # Team documentation
 gridpulse/                        # All application code and operational files
   .env.example                      # Server-side configuration placeholders
@@ -48,13 +50,15 @@ gridpulse/                        # All application code and operational files
         contract.py                 # Algorithm interface and input columns
         features.py                 # ASOF/latest input frame built in SQL
         service.py                  # Prepare → calculate → check → store/retrieve
-        algorithms/                 # One module per algorithm, registered in __init__.py
+        algorithms/                 # Registered algorithms (see __init__.py) and the Orchid P0 adapters
+          orchid/                   # Orchid modules vendored verbatim
       agent/
         service.py                  # Optional Gemini orchestration
         tools.py                    # Existing-service adapters
     tests/                          # pytest; no database needed
       ingestion/
-      analysis/                     # Contract tests run on every registered algorithm
+      analysis/                     # Contract tests for every registered algorithm; adapter tests
+        orchid/                     # Orchid's upstream test suites, ported
       api/
   db/migrations/                    # Re-runnable gridpulse schema: views over raw, analysis tables
   contracts/
@@ -64,7 +68,8 @@ gridpulse/                        # All application code and operational files
     raw/                            # Ignored local CSVs
     demo/                           # Permitted real-data demo cache
   scripts/                          # Thin operational commands
-  deploy/                           # Vultr deployment configuration
+  deploy/                           # Vultr: per-environment Compose stack, shared HTTPS proxy, deploy script
+  backend/Dockerfile, frontend/Dockerfile  # Images; build context is gridpulse/
 ```
 
 Python package directories also contain `__init__.py`. Framework-specific entry points, manifests and dependencies should be added after checking WWW/Components compatibility; do not infer a framework from the folder names. Root README and workstream READMEs must gain exact startup commands when these exist.
@@ -114,14 +119,13 @@ For expensive calculations, run analysis after an import and return stored compl
 
 ## Reference code and fixtures
 
-Inspect Orchid, WWW and Components before reuse. Keep reference checkouts outside the application tree; bring selected files into their responsibility folders with licence/attribution, and record upstream revisions in [AGENTS.md](../../AGENTS.md). No reference code is included in this scaffold.
+Inspect Orchid, WWW and Components before reuse. Keep reference checkouts outside the application tree; bring selected files into their responsibility folders with licence/attribution, and record upstream revisions in [AGENTS.md](../../AGENTS.md). Orchid's P0 modules are vendored in `analysis/algorithms/orchid/`. No WWW or Components code is included yet.
 
 Synthetic API examples belong in `gridpulse/contracts/examples/` and must be visibly labelled during UI development. Real cached demo data belongs in `gridpulse/data/demo/` with provenance. Raw downloads stay in ignored `gridpulse/data/raw/`.
 
 ## Implementation status
 
-The backend infrastructure runs end to end against Tiger Data. That covers the API, the `gridpulse` views over the loader's `raw` schema, the algorithm runner, result storage and the demo cache, with one reference algorithm. Data modelling, the real algorithms, Gemini, the frontend and the Vultr deployment are not implemented; see [BACKEND_DESIGN.md](BACKEND_DESIGN.md#open-items). Do not present stubs or fixtures as implemented functionality. Add meaningful tests as each real implementation lands.
-
+The backend infrastructure runs end to end against Tiger Data. That covers the API, the `gridpulse` views over the loader's `raw` schema, the algorithm runner, result storage and the demo cache, with example algorithms. GitHub Actions tests each change and deploys `main` to development and `production` to production on Vultr ([deployment](../../gridpulse/deploy/README.md)). The Orchid P0 methods (issue #6) are implemented and tested as pure adapters in `analysis/algorithms/`, but no registered algorithm uses them yet. Data modelling and Gemini remain unimplemented; see [BACKEND_DESIGN.md](BACKEND_DESIGN.md#open-items). Do not present stubs or fixtures as implemented functionality. Add meaningful tests as each real implementation lands.
 
 ## Current frontend entry points
 

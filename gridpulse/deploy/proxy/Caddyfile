@@ -1,0 +1,10 @@
+# Shared proxy: automatic HTTPS for each environment's host name (e.g. 203-0-113-10.sslip.io
+# and dev.203-0-113-10.sslip.io), forwarding to that stack's web container on gridpulse-edge.
+# An environment that is not running yet answers 502.
+{$PRODUCTION_ADDRESS} {
+	reverse_proxy gridpulse-production-web:80
+}
+
+{$DEVELOPMENT_ADDRESS} {
+	reverse_proxy gridpulse-development-web:80
+}
