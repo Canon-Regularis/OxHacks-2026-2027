@@ -227,3 +227,6 @@ node_modules/
 /frontend/build/
 .env.*
 !.env.example
+
+# Frontend source directory (the Python template ignores lib/ globally).
+!/frontend/src/lib/
