@@ -12,13 +12,13 @@ Work merges into `main` and appears on development. Promote to production with a
 ```text
 push to main or production touching gridpulse/{backend,frontend,db,data/demo,deploy}
   → GitHub Actions (.github/workflows/deploy.yml)
-      backend tests (pytest) + frontend checks (once a package.json exists)
-      → build gridpulse-backend and gridpulse-frontend images → ghcr.io (private)
-      → SSH to the VPS: start/reload the proxy, pull images, `gridpulse migrate`, restart that
-        environment, wait for the health check
+      in parallel: backend tests (pytest -n auto), frontend checks (once a package.json exists),
+        and the gridpulse-backend and gridpulse-frontend image builds → ghcr.io (private)
+      → once all of those pass, SSH to the VPS: start/reload the proxy, pull images,
+        `gridpulse migrate`, restart that environment, wait for the health check
 ```
 
-Pull requests run the tests and build both images without pushing or deploying. A manual run (Actions → CI/CD → Run workflow) deploys only when started from `main` or `production`.
+Images build alongside the tests, so the `main` and `production` tags can move before the tests finish; deploys use the `sha-<commit>` tag and wait for the tests. Pull requests run the tests and build only the images their diff can affect (both, if it touches the workflow or `deploy/`), without pushing or deploying. A manual run (Actions → CI/CD → Run workflow) deploys only when started from `main` or `production`.
 
 ## What runs on the VPS
 

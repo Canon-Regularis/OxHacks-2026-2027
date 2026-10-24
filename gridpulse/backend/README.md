@@ -20,6 +20,7 @@ Database: save the credentials file downloaded from Tiger Cloud (`tiger-cloud-<s
 
 ```bash
 pytest                                              # unit tests, no database needed
+pytest -n auto                                      # the same, one worker per core (what CI runs)
 RUNSLOW=1 pytest                                    # also the 31 slow Orchid smoothing tests
 GRIDPULSE_INTEGRATION=1 pytest                      # also run read-only checks against Tiger Data
 ruff check . && ruff format --check . && mypy       # strict lint and types for the Orchid adapter layer
