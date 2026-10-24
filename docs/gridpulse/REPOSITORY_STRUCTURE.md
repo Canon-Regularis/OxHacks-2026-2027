@@ -1,6 +1,6 @@
 # Repository structure and ownership
 
-This is the agreed layout. The folders and base files are scaffolded; HTTP handlers, database integration, algorithms and frontend framework setup remain to be implemented. Avoid introducing parallel locations for the same responsibility.
+This is the agreed layout. The folders and base files are scaffolded; HTTP handlers, database integration and frontend framework setup remain to be implemented, while the pure algorithm layer exists (see [implementation status](#implementation-status)). Avoid introducing parallel locations for the same responsibility.
 
 ## Layout
 
@@ -25,7 +25,7 @@ gridpulse/                        # All application code and operational files
       styles/                       # Styles/design tokens; WWW reference
     public/                         # Static assets
   backend/
-    pyproject.toml                  # Python package; runtime dependencies pending
+    pyproject.toml                  # Python package; framework and database dependencies pending
     src/gridpulse/
       main.py                       # Application/framework wiring
       config.py                     # Server configuration
@@ -39,13 +39,15 @@ gridpulse/                        # All application code and operational files
       analysis/
         features.py                 # ASOF joins and window calculations
         service.py                  # Query → prepare → calculate → store/retrieve
-        algorithms/wind_analysis.py # Pure algorithm/Orchid adapter placeholder
+        algorithms/                 # Pure calculations: Orchid P0 adapters
+          orchid/                   # Orchid modules vendored verbatim
+          wind_analysis.py          # Wind-analysis adapter placeholder
       agent/
         service.py                  # Optional Gemini orchestration
         tools.py                    # Existing-service adapters
     tests/
       ingestion/
-      analysis/
+      analysis/                     # Adapter tests; orchid/ holds the ported upstream suites
       api/
   db/migrations/                    # Versioned database schema changes
   contracts/
@@ -105,10 +107,10 @@ For expensive calculations, run analysis after an import and return stored compl
 
 ## Reference code and fixtures
 
-Inspect Orchid, WWW and Components before reuse. Keep reference checkouts outside the application tree; bring selected files into their responsibility folders with licence/attribution, and record upstream revisions in [AGENTS.md](../../AGENTS.md). No reference code is included in this scaffold.
+Inspect Orchid, WWW and Components before reuse. Keep reference checkouts outside the application tree; bring selected files into their responsibility folders with licence/attribution, and record upstream revisions in [AGENTS.md](../../AGENTS.md). Orchid's P0 modules are vendored in `analysis/algorithms/orchid/`. No WWW or Components code is included yet.
 
 Synthetic API examples belong in `gridpulse/contracts/examples/` and must be visibly labelled during UI development. Real cached demo data belongs in `gridpulse/data/demo/` with provenance. Raw downloads stay in ignored `gridpulse/data/raw/`.
 
 ## Implementation status
 
-The scaffold establishes locations and package metadata only. It does not expose a working API, connect to Tiger Data, calculate indicators, run Gemini or deploy to Vultr. Do not present stubs or fixtures as implemented functionality. Add meaningful tests as each real implementation lands.
+The pure algorithm layer (`analysis/algorithms/`, issue #6) is implemented and tested, but no service, API or database calls it yet. Beyond that, the scaffold establishes locations and package metadata only. It does not expose a working API, connect to Tiger Data, run Gemini or deploy to Vultr. Do not present stubs or fixtures as implemented functionality. Add meaningful tests as each real implementation lands.

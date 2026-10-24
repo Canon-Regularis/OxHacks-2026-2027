@@ -17,26 +17,27 @@ Use this file as repository-wide guidance when working on GridPulse. It records 
 
 | Source | Intended use | Location / status |
 |---|---|---|
-| **Orchid** | Backend algorithm implementations, adapted behind GridPulse interfaces | Repository URL and local path pending; not available locally when this file was created |
+| **Orchid** | Backend algorithm implementations, adapted behind GridPulse interfaces | <https://github.com/Orthant-Research-Group/orchid> (private), commit `ca8fc9290722fb45ab27e022b76365beba1306c8`; P0 modules vendored in `gridpulse/backend/src/gridpulse/analysis/algorithms/orchid/`. No licence file upstream: confirm terms before this repository is made public |
 | **WWW** | Main website template, page structure and layout reference | Team-provided reference: <https://kcpc.orthant.co.uk/>; source repository URL and local path pending |
 | **Components** | Reusable styling and UI components for frontend polish | Repository URL and local path pending |
 | **Existing exporter** | Fetch Elexon data and write CSVs for ingestion | Being implemented by a teammate; sample files, schema and code location pending |
 
 The team plans to pull the reference repositories locally. Once available, record their exact paths, upstream URLs, revisions, licences and the files actually reused. Inspect compatibility and dependencies before choosing components. Preserve applicable attribution and licence notices.
 
-## Orchid inventory supplied by the team
+## Orchid modules in use
 
-The shared integration-plan description names these five files:
+The Orchid → GridPulse catalogue and architecture are in issue #3. Its P0 methods (issue #6) come from four Orchid modules, vendored verbatim. Their SHA-256 digests are recorded in `orchid/__init__.py`:
 
-- `spectral_template.py`
-- `autoregressive_template.py`
-- `forecasting_baseline_template.py`
-- `smoothing_template.py`
-- `state_space_template.py`
+| Vendored file | Upstream path (`algorithms/core/…`) |
+|---|---|
+| `autoregressive.py` | `forecasting/autoregressive/autoregressive_template.py` |
+| `forecasting_baseline.py` | `forecasting/baseline/forecasting_baseline_template.py` |
+| `smoothing.py` | `forecasting/smoothing/smoothing_template.py` |
+| `spectral.py` | `spectral/spectral_template.py` |
 
-Referenced document: `Orchid_GridPulse_HRT_Algorithm_Architecture.md`. Only its title and summary were supplied in chat; the full document is not currently in this repository. The list above is not a verified inventory of Orchid's public symbols or dependencies.
+Each module's upstream `_stress_test.py` is ported to `gridpulse/backend/tests/analysis/orchid/`, with only the import lines changed. GridPulse code calls Orchid only through the adapters in `analysis/algorithms/`, which use one canonical implementation per method; see [algorithms and analysis contracts](docs/gridpulse/ALGORITHMS_AND_ANALYSIS.md). `state_space_template.py` is left for the P1 work (#7). Do not edit vendored files: change Orchid upstream and re-vendor.
 
-**LightGBM status:** not verified. No Orchid implementation is available locally to inspect. The team's candidate list explicitly includes LightGBM classification and logistic regression, both of which require fitted models for predictive use. Library reuse alone does not eliminate fitting. If the MVP must avoid training, omit these methods unless suitable already-fitted artifacts exist and their applicability is established. No such artifacts have been confirmed.
+**LightGBM status:** the vendored modules contain no LightGBM or other classifier, and the P0 port adds none. The team's candidate list explicitly includes LightGBM classification and logistic regression, both of which require fitted models for predictive use. Library reuse alone does not eliminate fitting. If the MVP must avoid training, omit these methods unless suitable already-fitted artifacts exist and their applicability is established. No such artifacts have been confirmed.
 
 ## Candidate algorithms and scope checks
 
@@ -60,7 +61,7 @@ Other proposed extensions include a probabilistic scenario engine, an autonomous
 ## Integration agreements still needed
 
 1. Obtain real CSV samples and agree identifiers, units, publication/delivery timestamps and revision handling.
-2. Inspect Orchid and the full architecture document; select methods compatible with the no-training constraint and available data.
+2. Orchid P0 methods are integrated (#6). Select P1–P3 methods (#7, #8, #10) that are compatible with the no-training constraint and the available data.
 3. Agree algorithm adapters and frontend API response examples before parallel implementation.
 4. Identify reusable WWW/Components files and preserve upstream attribution.
 5. Keep credentials out of documentation, source control and frontend code. Use server-side configuration and placeholder examples only.
