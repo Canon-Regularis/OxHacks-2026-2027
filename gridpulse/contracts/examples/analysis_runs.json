@@ -1,0 +1,82 @@
+{
+  "_fixture": "Synthetic example for UI development; not real data. Run 12 is the default run; 15 overrides a parameter; 14 is a cutoff run.",
+  "algorithm": {
+    "id": "price_naive_backtest",
+    "version": "0.1.0",
+    "description": "Day-ahead imbalance price from persistence and same-period-last-week baselines, with error scorecards.",
+    "inputs": [
+      "price_gbp_mwh"
+    ],
+    "outputs": {
+      "persistence_forecast": "GBP/MWh",
+      "seasonal_naive_forecast": "GBP/MWh"
+    },
+    "tables": {
+      "metrics": "MAE, RMSE and bias per model over the requested range",
+      "worst_misses": "Ten periods with the largest seasonal-naive error"
+    },
+    "params": {
+      "horizon_periods": 48
+    },
+    "param_descriptions": {
+      "horizon_periods": "Forecast lead time in settlement periods (48 = day-ahead), 1 to 335"
+    },
+    "limitations": "Numerical price baselines for comparison, not spike probabilities or a trading signal.",
+    "latest_run": {
+      "run_id": 12,
+      "algorithm_id": "price_naive_backtest",
+      "algorithm_version": "0.1.0",
+      "params": {
+        "horizon_periods": 48
+      },
+      "overrides": {},
+      "range_start_utc": "2026-06-30T23:00:00Z",
+      "range_end_utc": "2026-10-23T23:00:00Z",
+      "cutoff_utc": null,
+      "finished_at_utc": "2026-10-24T18:02:00Z"
+    }
+  },
+  "runs": [
+    {
+      "run_id": 15,
+      "algorithm_id": "price_naive_backtest",
+      "algorithm_version": "0.1.0",
+      "params": {
+        "horizon_periods": 1
+      },
+      "overrides": {
+        "horizon_periods": 1
+      },
+      "range_start_utc": "2026-06-30T23:00:00Z",
+      "range_end_utc": "2026-10-23T23:00:00Z",
+      "cutoff_utc": null,
+      "finished_at_utc": "2026-10-24T19:30:00Z"
+    },
+    {
+      "run_id": 14,
+      "algorithm_id": "price_naive_backtest",
+      "algorithm_version": "0.1.0",
+      "params": {
+        "horizon_periods": 48
+      },
+      "overrides": {},
+      "range_start_utc": "2026-06-30T23:00:00Z",
+      "range_end_utc": "2026-10-23T23:00:00Z",
+      "cutoff_utc": "2026-10-23T12:00:00Z",
+      "finished_at_utc": "2026-10-24T19:10:00Z"
+    },
+    {
+      "run_id": 12,
+      "algorithm_id": "price_naive_backtest",
+      "algorithm_version": "0.1.0",
+      "params": {
+        "horizon_periods": 48
+      },
+      "overrides": {},
+      "range_start_utc": "2026-06-30T23:00:00Z",
+      "range_end_utc": "2026-10-23T23:00:00Z",
+      "cutoff_utc": null,
+      "finished_at_utc": "2026-10-24T18:02:00Z"
+    }
+  ]
+}

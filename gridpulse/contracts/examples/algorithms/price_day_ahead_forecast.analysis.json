@@ -25,6 +25,34 @@
     },
     "limitations": "A forecast of the day after the range, from prices settled by its end. The selection itself is not backtested here; compare price_forecast_backtest for out-of-sample accuracy. Intervals are model-based, not probabilities of a price event.",
     "version": "0.1.0",
+    "params": {
+      "history_periods": 1344,
+      "horizon": 48,
+      "levels": [
+        0.8,
+        0.95
+      ],
+      "models": {
+        "seasonal_naive": {
+          "season_length": 48
+        },
+        "auto_ets": {
+          "season_length": 48
+        },
+        "auto_arima": {
+          "season_length": 48,
+          "seasonal_differencing": null,
+          "max_p": 3,
+          "max_q": 2
+        }
+      }
+    },
+    "param_descriptions": {
+      "history_periods": "Settled periods before the forecast day used to select and fit each model (1344 = 28 days)",
+      "horizon": "Periods forecast (48 = the next settlement day; 46 or 50 on clock-change days)",
+      "levels": "Central prediction-interval levels, as fractions",
+      "models": "Model name -> its settings; null seasonal_differencing lets a test choose"
+    },
     "latest_run": {
       "run_id": 26,
       "algorithm_id": "price_day_ahead_forecast",
@@ -51,8 +79,9 @@
           }
         }
       },
+      "overrides": {},
       "range_start_utc": "2026-09-25T23:00:00Z",
-      "range_end_utc": "2026-10-24T23:00:00Z",
+      "range_end_utc": "2026-10-26T00:00:00Z",
       "cutoff_utc": null,
       "finished_at_utc": "2026-10-24T21:05:00Z"
     }
@@ -83,8 +112,9 @@
         }
       }
     },
+    "overrides": {},
     "range_start_utc": "2026-09-25T23:00:00Z",
-    "range_end_utc": "2026-10-24T23:00:00Z",
+    "range_end_utc": "2026-10-26T00:00:00Z",
     "cutoff_utc": null,
     "finished_at_utc": "2026-10-24T21:05:00Z"
   },

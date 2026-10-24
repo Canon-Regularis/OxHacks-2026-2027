@@ -24,6 +24,10 @@ ALGORITHM = Algorithm(
     inputs=("wind_mw", "price_gbp_mwh"),
     outputs={"wind_price_corr": ""},
     params={"window_periods": 336, "min_periods": 240},
+    param_descriptions={
+        "window_periods": "Trailing window length in settlement periods (336 = 7 days)",
+        "min_periods": "Fewest non-missing periods in the window for a value; fewer gives null",
+    },
     warmup=timedelta(days=7),  # keep equal to window_periods x 30 min
     limitations="Descriptive statistic over past periods. Not a forecast, a probability or evidence of cause.",
 )

@@ -23,6 +23,53 @@
     },
     "limitations": "Benchmarks every other forecaster must beat. Each forecast uses only prices settled before its origin (the previous day's end). Intervals come from each model's interval_method; sqrt-horizon is a heuristic. WMAPE and sMAPE are fractions. Not a probability of a price spike or a trading signal.",
     "version": "0.1.0",
+    "params": {
+      "initial": 1344,
+      "window": 1344,
+      "horizon": 48,
+      "step": 48,
+      "max_folds": 60,
+      "season_length": 48,
+      "levels": [
+        0.8,
+        0.95
+      ],
+      "models": {
+        "naive": {},
+        "seasonal_naive_day": {
+          "season_length": 48
+        },
+        "seasonal_naive_week": {
+          "season_length": 336
+        },
+        "naive2": {
+          "season_length": 48
+        },
+        "drift": {},
+        "mean": {},
+        "moving_average": {
+          "window": 48
+        },
+        "weighted_moving_average": {
+          "weights": [
+            1,
+            2,
+            3,
+            4
+          ]
+        }
+      }
+    },
+    "param_descriptions": {
+      "initial": "Settlement periods of history before the first forecast origin (1344 = 28 days)",
+      "window": "Sliding training window in periods; null would use an expanding window",
+      "horizon": "Periods forecast from each origin (48 = one day ahead)",
+      "step": "Periods between consecutive origins (48 = one origin per day)",
+      "max_folds": "Most origins a run may use; a longer range is an error, not a truncation",
+      "season_length": "Seasonal period in half-hours used to scale MASE, RMSSE and MSIS (48 = daily)",
+      "levels": "Central prediction-interval levels scored, as fractions",
+      "models": "Model name -> its settings; names match the output prefixes and the model column of tables"
+    },
     "latest_run": {
       "run_id": 20,
       "algorithm_id": "price_baseline_backtest",
@@ -64,6 +111,7 @@
           }
         }
       },
+      "overrides": {},
       "range_start_utc": "2026-08-31T23:00:00Z",
       "range_end_utc": "2026-10-23T23:00:00Z",
       "cutoff_utc": null,
@@ -111,6 +159,7 @@
         }
       }
     },
+    "overrides": {},
     "range_start_utc": "2026-08-31T23:00:00Z",
     "range_end_utc": "2026-10-23T23:00:00Z",
     "cutoff_utc": null,

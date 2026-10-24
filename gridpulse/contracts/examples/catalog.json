@@ -68,6 +68,14 @@
       "outputs": {
         "wind_price_corr": ""
       },
+      "params": {
+        "window_periods": 336,
+        "min_periods": 240
+      },
+      "param_descriptions": {
+        "window_periods": "Trailing window length in settlement periods (336 = 7 days)",
+        "min_periods": "Fewest non-missing periods in the window for a value; fewer gives null"
+      },
       "limitations": "Descriptive statistic over past periods. Not a forecast, a probability or evidence of cause.",
       "latest_run": {
         "run_id": 7,
@@ -77,6 +85,7 @@
           "window_periods": 336,
           "min_periods": 240
         },
+        "overrides": {},
         "range_start_utc": "2026-06-30T23:00:00Z",
         "range_end_utc": "2026-10-23T23:00:00Z",
         "cutoff_utc": null,
@@ -99,6 +108,12 @@
         "metrics": "MAE, RMSE and bias per model over the requested range",
         "worst_misses": "Ten periods with the largest seasonal-naive error"
       },
+      "params": {
+        "horizon_periods": 48
+      },
+      "param_descriptions": {
+        "horizon_periods": "Forecast lead time in settlement periods (48 = day-ahead), 1 to 335"
+      },
       "limitations": "Numerical price baselines for comparison, not spike probabilities or a trading signal.",
       "latest_run": {
         "run_id": 12,
@@ -107,6 +122,7 @@
         "params": {
           "horizon_periods": 48
         },
+        "overrides": {},
         "range_start_utc": "2026-06-30T23:00:00Z",
         "range_end_utc": "2026-10-23T23:00:00Z",
         "cutoff_utc": null,

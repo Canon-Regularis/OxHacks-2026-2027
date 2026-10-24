@@ -7,6 +7,7 @@ import pandas as pd
 from fastapi import APIRouter, Depends, Query
 from psycopg import Connection
 
+from gridpulse.analysis import service
 from gridpulse.analysis.algorithms import ALGORITHMS
 from gridpulse.analysis.features import build_input_frame
 from gridpulse.api.deps import DateRange, api_error, as_utc, choose_resolution, date_range, get_conn
@@ -159,7 +160,7 @@ def period(settlement_date: date, settlement_period: int, conn: Connection = Dep
         for name, (table, column) in FORECAST_VINTAGES.items()
     }
     analysis = []
-    for row in queries.period_results(conn, start):
+    for row in service.period_results(conn, list(ALGORITHMS.values()), start):
         algorithm = ALGORITHMS.get(row["algorithm_id"])
         unit = algorithm.outputs.get(row["indicator"]) if algorithm else None
         analysis.append(PeriodIndicator(**row, unit=unit))

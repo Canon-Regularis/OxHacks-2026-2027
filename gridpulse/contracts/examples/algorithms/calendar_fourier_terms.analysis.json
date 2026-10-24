@@ -17,6 +17,14 @@
     "tables": {},
     "limitations": "Deterministic functions of the clock, not data. On a 50-period day the repeated hour reuses its slots, so two periods share values; on a 46-period day the skipped hour never occurs.",
     "version": "0.1.0",
+    "params": {
+      "daily_harmonics": 2,
+      "weekly_harmonics": 1
+    },
+    "param_descriptions": {
+      "daily_harmonics": "Sine/cosine pairs per day of the Europe/London clock",
+      "weekly_harmonics": "Sine/cosine pairs per week; ones duplicating a daily harmonic are omitted"
+    },
     "latest_run": {
       "run_id": 27,
       "algorithm_id": "calendar_fourier_terms",
@@ -25,6 +33,7 @@
         "daily_harmonics": 2,
         "weekly_harmonics": 1
       },
+      "overrides": {},
       "range_start_utc": "2026-10-24T23:00:00Z",
       "range_end_utc": "2026-10-26T00:00:00Z",
       "cutoff_utc": null,
@@ -39,6 +48,7 @@
       "daily_harmonics": 2,
       "weekly_harmonics": 1
     },
+    "overrides": {},
     "range_start_utc": "2026-10-24T23:00:00Z",
     "range_end_utc": "2026-10-26T00:00:00Z",
     "cutoff_utc": null,

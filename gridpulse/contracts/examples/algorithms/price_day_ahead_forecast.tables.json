@@ -26,8 +26,9 @@
         }
       }
     },
+    "overrides": {},
     "range_start_utc": "2026-09-25T23:00:00Z",
-    "range_end_utc": "2026-10-24T23:00:00Z",
+    "range_end_utc": "2026-10-26T00:00:00Z",
     "cutoff_utc": null,
     "finished_at_utc": "2026-10-24T21:05:00Z"
   },

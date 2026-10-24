@@ -18,6 +18,7 @@ MODELS = {
     "period.json": schemas.PeriodDetail,
     "analysis.json": schemas.AnalysisResponse,
     "analysis_tables.json": schemas.RunTables,
+    "analysis_runs.json": schemas.RunList,
 }
 
 
@@ -58,6 +59,8 @@ def test_algorithm_example(path):
     assert set(analysis.indicators) == set(analysis.algorithm.outputs)
     assert all(len(column.values) == len(analysis.t) for column in analysis.indicators.values())
     assert analysis.tables == list(analysis.algorithm.tables)
+    assert set(analysis.algorithm.param_descriptions) == set(analysis.algorithm.params)
+    assert analysis.run.params == analysis.algorithm.params and analysis.run.overrides == {}
 
     tables_path = path.with_name(f"{algorithm_id}.tables.json")
     if not analysis.tables:
@@ -77,6 +80,19 @@ def test_every_algorithm_example_is_paired():
     names = {p.name for p in (EXAMPLES_DIR / "algorithms").glob("*.json")}
     ids = {p.name.removesuffix(".analysis.json") for p in ALGORITHM_EXAMPLES}
     assert names <= {f"{i}.analysis.json" for i in ids} | {f"{i}.tables.json" for i in ids}
+
+
+def test_every_param_is_described():
+    algorithms = load("catalog.json")["algorithms"] + [load("analysis_runs.json")["algorithm"]]
+    for algorithm in algorithms:
+        assert set(algorithm["param_descriptions"]) == set(algorithm["params"]), algorithm["id"]
+
+
+def test_run_list_marks_overrides():
+    body = load("analysis_runs.json")
+    defaults = body["algorithm"]["params"]
+    for run in body["runs"]:
+        assert run["overrides"] == {k: v for k, v in run["params"].items() if defaults.get(k) != v}
 
 
 def test_error_example_shape():
