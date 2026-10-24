@@ -1,89 +1,54 @@
-# Data pipeline and point-in-time contracts
+# CSV ingestion and Tiger Data pipeline
 
-## Sources (Elexon Insights API)
+## Source and handoff
 
-Base API: `https://data.elexon.co.uk/bmrs/api/v1` (confirm actual request paths/parameters using the linked documentation before implementing). Elexon's developer portal describes its APIs as public without an API key; cache results locally for reliability.
+Reuse the Elexon API exporter already being implemented by the team. CSV files are the initial handoff into the backend; the dashboard reads through the backend API rather than opening CSVs directly.
 
-| Purpose | Dataset / documented endpoint | Important handling |
+Expected datasets are imbalance settlement prices, wind forecasts and demand forecasts. Wind outturn is optional for retrospective charts. The exporter owner must provide one real sample per dataset and document actual column names, units, timezone, publication timestamps, identifiers and revision semantics before ingestion is finalised.
+
+Source catalogue: [Elexon Insights API](https://bmrs.elexon.co.uk/api-documentation/endpoint). Existing candidate datasets are DISEBSP (system prices), WINDFOR (wind forecasts), NDF (demand) and optionally FUELHH (outturn). These are source candidates; verify mappings against actual exports during implementation.
+
+## Ingestion flow
+
+1. Read a completed CSV file and validate its required columns and types.
+2. Normalise names, explicit units and timestamps; reject or report invalid rows.
+3. Record an import batch with filename, content hash, source, extraction time and row counts.
+4. Insert/upsert records into Tiger Data in a transaction using dataset-specific identities.
+5. Record accepted/rejected counts, coverage and completion status; run analysis only after a successful import.
+
+Repeated imports must be safe. Preserve different forecast publication versions rather than overwriting them with the newest forecast. For revised settlement prices, retain settlement-run/version information when supplied; otherwise explicitly document that the export contains only the latest retrospective outcome.
+
+## Proposed logical tables
+
+These fields describe the application contract, not exact CSV column names. Final database migrations depend on real samples.
+
+| Table | Important fields | Identity / handling |
 |---|---|---|
-| **Target:** GB imbalance system prices | [DISEBSP — `/balancing/settlement/system-prices/{settlementDate}`](https://bmrs.elexon.co.uk/api-documentation/endpoint/balancing/settlement/system-prices/%7BsettlementDate%7D) | Returns the latest available settlement run per period; its historical revision state is *not* necessarily what was available in real time. Treat as retrospective labels. |
-| Forecasted wind generation | [WINDFOR `/forecast/generation/wind/history`](https://bmrs.elexon.co.uk/api-documentation/endpoint/forecast/generation/wind/history), [evolution](https://bmrs.elexon.co.uk/api-documentation/endpoint/forecast/generation/wind/evolution) | Preserve each `publishTime` and the forecast delivery interval; don't collapse to latest when training. |
-| Day-ahead demand forecasts | [NDF `/datasets/NDF`](https://bmrs.elexon.co.uk/api-documentation/endpoint/datasets/NDF) and [demand history](https://bmrs.elexon.co.uk/api-documentation/endpoint/forecast/demand/day-ahead/history) | Preserve published versions; choose one demand definition consistently. |
-| Retrospective wind outturn | [FUELHH `/datasets/FUELHH`](https://bmrs.elexon.co.uk/api-documentation/endpoint/datasets/FUELHH) | For analysis/chart labels only, not future prediction features. |
+| `import_batches` | batch ID, dataset, filename/hash, extracted/imported times, status, counts | Identify already imported content; track failures |
+| `wind_forecasts` | settlement date/period, delivery start UTC, publication UTC, wind MW, source, batch ID | Delivery + publication + source and any source record identifier |
+| `demand_forecasts` | settlement date/period, delivery start UTC, publication UTC, demand MW, source, batch ID | Preserve versions and demand definition |
+| `settlement_prices` | settlement date/period, delivery start UTC, price GBP/MWh, settlement run/version if available, source, batch ID | Explicit rule for versioned records or latest-only upserts |
+| `analysis_runs` | run ID, algorithm ID/version, parameters, input batches, time range, cutoff/mode, completion time | Makes results reproducible |
+| `analysis_results` | run ID, settlement date/period, delivery start UTC, indicator name, value, unit/status | Run + period + indicator; missing differs from zero |
 
-Alternative forecast-specific endpoints such as `/forecast/generation/wind/latest` have their own filtering semantics: **don't assume `latest` means latest as of a past cutoff without testing**. Elexon's WINDFOR documentation describes multiple forecast updates per day, motivating as-of joins.
+Use PostgreSQL `TIMESTAMPTZ` for instants. Index delivery times and common date-range filters. Configure Tiger Data time-series tables for the main time-series queries once the schema is confirmed; unique indexes must include any time partition column. Show a useful SQL time-window query or aggregation in the demo. Continuous aggregates and compression are optional, not prerequisites.
 
-## Minimal data model
+## Time and historical availability
 
-Retain raw API JSON (or other source format) in a local cache, then normalise into tables:
+Use `(settlement_date, settlement_period)` as the business identity and UTC for instants. GB settlement days contain 46, 48 or 50 periods; avoid fixed 48-slot arrays and naive local-time joins. The hackathon's 25 October 2026 clock-change day is a relevant edge case. See [Elexon settlement guidance](https://www.elexon.co.uk/bsc/settlement/).
 
-```text
-price_outcomes(
-  settlement_date DATE, settlement_period INT,
-  price_gbp_per_mwh FLOAT, source_dataset TEXT, extracted_at_utc TIMESTAMP
-)
-wind_forecasts(
-  settlement_date DATE, settlement_period INT,
-  delivery_start_utc TIMESTAMP, published_at_utc TIMESTAMP,
-  forecast_wind_mw FLOAT, source_dataset TEXT
-)
-demand_forecasts(
-  settlement_date DATE, settlement_period INT,
-  delivery_start_utc TIMESTAMP, published_at_utc TIMESTAMP,
-  forecast_demand_mw FLOAT, source_dataset TEXT
-)
-wind_outturn(
-  settlement_date DATE, settlement_period INT,
-  actual_wind_mw FLOAT
-)
-features(
-  settlement_date, settlement_period, delivery_start_utc,
-  prediction_cutoff_utc, forecast_wind_mw, wind_revision_6h_mw,
-  wind_revision_24h_mw, forecast_demand_mw, residual_demand_mw,
-  wind_share_of_demand, local_hour, weekday, month,
-  target_price_gbp_per_mwh
-)
-```
+Retain publication timestamps separately from delivery and ingestion timestamps. For a declared historical cutoff, select the newest forecast published by that cutoff for the same delivery period. Do not substitute ingestion time for publication time. If versions or timestamps are unavailable, describe the view as retrospective and disclose the limitation.
 
-These are **logical** fields, not a claim of exact API response column names. Inspect samples and map source units, timezone, period numbers and publication time before loading. Deduplicate source records by stable key + publication timestamp, and flag ambiguous duplicates rather than silently averaging.
+## Quality and configuration
 
-## Join algorithm
+- Check duplicate identities, date/period validity, units and missing-data coverage.
+- Preserve negative prices and missing values; do not silently replace either with zero.
+- Confirm revisions compare forecasts for the same delivery interval.
+- Keep raw CSV exports available locally for debugging; ignore large exports and credentials in Git.
+- Commit only a small redistribution-permitted demo fixture with source and extraction notes.
+- Use server-side database configuration, for example `DATABASE_URL`; commit placeholders only.
+- Import at startup or via an explicit command initially. Scheduling and direct API ingestion can wait.
 
-For each target period `(D, period)`:
+## Cached demo fallback
 
-1. Derive `prediction_cutoff` = **18:00 Europe/London on D−1**, converted to UTC with an IANA timezone library.
-2. For that target delivery period, select the **newest wind forecast with `published_at_utc <= prediction_cutoff_utc`**.
-3. Similarly select the latest demand forecast known by that cutoff.
-4. Calculate a 6h / 24h *revision* only when there is a real older published wind forecast whose release is at/before the relevant historical reference cutoff. Clearly document the meaning (e.g. difference between latest forecast as of cutoff and latest forecast as of cutoff−6h for the **same delivery period**). Missing revisions remain missing, not zero by default.
-5. Derive `residual_demand_mw = forecast_demand_mw - forecast_wind_mw` and wind fraction, guarding against zero/missing demand.
-6. Add calendar features derived from the **target** settlement period without consulting future outcomes.
-7. Attach the latest available *retrospective* system price as the training label, never as a prediction-time input.
-
-**Do not** use final actual wind, final imbalance price, or a forecast revised after cutoff as an input. Avoid lagged settlement prices in the MVP unless their exact publication availability can be proven.
-
-## GB settlement periods and DST
-
-The identity of a GB settlement period is the **settlement date + numbered settlement period**, not simply a naive local clock timestamp. Official Elexon guidance specifies 46 periods on the spring transition, 50 on the autumn transition, and 48 on ordinary days. The hackathon weekend includes the autumn transition on **25 October 2026**; this is directly relevant to demo dates. Store UTC instants, zone-aware local labels, and preserve repeated local times. Do **not** assume 48 rows per day or use a naive `(local date, HH:MM)` key. [Elexon settlement guidance](https://www.elexon.co.uk/bsc/settlement/).
-
-## Quality gates
-
-- [ ] Confirm chosen endpoint schemas with at least one sampled response per dataset; document field/unit mapping.
-- [ ] One label per valid `(settlement_date, settlement_period)`; no duplicated scoring rows.
-- [ ] Unit conversions to MW and GBP/MWh are explicit and tested.
-- [ ] No input `published_at_utc` exceeds its row's prediction cutoff.
-- [ ] Revisions compare forecasts **for the same target period**, not different deliveries.
-- [ ] Record missingness by feature/date; do not silently backfill with future revisions.
-- [ ] Test normal (48) and DST-short/long (46/50) settlement days.
-- [ ] Write deterministic Parquet outputs + source-fetch cache; demo can run offline.
-
-## Suggested repository paths
-
-```text
-data/raw/             # ignored download cache
-data/processed/      # ignored normalized tables
-data/demo/           # small redistribution-safe, versioned fixture if permitted
-src/data/            # API client and normalization
-src/features/        # as-of joins and leakage tests
-```
-
-Only commit example/sample data if its terms and size are suitable; do not commit secrets or huge API extracts.
+Export a small set of source series and real analysis results from one completed run. The backend should be able to serve this cache if the hosted database is unavailable, and the UI must label cached mode and data freshness. Tiger Data remains the normal runtime store; the cache is a demo fallback.

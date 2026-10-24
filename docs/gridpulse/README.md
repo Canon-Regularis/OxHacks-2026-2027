@@ -1,60 +1,57 @@
-# GridPulse — GB electricity imbalance-price risk predictor
+# GridPulse — electricity-market analysis dashboard
 
-**Status:** OxHack 2026 proposal, not an implemented or validated forecasting system.
-**Team:** 3 developers. **Build window:** ~48 hours. **Suggested stack:** Python, Elexon Insights API, Parquet/DuckDB, LightGBM, Streamlit, Plotly.
+**Status:** revised implementation plan, not a delivered system. **Team:** 3 developers. **Build window:** 25 hours.
 
-## The idea
+## Project overview
 
-Predict **extreme positive and negative GB electricity imbalance settlement prices** using forecasts of wind generation and electricity demand, especially **revisions to wind forecasts**. Demonstrate the model with a settlement-period risk heatmap, a historical replay, and a hypothetical wind-shock slider.
+GridPulse brings together GB electricity wind forecasts, demand forecasts and imbalance settlement prices. The backend applies the team's existing algorithms, and a polished frontend helps users explore the resulting indicators, changing conditions and historical events.
 
-> **Pitch:** “When wind forecasts change, electricity markets must react. GridPulse shows when Britain's imbalance settlement prices are at heightened risk of extremes, what information informed the alert, and how the risk changes under hypothetical wind scenarios.”
+**Pitch:** “GridPulse turns electricity-market data into an interactive view of changing wind, demand and price conditions, with advanced analysis that users can inspect.”
 
-**Correct framing:** The target is the *imbalance settlement price*, not a prediction of grid failure or a measure of actual physical grid stability. Risk probabilities are model estimates, not guaranteed events or trading advice.
+## Architecture and technology roles
 
-## Core research question
+```text
+Elexon API → CSV exporter → backend importer → Tiger Data
+                                                ↓
+                                     backend analysis algorithms
+                                                ↓
+                                           backend API
+                                                ↓
+                                        frontend dashboard
 
-**Do historical revisions to published wind-generation forecasts improve out-of-sample classification of extreme GB imbalance prices beyond calendar, demand and the latest wind forecast?**
+Extension: user question → Gemini agent → backend data/analysis tools → answer
+Hosting: Vultr for the application; Tiger Data remains the database service.
+Optional: Snowflake API integration after a useful role is established.
+```
 
-The minimum scientifically useful result is a chronological comparison of:
+CSV is the current upstream handoff; reuse the exporter already being built. Tiger Data is the central application store. Keep database access and algorithms in the backend; the frontend consumes its API. Choose frontend/backend frameworks based on team familiarity in the first hour.
 
-1. **A:** calendar + point-in-time demand forecast;
-2. **B:** A + latest point-in-time wind forecast;
-3. **C:** B + point-in-time wind forecast revisions.
+## MVP acceptance criteria
 
-It is a valid result if C does *not* outperform B. Never pre-claim an improvement.
+1. Real exported CSV data can be imported repeatedly into Tiger Data without duplicate logical records.
+2. The backend runs the existing algorithms on stored data and returns documented outputs.
+3. The dashboard shows a selected period's forecasts, prices and available algorithm indicators with clear units.
+4. Users can explore a historical event and inspect its underlying data and analysis.
+5. Freshness, missing data, algorithm identity and limitations are visible.
+6. A Vultr-hosted application is reachable, with a local cached demo available if hosting or connectivity fails.
 
-## Minimum viable product — ordered
+Visual polish is a core goal. Prioritise a coherent overview and useful interactions before adding more screens.
 
-| Order | Feature | Done when |
-|---|---|---|
-| 1 | Settlement price history | A clean settlement-date/period price-label table exists. |
-| 2 | Wind forecast versions | Forecasts retain publication times and support as-of selection. |
-| 3 | Forecast demand and residual demand | Matching demand estimates exist or missingness is documented. |
-| 4 | Baseline + two LightGBM classifiers | Both positive and negative extreme-event scores run end-to-end. |
-| 5 | Time-ordered validation | A held-out result with PR-AUC, precision, recall and event rates is reported. |
-| 6 | Dashboard heatmap | A user can view per-period model risk for a selected day. |
-| 7 | Historical event replay | Predictions made using earlier-known inputs are compared with actual prices. |
-| 8 | Wind forecast vs outturn analysis | Retrospective error chart, never used as forward-looking input. |
-| 9 | Offline reproducible demo | Cached data/model and one documented launch path work without a live API. |
+## Analysis scope
 
-**Suggested MVP prediction protocol:** For a local GB settlement day **D**, use only data published by **18:00 Europe/London on D−1** to predict each settlement period on D. Handle the cutoff in UTC internally. This is a project design choice, not a claim about official market deadlines.
+No model training is part of this build. Do not promise classifier probabilities, learned thresholds, calibration, SHAP explanations or model comparisons. The algorithm owner defines supported calculations, required history, parameters, score meanings and runtime constraints. Suggested dashboard signals are candidates until that contract is confirmed.
 
-## What's in this document set
+Keep retrospective observations distinguishable from forecasts. If presenting an alert as having been available historically, use only inputs published by its declared analysis cutoff. Otherwise label the view as retrospective analysis.
 
-- [DATA_PIPELINE.md](DATA_PIPELINE.md) — sources, feature schema, point-in-time joins, DST and quality checks.
-- [MODEL_AND_EVALUATION.md](MODEL_AND_EVALUATION.md) — labels, baselines, LightGBM, validation and ablations.
-- [BUILD_AND_DEMO.md](BUILD_AND_DEMO.md) — developer ownership, 48-hour milestones, dashboard and demo script.
-- [RESEARCH_AND_EXTENSIONS.md](RESEARCH_AND_EXTENSIONS.md) — papers, high-impact additions, cuts and caveats.
+## Extensions and hosting
 
-## Hard guardrails
+- **Gemini API:** backend agent calling existing data and analysis tools to answer higher-level questions, with supporting periods and results.
+- **Vultr:** deploy the application early enough to catch configuration and network issues; avoid creating a separate infrastructure project.
+- **Snowflake API:** optional sponsor-track exploration. Decide on a useful role, such as comparing a hosted model's analysis of the same evidence, before implementation. No duplicate data platform is required for the MVP.
 
-- No forecast, observation or revised price that was **unavailable at the prediction cutoff** may enter an input row.
-- Define extreme-price thresholds using **training data only**, then freeze them for validation/test.
-- Keep train/validation/test in chronological order; do not shuffle settlement periods.
-- Never present a synthetic slider formula as the trained model's output.
-- Do not claim the model is profitable, causal, calibrated or robust until the relevant evaluation supports it.
-- For settlement periods, use `(settlement_date, settlement_period)` as canonical identity: Great Britain has **46/48/50 periods** on clock-change/normal days, respectively.
+## Document map
 
-## Go/no-go gate
-
-By the first half of the hackathon, prioritise **cached real data + leakage-safe baseline + real scored predictions visible in the UI**. If blocked on historical version data, reduce scope to a transparent baseline model with fewer features and document limitations; do not silently use later information.
+- [DATA_PIPELINE.md](DATA_PIPELINE.md): CSV import, database tables and data quality.
+- [ALGORITHMS_AND_ANALYSIS.md](ALGORITHMS_AND_ANALYSIS.md): integration contracts, backend API and validation.
+- [BUILD_AND_DEMO.md](BUILD_AND_DEMO.md): ownership, 25-hour checkpoints, dashboard and hosting.
+- [RESEARCH_AND_EXTENSIONS.md](RESEARCH_AND_EXTENSIONS.md): Gemini agent, optional Snowflake role and limitations.
