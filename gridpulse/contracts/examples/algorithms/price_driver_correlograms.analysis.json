@@ -10,22 +10,23 @@
     ],
     "outputs": {},
     "tables": {
+      "sample": "The gap-free stretch of the range the correlations use: its first and last period, its length and how many periods were left out",
       "acf_price": "Price autocorrelation at lags 1..K with a Bartlett band",
       "pacf_price": "Price partial autocorrelation at lags 1..K with a +/- z/sqrt(n) band",
       "ccf_residual_demand": "corr(price[t+k], residual_demand[t]) at lags -K..K; k > 0 means demand leads",
       "ccf_wind": "corr(price[t+k], wind_forecast[t]) at lags -K..K; k > 0 means wind leads"
     },
-    "limitations": "Retrospective association over the whole range, not causation. The cross-correlation band assumes white noise, so it overstates significance between autocorrelated series.",
+    "limitations": "Retrospective association over the whole stretch, not causation. The cross-correlation band assumes white noise, so it overstates significance between autocorrelated series. Uses the longest gap-free stretch of the range (see the sample table); a range too short for the lags gives empty tables.",
+    "params": {
+      "max_lag": 96,
+      "alpha": 0.05
+    },
     "datasets": [
       "elexon_ndf",
       "elexon_system_prices",
       "elexon_windfor"
     ],
     "version": "0.1.0",
-    "params": {
-      "max_lag": 96,
-      "alpha": 0.05
-    },
     "param_descriptions": {
       "max_lag": "Largest lag in periods (96 = 48 h); cross-correlations cover -max_lag to +max_lag",
       "alpha": "Significance level of the band (0.05 = 95% band)"
@@ -83,6 +84,7 @@
   "indicators": {},
   "warnings": [],
   "tables": [
+    "sample",
     "acf_price",
     "pacf_price",
     "ccf_residual_demand",

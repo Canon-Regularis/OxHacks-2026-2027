@@ -5,16 +5,10 @@
     "algorithm_id": "price_forecast_backtest",
     "algorithm_version": "0.1.0",
     "params": {
-      "initial": 1344,
-      "window": 1344,
       "horizon": 48,
-      "step": 48,
+      "window": 1344,
       "max_folds": 60,
       "season_length": 48,
-      "levels": [
-        0.8,
-        0.95
-      ],
       "models": {
         "seasonal_naive": {
           "season_length": 48
@@ -250,14 +244,14 @@
           "2026-09-14T23:00:00Z",
           "2026-08-17T23:00:00Z",
           1344,
-          "insufficient_data",
-          "training window has 3 missing periods",
+          "failed",
+          "Orchid ETSForecaster returned non-finite forecasts",
           null
         ]
       ]
     },
     "fold_params": {
-      "description": "Fitted parameters per model and origin (ETS smoothing weights, ARIMA coefficients and sigma2)",
+      "description": "Fitted parameters per model and origin (ETS smoothing weights, ARIMA coefficients, sigma2 and AICc)",
       "columns": [
         "model",
         "origin_utc",
@@ -280,19 +274,19 @@
         [
           "arima",
           "2026-08-31T23:00:00Z",
-          "ar_1",
+          "ar.L1",
           0.71
         ],
         [
           "arima",
           "2026-08-31T23:00:00Z",
-          "ar_2",
+          "ar.L2",
           -0.08
         ],
         [
           "arima",
           "2026-08-31T23:00:00Z",
-          "ma_1",
+          "ma.L1",
           -0.24
         ],
         [
@@ -300,6 +294,12 @@
           "2026-08-31T23:00:00Z",
           "sigma2",
           1712.0
+        ],
+        [
+          "arima",
+          "2026-08-31T23:00:00Z",
+          "aicc",
+          9884.2
         ],
         [
           "ets",

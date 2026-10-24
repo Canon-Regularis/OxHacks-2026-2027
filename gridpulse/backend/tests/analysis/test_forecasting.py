@@ -148,7 +148,9 @@ def test_min_history_is_exact(
             3,
         ),
     ],
-    ids=repr,
+    # Named by forecaster: a lambda's repr holds its address, which differs between pytest-xdist
+    # workers and makes them disagree about which tests exist.
+    ids=["Naive", "SeasonalNaive", "Drift", "Naive2", "MovingAverage", "WeightedMovingAverage"],
 )
 def test_interval_sigma_excludes_warm_up_residuals(
     make_series: MakeSeries,
@@ -334,7 +336,9 @@ def test_zero_width_tolerance_follows_the_data_not_the_forecast() -> None:
         (ETS(trend="additive", damped=True), {"alpha", "beta", "phi"}, "analytic"),
         (ETS(seasonal="multiplicative", season_length=48), {"alpha", "gamma"}, "sqrt-horizon"),
     ],
-    ids=repr,
+    # Not repr: a set's repr order changes with the process's string hash seed, which makes
+    # pytest-xdist workers disagree about which tests exist.
+    ids=["level", "damped-trend", "multiplicative-seasonal"],
 )
 def test_ets_reports_only_fitted_components(
     make_series: MakeSeries, forecaster: Forecaster, components: set[str], method: str

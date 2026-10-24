@@ -12,13 +12,13 @@ Work merges into `main` and appears on development. Promote to production with a
 ```text
 push to main or production touching gridpulse/{backend,frontend,db,data/demo,deploy}
   → GitHub Actions (.github/workflows/deploy.yml)
-      backend tests (pytest) + frontend checks (once a package.json exists)
-      → build gridpulse-backend and gridpulse-frontend images → ghcr.io (private)
-      → SSH to the VPS: start/reload the proxy, pull images, `gridpulse migrate`, restart that
-        environment, wait for the health check
+      in parallel: backend tests (pytest -n auto), frontend checks (once a package.json exists),
+        and the gridpulse-backend and gridpulse-frontend image builds → ghcr.io (private)
+      → once all of those pass, SSH to the VPS: start/reload the proxy, pull images,
+        `gridpulse migrate`, restart that environment, wait for the health check
 ```
 
-Pull requests run the tests and build both images without pushing or deploying. A manual run (Actions → CI/CD → Run workflow) deploys only when started from `main` or `production`.
+Images build alongside the tests, so the `main` and `production` tags can move before the tests finish; deploys use the `sha-<commit>` tag and wait for the tests. Pull requests run the tests and build only the images their diff can affect (both, if it touches the workflow or `deploy/`), without pushing or deploying. A manual run (Actions → CI/CD → Run workflow) deploys only when started from `main` or `production`.
 
 ## What runs on the VPS
 
@@ -129,8 +129,11 @@ Run these on the VPS as `deploy`, from the environment's directory (`/opt/gridpu
 | Status | `docker compose ps`; `curl -s localhost:8000/api/health` (development: `8001`) |
 | Change settings | Edit `.env`, then `docker compose up -d` |
 | Run a CLI job | `docker compose run --rm backend gridpulse analyse wind_price_correlation --from 2026-07-01 --to 2026-10-23` |
+| Refresh analysis results | Automatic every three hours (*Refresh analysis* workflow). By hand: run that workflow from Actions (optionally *force*), or `docker compose exec backend gridpulse refresh` |
 
-**Offline fallback.** Recorded responses committed under `gridpulse/data/demo/responses/` are built into the backend image. To serve them, set `GRIDPULSE_MODE=replay` in that environment's `.env` and run `docker compose up -d`. Record locally and commit the files; responses recorded inside the container are lost on the next deploy.
+**Analysis results** are computed per environment: each database only has the runs made against it. The *Refresh analysis* workflow ([`refresh-analysis.yml`](../../.github/workflows/refresh-analysis.yml)) runs `gridpulse refresh` inside each environment's backend container every three hours and on demand. It reruns only what is stale, so an environment shows results within three hours of a deploy or data load. It uses the same SSH settings as the deploy job. If the production environment requires approval, each scheduled run waits for it.
+
+**Offline fallback.** Recorded responses committed under `gridpulse/data/demo/responses/` are built into the backend image. [`scripts/record_demo.py`](../scripts/record_demo.py) records them without clicking through a UI. To serve them, set `GRIDPULSE_MODE=replay` in that environment's `.env` and run `docker compose up -d`. Record locally and commit the files; responses recorded inside the container are lost on the next deploy.
 
 ## Running one environment locally
 

@@ -262,6 +262,25 @@ def find_run(
     return rows[0] if rows else None
 
 
+def served_runs(conn: Connection, algorithms: list[tuple[str, str, dict]]) -> dict[str, dict]:
+    """find_run without a range for many algorithms in one query: algorithm id -> its latest
+    successful retrospective run with exactly these params. `algorithms` is (id, version, params)."""
+    if not algorithms:
+        return {}
+    ids, versions, params = zip(*algorithms, strict=True)
+    columns = ", ".join(f"r.{column.strip()}" for column in _RUN_COLUMNS.split(","))
+    rows = _dicts(
+        conn,
+        f"SELECT DISTINCT ON (r.algorithm_id) {columns} FROM gridpulse.analysis_runs r"
+        " JOIN unnest(%(ids)s::text[], %(versions)s::text[], %(params)s::jsonb[]) AS a(id, version, params)"
+        "   ON r.algorithm_id = a.id AND r.algorithm_version = a.version AND r.params = a.params"
+        " WHERE r.status = 'succeeded' AND r.cutoff_utc IS NULL"
+        " ORDER BY r.algorithm_id, r.finished_at_utc DESC, r.run_id DESC",
+        {"ids": list(ids), "versions": list(versions), "params": [Jsonb(p) for p in params]},
+    )
+    return {row["algorithm_id"]: row for row in rows}
+
+
 def get_run(conn: Connection, run_id: int) -> dict | None:
     rows = _dicts(
         conn,

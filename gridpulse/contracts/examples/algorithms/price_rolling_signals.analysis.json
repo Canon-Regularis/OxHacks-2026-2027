@@ -21,62 +21,17 @@
     },
     "tables": {},
     "limitations": "Trailing windows only, so each value was knowable at the end of its period. A window that touches a missing period gives null; the EWMA restarts after a gap. price_change_48 counts 48 elapsed half-hours, not the same clock time, across a clock change. Descriptive, not a forecast.",
+    "params": {},
     "datasets": [
       "elexon_system_prices"
     ],
     "version": "0.1.0",
-    "params": {
-      "window": 48,
-      "weights": "linear 1..48",
-      "ewma_span": 48,
-      "quantile_window": 336,
-      "quantiles": [
-        0.1,
-        0.9
-      ],
-      "differences": [
-        {
-          "lag": 1,
-          "order": 1
-        },
-        {
-          "lag": 48,
-          "order": 1
-        }
-      ]
-    },
-    "param_descriptions": {
-      "window": "Trailing window in periods for mean, weighted mean, variance, std, median and RMS (48 = 24 h)",
-      "weights": "Weights of the weighted mean, oldest to newest",
-      "ewma_span": "EWMA span in periods; alpha = 2 / (span + 1)",
-      "quantile_window": "Trailing window in periods for the percentiles (336 = 7 days)",
-      "quantiles": "Percentiles reported, as fractions",
-      "differences": "Lag and order of each change series (lag 48 = same period yesterday, counted in half-hours)"
-    },
+    "param_descriptions": {},
     "latest_run": {
       "run_id": 23,
       "algorithm_id": "price_rolling_signals",
       "algorithm_version": "0.1.0",
-      "params": {
-        "window": 48,
-        "weights": "linear 1..48",
-        "ewma_span": 48,
-        "quantile_window": 336,
-        "quantiles": [
-          0.1,
-          0.9
-        ],
-        "differences": [
-          {
-            "lag": 1,
-            "order": 1
-          },
-          {
-            "lag": 48,
-            "order": 1
-          }
-        ]
-      },
+      "params": {},
       "overrides": {},
       "datasets": {
         "elexon_system_prices": "2026-10-24T14:10:00Z"
@@ -91,26 +46,7 @@
     "run_id": 23,
     "algorithm_id": "price_rolling_signals",
     "algorithm_version": "0.1.0",
-    "params": {
-      "window": 48,
-      "weights": "linear 1..48",
-      "ewma_span": 48,
-      "quantile_window": 336,
-      "quantiles": [
-        0.1,
-        0.9
-      ],
-      "differences": [
-        {
-          "lag": 1,
-          "order": 1
-        },
-        {
-          "lag": 48,
-          "order": 1
-        }
-      ]
-    },
+    "params": {},
     "overrides": {},
     "datasets": {
       "elexon_system_prices": "2026-10-24T14:10:00Z"

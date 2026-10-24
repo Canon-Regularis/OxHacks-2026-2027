@@ -100,6 +100,7 @@ Before editing the frontend, read [its README](gridpulse/frontend/README.md) for
 - [Overview](docs/gridpulse/README.md)
 - [Data pipeline](docs/gridpulse/DATA_PIPELINE.md)
 - [Algorithms and analysis contracts](docs/gridpulse/ALGORITHMS_AND_ANALYSIS.md)
+- [Modelling notes: first results, adapter choices, open questions](docs/gridpulse/MODELLING_NOTES.md)
 - [Build and demo plan](docs/gridpulse/BUILD_AND_DEMO.md)
 - [Extensions](docs/gridpulse/RESEARCH_AND_EXTENSIONS.md)
 - [Sponsor reference](docs/sponsors.md)
