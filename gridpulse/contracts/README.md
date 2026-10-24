@@ -19,6 +19,17 @@ The frontend reference, covering every field, parameter and error code, is [FRON
 
 Conventions: `from`/`to` are inclusive settlement dates (`YYYY-MM-DD`). Instants are UTC with a `Z` suffix. Each series is a `values` array aligned with the shared `t` array, with `null` for missing data, which is never zero. At 30m resolution the response includes `settlement_date`/`settlement_period` arrays. Never assume 48 periods per day.
 
+Every example carries a `_fixture` label and contains synthetic values only. Real responses do not have that key. Update examples and `schemas.py` together.
+
+
+## Overview weather context
+
+- `GET /api/weather/locations` → `{locations: [{id,label,latitude,longitude}], warnings}`.
+- `GET /api/weather?date=YYYY-MM-DD&location=<id>` → `{location, points, source, warnings, window_hours:168}`.
+- Each point: `t` (completed UTC hour end), `temperature` (°C), `pressure` (MSL hPa), `temperature_change`, `pressure_change`, `price_change` (£/MWh), `temperature_correlation`, `pressure_correlation`, `temperature_samples`, `pressure_samples`.
+
+All numeric values except counts may be null. Correlations compare hourly changes over seven days, require 24 valid pairs and never include future hours. Source is stored Open-Meteo archived forecasts, not verified as-of observations. Unknown locations return `unknown_weather_location` (404); missing migration returns `weather_not_configured` (503). See runtime schemas and weather-analysis tests for the executable contract.
+
 ## Planned algorithm adapters
 
 `examples/algorithms/` holds a `/api/analysis` response (`<id>.analysis.json`) and, where the algorithm declares tables, a `/api/analysis/runs/{run_id}/tables` response (`<id>.tables.json`) for each adapter planned around the P0 Orchid modules. Together they cover every public method in the 14 P0 families (see [the P0 table](../../docs/gridpulse/ALGORITHMS_AND_ANALYSIS.md#p0-algorithms-issue-6)). They are proposals to build the frontend against; the adapters are not implemented yet, and ids, outputs and table columns may change when they are.
