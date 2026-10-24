@@ -145,7 +145,7 @@ The P0 methods reach the API through eight algorithms in `analysis/algorithms/`.
 | `price_residual_diagnostics` | `residual_diagnostics` on `ETS` and `ARIMA` residuals | any; fits the latest 56 gap-free days | 18 s for 53 days |
 | `calendar_fourier_terms` | `fourier_terms` | any | 17 s for 61 days |
 
-The three backtests share `_backtest.py`, which backtests one origin at a time so that a missing price excludes only the folds containing it (status `missing_data`). The correlograms and diagnostics use the longest gap-free stretch of the range and report it in a `sample` table. Run them with `gridpulse analyse <id> --from … --to …`; see the frontend's [display guide](ALGORITHM_DISPLAY.md) for how each is shown.
+The three backtests share `_backtest.py`, which backtests one origin at a time so that a missing price excludes only the folds containing it (status `missing_data`). The correlograms and diagnostics use the longest gap-free stretch of the range and report it in a `sample` table. Run them with `gridpulse analyse <id> --from … --to …`; see the frontend's [display guide](ALGORITHM_DISPLAY.md) for how each is shown. First results, the modelling choices built into these adapters and the open questions are in [MODELLING_NOTES.md](MODELLING_NOTES.md).
 
 ## Execution and result format
 

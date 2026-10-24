@@ -27,11 +27,14 @@ ruff check . && ruff format --check . && mypy       # strict lint and types for 
 gridpulse migrate                                   # create/update the gridpulse schema and views (safe to repeat)
 gridpulse analyse wind_price_correlation --from 2026-07-01 --to 2026-10-23
 gridpulse algorithms                                # list registered algorithms
+gridpulse refresh                                   # rerun stale algorithms up to the latest settled day
 uvicorn gridpulse.main:app --reload                 # API on :8000, docs at /docs
 ```
 
 Source data is loaded into the `raw` schema by the team's loader; the backend only reads it, through the `gridpulse.*` views.
 
-Offline demo: run once with `GRIDPULSE_MODE=record`, click through the demo, then start with `GRIDPULSE_MODE=replay` (no database needed).
+Offline demo: run once with `GRIDPULSE_MODE=record` and click through the demo, or record without a UI using [`../scripts/record_demo.py`](../scripts/record_demo.py); then start with `GRIDPULSE_MODE=replay` (no database needed).
+
+`gridpulse refresh` reruns each algorithm over its standard window (see `analysis/refresh.py`) when its served run does not cover the latest complete settlement day or its input data has been loaded again since; otherwise it skips it. A full rerun takes about 3 minutes; with nothing stale it takes seconds. The *Refresh analysis* workflow runs it in both environments every three hours.
 
 Keep routes thin, SQL in `db/queries.py`, orchestration in `analysis/service.py` and calculations in `analysis/algorithms/`. See the [repository structure](../../docs/gridpulse/REPOSITORY_STRUCTURE.md) and [API contract](../contracts/README.md).
