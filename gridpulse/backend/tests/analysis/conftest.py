@@ -1,10 +1,12 @@
-"""Series builders shared by the adapter tests."""
+"""Inputs shared by the analysis tests: half-hourly series and algorithm input frames."""
 
 import math
 import random
 from collections.abc import Callable
 from datetime import UTC, date, datetime, timedelta
 
+import numpy as np
+import pandas as pd
 import pytest
 
 from gridpulse.analysis.algorithms.series import HALF_HOUR, LONDON, HalfHourlySeries
@@ -70,6 +72,7 @@ def make_series() -> Callable[..., HalfHourlySeries]:
 
     return build
 
+
 @pytest.fixture
 def input_frame() -> pd.DataFrame:
     """Two synthetic weeks shaped exactly like build_input_frame output, with some gaps."""
@@ -86,5 +89,6 @@ def input_frame() -> pd.DataFrame:
         rng.uniform(1_000, 15_000, n),  # wind_outturn_mw
         rng.uniform(20_000, 40_000, n),  # demand_mw
         rng.uniform(20_000, 40_000, n),  # demand_outturn_mw
+        strict=True,
     )
     return input_frame_from_rows(list(rows))

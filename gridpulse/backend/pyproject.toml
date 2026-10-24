@@ -8,27 +8,23 @@ version = "0.1.0"
 description = "GridPulse data ingestion and analysis backend"
 requires-python = ">=3.11"
 dependencies = [
-    "tzdata",  # zoneinfo data for hosts without a system database (Windows, slim containers)
-]
-
-[project.optional-dependencies]
-dev = [
-    "mypy>=2.4",
-    "numpy>=2.3",  # only for the differential oracles in the ported Orchid suites
-    "pytest>=9.1",
-    "ruff>=0.17",
-    "scipy>=1.16",  # only for the differential oracles in the ported Orchid suites
-]
     "fastapi>=0.115",
     "uvicorn[standard]>=0.30",
     "psycopg[binary,pool]>=3.2",
     "pydantic-settings>=2.4",
     "pandas>=2.2",
     "numpy>=1.26",
+    "tzdata",  # zoneinfo data for hosts without a system database (Windows, slim containers)
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "httpx>=0.27"]
+dev = [
+    "httpx>=0.27",
+    "mypy>=2.4",
+    "pytest>=9.1",
+    "ruff>=0.17",
+    "scipy>=1.16",  # only for the differential oracles in the ported Orchid suites
+]
 
 [project.scripts]
 gridpulse = "gridpulse.cli:main"
@@ -41,10 +37,19 @@ testpaths = ["tests"]
 addopts = ["--import-mode=importlib", "--strict-markers", "--strict-config", "-ra"]
 xfail_strict = true
 
+# ruff and mypy are strict for the Orchid adapter layer; the rest of the backend predates them.
 [tool.ruff]
 line-length = 100
+include = ["src/gridpulse/analysis/algorithms/**/*.py", "tests/analysis/**/*.py"]
 # Orchid modules and their suites are vendored verbatim.
-extend-exclude = ["src/gridpulse/analysis/algorithms/orchid/[a-z]*.py", "tests/analysis/orchid"]
+extend-exclude = [
+    "src/gridpulse/analysis/algorithms/orchid/[a-z]*.py",
+    "tests/analysis/orchid",
+    "src/gridpulse/analysis/algorithms/__init__.py",
+    "src/gridpulse/analysis/algorithms/example_*.py",
+    "src/gridpulse/analysis/algorithms/wind_analysis.py",
+    "tests/analysis/test_algorithms.py",
+]
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "B", "UP", "SIM", "C4", "PT", "RUF", "N", "RET", "PIE"]
@@ -54,8 +59,17 @@ ignore = ["E501"]  # the formatter owns line length
 python_version = "3.11"
 strict = true
 mypy_path = "src"
-files = ["src", "tests"]
-exclude = ["^tests/analysis/orchid/"]
+files = ["src/gridpulse/analysis/algorithms", "tests/analysis"]
+exclude = [
+    "^tests/analysis/orchid/",
+    "^tests/analysis/test_algorithms\\.py$",
+    "^src/gridpulse/analysis/algorithms/(__init__|example_\\w+|wind_analysis)\\.py$",
+]
+follow_imports = "silent"  # check the modules above, not the backend code they import
+
+[[tool.mypy.overrides]]
+module = ["pandas", "pandas.*"]  # no stubs are installed
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = [
