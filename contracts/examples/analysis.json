@@ -1,0 +1,10 @@
+{
+  "is_fixture": true,
+  "mode": "fixture",
+  "from": "2026-10-24",
+  "to": "2026-10-24",
+  "data_updated_at_utc": null,
+  "run": null,
+  "periods": [],
+  "warnings": ["Synthetic empty response for UI development; no analysis has run."]
+}

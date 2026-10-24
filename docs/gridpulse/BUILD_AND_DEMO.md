@@ -39,23 +39,11 @@ Use Vultr as the application hosting target and Tiger Data as the managed databa
 
 Keep `DATABASE_URL`, `GEMINI_API_KEY` and any optional Snowflake credentials on the server. Configure frontend/backend routing, permitted frontend origins where needed, database connectivity and HTTPS for the public app. Document deployed URL, deployment/update steps and local startup commands in the root README. Verify reboot/restart behaviour and test the URL from another device before relying on it for judging.
 
-## Suggested repository layout
+## Repository layout
 
-```text
-frontend/             # Dashboard and API client
-backend/              # API, ingestion, database access, algorithm adapters
-backend/algorithms/   # Existing implementations or integration wrappers
-backend/tests/        # Meaningful ingestion and algorithm contract checks
-db/                   # Schema/migrations
-scripts/              # Import, demo export and deployment helpers
-data/demo/            # Small permitted real-data cache with provenance
-data/raw/             # Ignored CSV downloads
-docs/gridpulse/       # Project plan
-.env.example          # Configuration placeholders
-README.md             # Exact setup, launch and demo instructions
-```
+Follow the [repository structure and request flow](REPOSITORY_STRUCTURE.md). The skeleton now exists, with frontend, backend, database migrations, shared contracts, data, scripts and deployment areas. Base modules are stubs; framework setup and application behaviour remain to be implemented.
 
-This is a proposed structure, not existing application code. Keep one repository and avoid extra services beyond the frontend, backend and database.
+The algorithm integration location is `backend/src/gridpulse/analysis/algorithms/`. The shared frontend HTTP boundary is `frontend/src/lib/api.ts`; backend routes live in `backend/src/gridpulse/api/`. Keep one repository and avoid extra services beyond the frontend, backend and database.
 
 ## Demo sequence (2–3 minutes)
 

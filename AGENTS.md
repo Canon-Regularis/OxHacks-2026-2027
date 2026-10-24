@@ -67,6 +67,10 @@ Other proposed extensions include a probabilistic scenario engine, an autonomous
 
 Preserve `(settlement_date, settlement_period)` identities, UTC instants and 46/48/50-period day support. Distinguish retrospective analysis from signals actually available at a historical cutoff. Describe scores according to the algorithm's supported meaning; do not label an arbitrary indicator as a probability.
 
+## Repository layout
+
+Follow [the repository structure and request flow](docs/gridpulse/REPOSITORY_STRUCTURE.md). Frontend code lives in `frontend/`; Python code in `backend/src/gridpulse/`; SQL migrations in `db/migrations/`; shared API examples in `contracts/`. Algorithms belong in `analysis/algorithms/` and are called through `analysis/service.py`. Keep HTTP, database access and pure calculations separate. Skeleton files are not implemented features.
+
 ## Related project documents
 
 - [Overview](docs/gridpulse/README.md)

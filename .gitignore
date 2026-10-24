@@ -218,3 +218,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# GridPulse local data and frontend build outputs
+/data/raw/*
+!/data/raw/.gitkeep
+node_modules/
+/frontend/dist/
+/frontend/build/
+.env.*
+!.env.example

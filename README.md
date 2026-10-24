@@ -2,7 +2,7 @@
 
 An electricity-market analysis dashboard combining GB wind forecasts, demand forecasts and imbalance settlement prices with the team's existing analysis algorithms.
 
-**Team:** Matthew, Mark, David. **Build window:** 25 hours. **Status:** implementation plan; the documented services and features are not yet implemented in this repository.
+**Team:** Matthew, Mark, David. **Build window:** 25 hours. **Status:** repository skeleton created; application services and features are not yet implemented.
 
 ## MVP
 
@@ -29,8 +29,20 @@ No model training is planned. Algorithm formulas, score semantics and supported 
 
 Start with the [project overview](docs/gridpulse/README.md), then the [data pipeline](docs/gridpulse/DATA_PIPELINE.md), [algorithms and API contracts](docs/gridpulse/ALGORITHMS_AND_ANALYSIS.md), [25-hour build and demo plan](docs/gridpulse/BUILD_AND_DEMO.md), and [extensions](docs/gridpulse/RESEARCH_AND_EXTENSIONS.md). The [sponsor reference](docs/sponsors.md) contains background on available tracks.
 
+## Repository layout
+
+- `frontend/`: dashboard, UI components, charts and API client.
+- `backend/`: Python package for routes, ingestion, database access, algorithms and optional agent.
+- `db/migrations/`: schema changes; `contracts/`: shared API examples.
+- `data/`: ignored raw CSVs and a future cached demo; `scripts/`: operational helpers.
+- `deploy/`: Vultr configuration; `docs/`: team documentation.
+
+Follow the [full layout, ownership boundaries and request flow](docs/gridpulse/REPOSITORY_STRUCTURE.md). Workstream instructions are in [frontend/README.md](frontend/README.md) and [backend/README.md](backend/README.md).
+
 ## Setup and demo
 
-Application code, dependency manifests and launch commands are not yet present. Implementation must add exact local setup, database migration, CSV import, backend/frontend startup and Vultr deployment instructions here. Document required configuration with placeholders in `.env.example`; keep database credentials and service keys server-side.
+Base modules and a Python package manifest are present. They contain no working server, database integration or algorithms, and the frontend framework is not bootstrapped. See the backend README for optional package installation. Copy `.env.example` to a local `.env` when configuring the implementation; automatic environment loading is not yet implemented. Keep database credentials and service keys server-side.
+
+As implementations land, add exact database migration, CSV import, backend/frontend startup and Vultr deployment commands here. No runnable demo command exists yet.
 
 The demo must show which data is cached, its source and freshness, algorithm version and limitations. This is analysis of electricity prices and forecasts; indicators are not claims of grid failure or guaranteed future outcomes.
