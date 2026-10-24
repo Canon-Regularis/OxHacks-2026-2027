@@ -33,9 +33,9 @@ INPUT_COLUMNS = {
     "settlement_period": "Settlement period number, 1..46/48/50",
     "price_gbp_mwh": "Imbalance price, GBP/MWh (may be negative)",
     "niv_mwh": "Net imbalance volume, MWh",
-    "wind_mw": "Latest WINDFOR wind forecast for the period (latest by the cutoff in cutoff mode), MW",
+    "wind_mw": "WINDFOR wind forecast: latest version published before the period starts (and by the cutoff in cutoff mode), MW",
     "wind_outturn_mw": "FUELHH wind outturn (excludes embedded wind), MW",
-    "demand_mw": "Latest NDF national demand forecast for the period, MW",
+    "demand_mw": "NDF national demand forecast: latest version published before the period starts, MW",
     "demand_outturn_mw": "NESO national demand outturn (ND), MW; ~21 days in arrears",
     "residual_demand_mw": "demand_mw - wind_mw, MW",
 }

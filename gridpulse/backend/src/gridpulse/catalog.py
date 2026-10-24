@@ -26,9 +26,9 @@ SERIES: dict[str, Series] = {
     "price_min": Series("Imbalance price, bucket low", "GBP/MWh", "price_30m", "price_gbp_mwh", "min"),
     "price_max": Series("Imbalance price, bucket high", "GBP/MWh", "price_30m", "price_gbp_mwh", "max"),
     "niv": Series("Net imbalance volume", "MWh", "price_30m", "niv_mwh", "sum"),
-    "wind": Series("Wind forecast (latest WINDFOR)", "MW", "wind_30m", "wind_mw"),
+    "wind": Series("Wind forecast (WINDFOR, latest before delivery)", "MW", "wind_30m", "wind_mw"),
     "wind_outturn": Series("Wind outturn (FUELHH)", "MW", "wind_outturn_30m", "wind_outturn_mw"),
-    "demand": Series("National demand forecast (latest NDF)", "MW", "demand_30m", "demand_mw"),
+    "demand": Series("National demand forecast (NDF, latest before delivery)", "MW", "demand_30m", "demand_mw"),
     "demand_outturn": Series("National demand outturn (NESO ND)", "MW", "demand_outturn_30m", "demand_outturn_mw"),
     "residual_demand": Series("Residual demand (demand - wind forecast)", "MW", "residual_30m", "residual_demand_mw"),
 }

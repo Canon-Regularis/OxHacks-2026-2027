@@ -68,7 +68,7 @@ All paths are under `gridpulse/backend/src/gridpulse/`.
 |---|---|
 | `price_30m` | `bucket`, `price_gbp_mwh` (system sell price = the single imbalance price), `niv_mwh` |
 | `wind_forecast_vintages`, `demand_forecast_vintages` | Every published version, keyed by `delivery_start_utc`, `published_at_utc`. Each hourly WINDFOR value is applied to both settlement periods in its hour |
-| `wind_30m`, `demand_30m` | **Latest** published forecast per period (`last(value, published_at)`) |
+| `wind_30m`, `demand_30m` | **Latest version published at or before the period starts** (`last(value, published_at)`). Later versions are excluded: each WINDFOR publish re-issues the previous ~27 h, and a value published after delivery is not a forecast |
 | `wind_outturn_30m`, `demand_outturn_30m` | Outturns |
 | `residual_30m` | Latest demand forecast − latest wind forecast. This is one aggregate rather than a join, because Postgres does not carry a time filter across a join |
 | `analysis_runs`, `analysis_results` (hypertable) | Algorithm runs, and per-period results in long format |
@@ -91,7 +91,7 @@ The slow case comes from re-aggregating every NDF/WINDFOR vintage on each reques
 
 - Every instant in the database and the API is UTC (`…Z`). Periods are identified by `(settlement_date, settlement_period)`. All conversions go through `settlement.py`, which has tests for the 46/48/50-period days, including **25 Oct 2026, the hackathon weekend**.
 - API `from`/`to` are inclusive settlement dates and become `[London midnight of from, London midnight of to+1)`.
-- **Cutoff mode** (`cutoff=` on `/api/series` and `gridpulse analyse`) uses only forecast versions with `published_at_utc <= cutoff`. Prices and outturns are included only for periods that had **ended** by the cutoff. The publication delay of actuals is not modelled; for example, NESO demand arrives about 21 days late. This is the honest "what would we have known" view for the HRT predictions track. Without a cutoff, a view is retrospective and should be labelled as such.
+- **Cutoff mode** (`cutoff=` on `/api/series` and `gridpulse analyse`) uses only forecast versions with `published_at_utc <= cutoff`, and, as everywhere, published before the period starts. Prices and outturns are included only for periods that had **ended** by the cutoff. The publication delay of actuals is not modelled; for example, NESO demand arrives about 21 days late. This is the honest "what would we have known" view for the HRT predictions track. Without a cutoff, a view is retrospective and should be labelled as such.
 
 ## API
 

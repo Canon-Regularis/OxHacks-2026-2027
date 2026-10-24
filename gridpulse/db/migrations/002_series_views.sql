@@ -6,7 +6,9 @@
 -- data, a view can be replaced by a continuous aggregate or table of the same name and columns,
 -- with no backend change.
 --
--- "Latest forecast" means the last version published for that period, as in the data loaded today.
+-- "Latest forecast" means the last version published at or before the period starts. Later versions
+-- are excluded: each WINDFOR publish re-issues the previous ~27 hours, and a value published after
+-- delivery is not a forecast. The *_vintages views keep every version for inspection.
 
 -- Prices and imbalance volume (DISEBSP). GB has used a single imbalance price since 2015, so the
 -- system sell price is "the price".
@@ -34,11 +36,13 @@ WHERE boundary = 'N';
 CREATE OR REPLACE VIEW gridpulse.wind_30m AS
 SELECT delivery_start_utc AS bucket, last(wind_mw, published_at_utc) AS wind_mw
 FROM gridpulse.wind_forecast_vintages
+WHERE published_at_utc <= delivery_start_utc
 GROUP BY delivery_start_utc;
 
 CREATE OR REPLACE VIEW gridpulse.demand_30m AS
 SELECT delivery_start_utc AS bucket, last(demand_mw, published_at_utc) AS demand_mw
 FROM gridpulse.demand_forecast_vintages
+WHERE published_at_utc <= delivery_start_utc
 GROUP BY delivery_start_utc;
 
 -- Outturns. FUELHH WIND excludes embedded wind. NESO demand arrives about 21 days in arrears.
@@ -67,4 +71,5 @@ FROM (
     SELECT 'wind', delivery_start_utc, published_at_utc, wind_mw
     FROM gridpulse.wind_forecast_vintages
 ) AS forecasts
+WHERE published_at_utc <= delivery_start_utc
 GROUP BY delivery_start_utc;

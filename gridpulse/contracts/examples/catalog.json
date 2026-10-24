@@ -8,7 +8,7 @@
     },
     {
       "id": "wind",
-      "label": "Wind forecast (latest WINDFOR)",
+      "label": "Wind forecast (WINDFOR, latest before delivery)",
       "unit": "MW"
     },
     {
@@ -18,7 +18,7 @@
     },
     {
       "id": "demand",
-      "label": "National demand forecast (latest NDF)",
+      "label": "National demand forecast (NDF, latest before delivery)",
       "unit": "MW"
     },
     {

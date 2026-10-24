@@ -106,7 +106,7 @@ _GRID = (
     " INTERVAL '30 minutes') AS grid(t)"
 )
 
-# Latest forecasts, and every price and outturn, for each period in [start, end).
+# Latest pre-delivery forecasts, and every price and outturn, for each period in [start, end).
 _LATEST_INPUTS = f"""
 SELECT grid.t, p.price_gbp_mwh, p.niv_mwh, w.wind_mw, wo.wind_outturn_mw, d.demand_mw, dout.demand_outturn_mw
 FROM {_GRID}
@@ -118,19 +118,22 @@ LEFT JOIN gridpulse.demand_outturn_30m dout ON dout.bucket = grid.t AND dout.buc
 ORDER BY grid.t
 """
 
-# What was known at `cutoff`: forecasts published by then, and prices/outturns for periods that had
-# ended by then. Publication delays of actuals (e.g. NESO demand, ~21 days) are not modelled.
+# What was known at `cutoff`: forecasts published by then (and, as in the *_30m views, before the
+# period started), and prices/outturns for periods that had ended by then. Publication delays of
+# actuals (e.g. NESO demand, ~21 days) are not modelled.
 _AS_OF_INPUTS = f"""
 WITH wind AS (
     SELECT delivery_start_utc AS t, last(wind_mw, published_at_utc) AS wind_mw
     FROM gridpulse.wind_forecast_vintages
-    WHERE delivery_start_utc >= %(start)s AND delivery_start_utc < %(end)s AND published_at_utc <= %(cutoff)s
+    WHERE delivery_start_utc >= %(start)s AND delivery_start_utc < %(end)s
+      AND published_at_utc <= %(cutoff)s AND published_at_utc <= delivery_start_utc
     GROUP BY 1
 ),
 demand AS (
     SELECT delivery_start_utc AS t, last(demand_mw, published_at_utc) AS demand_mw
     FROM gridpulse.demand_forecast_vintages
-    WHERE delivery_start_utc >= %(start)s AND delivery_start_utc < %(end)s AND published_at_utc <= %(cutoff)s
+    WHERE delivery_start_utc >= %(start)s AND delivery_start_utc < %(end)s
+      AND published_at_utc <= %(cutoff)s AND published_at_utc <= delivery_start_utc
     GROUP BY 1
 ),
 ended AS (

@@ -22,7 +22,7 @@
     },
     {
       "id": "wind",
-      "label": "Wind forecast (latest WINDFOR)",
+      "label": "Wind forecast (WINDFOR, latest before delivery)",
       "unit": "MW",
       "value": 6120.0,
       "previous": 6120.0,
@@ -38,7 +38,7 @@
     },
     {
       "id": "demand",
-      "label": "National demand forecast (latest NDF)",
+      "label": "National demand forecast (NDF, latest before delivery)",
       "unit": "MW",
       "value": 29850.0,
       "previous": 29400.0,
