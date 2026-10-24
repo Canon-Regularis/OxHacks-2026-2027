@@ -1,0 +1,171 @@
+# Tests, then builds both images, then deploys them to the Vultr VPS.
+# Pull requests run the tests and image builds only. Setup: gridpulse/deploy/README.md.
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - gridpulse/backend/**
+      - gridpulse/frontend/**
+      - gridpulse/db/**
+      - gridpulse/data/demo/**
+      - gridpulse/deploy/**
+      - gridpulse/.dockerignore
+      - .github/workflows/deploy.yml
+  pull_request:
+    paths:
+      - gridpulse/backend/**
+      - gridpulse/frontend/**
+      - gridpulse/db/**
+      - gridpulse/data/demo/**
+      - gridpulse/deploy/**
+      - gridpulse/.dockerignore
+      - .github/workflows/deploy.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Superseded pull request runs are cancelled; deploys queue one after another.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || 'production' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  backend-tests:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: gridpulse/backend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: gridpulse/backend/pyproject.toml
+      - run: pip install -e ".[dev]"
+      # Integration tests skip themselves without GRIDPULSE_INTEGRATION=1 and a database.
+      - run: pytest
+
+  frontend-checks:
+    name: Frontend checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: gridpulse/frontend
+    steps:
+      - uses: actions/checkout@v7
+      - id: app
+        run: echo "present=$([ -f package.json ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+      - if: steps.app.outputs.present == 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: gridpulse/frontend/package-lock.json
+      - if: steps.app.outputs.present == 'true'
+        run: |
+          npm ci
+          npm run check --if-present
+          npm run test --if-present
+
+  images:
+    name: ${{ matrix.component }} image
+    needs: [backend-tests, frontend-checks]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        component: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v7
+      - id: image
+        # Registry paths must be lower case.
+        run: echo "name=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/gridpulse-${{ matrix.component }}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v4
+      - if: github.event_name != 'pull_request'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v7
+        with:
+          context: gridpulse
+          file: gridpulse/${{ matrix.component }}/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ${{ steps.image.outputs.name }}:sha-${{ github.sha }}
+            ${{ steps.image.outputs.name }}:latest
+          labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          cache-from: type=gha,scope=${{ matrix.component }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.component }}
+
+  deploy:
+    name: Deploy to Vultr
+    needs: images
+    # Skipped until the VPS is configured as described in gridpulse/deploy/README.md.
+    if: github.event_name != 'pull_request' && vars.VPS_HOST != ''
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+    env:
+      APP_DIR: /opt/gridpulse
+      VPS_HOST: ${{ vars.VPS_HOST }}
+      VPS_USER: ${{ vars.VPS_USER }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: gridpulse/deploy
+
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          KNOWN_HOSTS: ${{ vars.VPS_SSH_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Pin the host key when it is configured; otherwise trust it on first use.
+          if [ -n "$KNOWN_HOSTS" ]; then
+            printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else
+            ssh-keyscan -H "$VPS_HOST" > ~/.ssh/known_hosts
+          fi
+          printf 'Host vps\n  HostName %s\n  User %s\n  IdentityFile ~/.ssh/deploy_key\n  IdentitiesOnly yes\n' \
+            "$VPS_HOST" "${VPS_USER:-deploy}" > ~/.ssh/config
+
+      - name: Copy compose file and deploy script
+        run: scp gridpulse/deploy/docker-compose.yml gridpulse/deploy/deploy.sh "vps:$APP_DIR/"
+
+      - name: Pull images, migrate and restart
+        env:
+          # The job's own token: it can read this repository's images and expires with the job.
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          printf '%s\n' "$GHCR_TOKEN" | ssh vps "
+            docker login ghcr.io -u '$ACTOR' --password-stdin > /dev/null || exit 1
+            IMAGE_TAG='sha-$GITHUB_SHA' REGISTRY='ghcr.io/${GITHUB_REPOSITORY_OWNER,,}' bash '$APP_DIR/deploy.sh'
+            status=\$?
+            docker logout ghcr.io > /dev/null
+            exit \$status
+          "
+
+      - name: Check the public URL
+        if: vars.PUBLIC_URL != ''
+        env:
+          PUBLIC_URL: ${{ vars.PUBLIC_URL }}
+        run: |
+          body=$(curl -fsS --retry 10 --retry-delay 3 --retry-all-errors "$PUBLIC_URL/api/health")
+          echo "$body"
+          if [ "$(jq -r .status <<< "$body")" != "ok" ]; then
+            echo "::warning::Deployed, but /api/health reports: $body"
+          fi
