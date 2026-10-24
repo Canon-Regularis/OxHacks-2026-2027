@@ -50,6 +50,11 @@ export function preset(
   const chart = createWidget('chart', range, binding),
     inspector = createWidget('inspector', range),
     notes = createWidget('context', range, binding);
+  if (kind === 'analysis') {
+    inspector.type = 'table';
+    inspector.title = 'Results table';
+    inspector.binding = binding;
+  }
   ws.widgets = {
     [chart.id]: chart,
     [inspector.id]: inspector,

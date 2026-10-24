@@ -127,8 +127,8 @@ test('50 periods, hover synchronisation and keyboard selection do not refetch', 
   await expect(page.locator('.metric-value').first()).not.toHaveText('No data');
   expect(requests).toBe(1);
   await expect(
-    page.getByRole('button', { name: 'Explore Soon' }),
-  ).toBeDisabled();
+    page.getByRole('link', { name: 'Terminal', exact: true }),
+  ).toHaveAttribute('href', '/terminal');
 });
 
 test('date selection survives reload and empty storage is optional', async ({
