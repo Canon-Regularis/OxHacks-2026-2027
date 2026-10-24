@@ -4,6 +4,17 @@
 >
 > **Status:** Prize names and rewards verified on the [official MLH OxHack ’26 prize page](https://www.mlh.com/events/oxhack-26/prizes) and [event page](https://www.mlh.com/events/oxhack-26) on **24 October 2026**. Vendor implementation notes are based on official documentation; model IDs, trial terms, credits and rules may change.
 
+## GridPulse project choices
+
+The current [GridPulse plan](gridpulse/README.md) is a **25-hour electricity-market analysis dashboard** using existing algorithms, with no model training.
+
+- **Tiger Data — MVP:** central store for CSV-imported electricity data and analysis results, queried by the backend.
+- **Vultr — hosting:** target for the frontend/backend deployment, with a local cached demo fallback.
+- **Gemini API — extension:** backend agent using data and analysis tools to answer higher-level questions after the main dashboard works.
+- **Snowflake API — optional exploration:** a useful role must be established before implementation; it is not a core dependency or a completed integration.
+
+The broader ideas and technology rankings below are generic sponsor reference material, not GridPulse implementation priorities. Follow the [25-hour build plan](gridpulse/BUILD_AND_DEMO.md) for project scope. Check track requirements when submitting; planned usage alone is not a completed entry.
+
 ## 0. Read this first: prizes and technology choice
 
 ### Official MLH prize categories (8 total)

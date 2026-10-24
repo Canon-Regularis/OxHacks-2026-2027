@@ -1,36 +1,63 @@
-# Research, high-impact extensions, limitations
+# Extensions, sponsor integrations and limitations
 
-## Research basis (references supplied in the proposal)
+## Main extension: Gemini-powered analysis agent
 
-1. **Goodarzi, Perera & Bunn (2019)** — *The impact of renewable energy forecast errors on imbalance volumes and electricity spot prices*, *Energy Policy* 134, 110827. https://doi.org/10.1016/j.enpol.2019.06.035 — Evidence from the German electricity market; motivation for studying renewable forecast errors and price/imbalance behaviour. It does **not** establish that our classifier or hypothetical-slider response is causal.
-2. **Browell & Gilbert (2022)** — *Predicting Electricity Imbalance Prices and Volumes: Capabilities and Opportunities*, *Energies* 15(10), 3645. https://doi.org/10.3390/en15103645 — GB-specific forecasting context; compares day-ahead and intraday horizons and includes probabilistic/fan-chart examples. Do not compare their intraday reported performance directly with our day-ahead-only MVP.
-3. **Zamudio López, Zareipour & Quashie (2024)** — *Forecasting the Occurrence of Electricity Price Spikes: A Statistical-Economic Investigation Study*, *Forecasting* 6(1), 115–137. https://doi.org/10.3390/forecast6010007 — Tree-based classification, precision/recall and event thresholds. **This study uses Alberta electricity data, not GB**; only the methodology is transferred.
-4. **Lundberg & Lee (2017)** — *A Unified Approach to Interpreting Model Predictions*. https://arxiv.org/abs/1705.07874 — SHAP feature attribution, not proof of causal explanation.
-5. **Elexon Insights API documentation** — https://bmrs.elexon.co.uk/api-documentation/endpoint — Public forecast/price endpoint catalogue.
-6. **Elexon settlement period rules** — https://www.elexon.co.uk/bsc/settlement/ — 46/48/50 settlement periods around daylight-saving transitions.
+After the core dashboard works, add a backend agent using the **Gemini API**. It should answer higher-level questions by querying the same stored data and calling the same analysis functions used by the dashboard.
 
-## Optional extensions ranked by impact / effort
+Example questions:
 
-| Priority | Extension | Expected benefit | Rough effort after MVP | Key caveat |
-|---|---|---|---|---|
-| **P1.1** | Hypothetical **Wind Shock Simulator** | Immediate interactive demo: change wind forecast by ±2 GW and rescore risk. | 1–2h | Sensitivity, **not** a causal market simulator; update derived features consistently. |
-| **P1.2** | **SHAP explanation** of selected settlement period | Judges see top feature contributions behind alerts. | 1–3h | Model attribution, not real-world cause. |
-| **P1.3** | **A/B/C wind-information ablation** | Strongest empirical research narrative: do revisions add held-out predictive value? | 1–2h | Use one dataset, issue protocol and held-out split; don't cherry-pick. |
-| **P1.4** | **Quantile price fan chart** | Visual uncertainty bands for settlement price (£/MWh). | 2–4h | Secondary model; quantiles may cross and need calibration checks. |
-| **P1.5** | **Forecast instability alerts** | Show volatile/reversing wind forecast updates. | 2–3h | Derive exclusively from versions published by cutoff; test relationship, don't assume. |
+- “What changed around this price spike?”
+- “Which periods had the largest downward wind forecast revisions?”
+- “Compare demand and algorithm indicators across these two days.”
 
-If time only allows one extra: choose the **wind shock slider** after historical replay works. If the judges value a research result, the **three-way ablation** is arguably the most important add-on and can be implemented independently of the slider.
+Suggested flow:
 
-## Methodological / product limitations to show judges
+```text
+Question + selected date range
+    → backend Gemini integration
+    → bounded data/analysis tools
+    → structured evidence
+    → answer with periods, units, source and algorithm context
+```
 
-- **Forecast revisions are informative hypotheses, not demonstrated causes.** Wind alone misses outages, generator bids, market positions, interconnector flows, balancing actions and many other drivers.
-- **Imbalance prices can be revised** by settlement runs. The chosen DISEBSP endpoint returns latest run information and is suitable as a retrospective outcome, not proof of what a participant saw at an earlier time.
-- **Data availability differs by horizon.** A published API timestamp must be checked against the exact issue time; every forecast row must obey the as-of join rule.
-- **Rare events are difficult.** Report prevalence and false alarms, not just impressive individual replay days or accuracy.
-- **Probability is not automatic calibration.** LightGBM scores need empirical reliability checks before claiming that “80% risk” means 8 in 10 similar cases.
-- **Weather ≠ realised wind generation.** Retrospective forecast error is useful for analysis, but actual outturn cannot be used as an ahead-of-time predictor.
-- **Local-day length varies.** The Oct 25, 2026 clock change creates a 50-period settlement day; build labels and plots by settlement period, not fixed 48-slot assumptions.
+Start with a small read-only tool set: available coverage, fetch bounded series, fetch existing analysis and inspect a period. Add new analysis execution only if runtime is predictable. Validate tool arguments, cap rows/tool calls, set timeouts and keep credentials server-side. Feed data as evidence, not instructions.
 
-## Future work (out of hackathon scope)
+Answers should identify supporting periods and calculations, distinguish observations from interpretations and state when data is missing. The agent must not invent measurements or claim a causal explanation from correlation. Keep the dashboard operational when Gemini is unavailable; label any recorded response used as a demo fallback.
 
-Intraday issue times; additional system margin and interconnector data; calibrated conditional quantiles; conformal coverage evaluation; rolling-origin multi-season backtests; and actual operational decision-value studies with transaction-cost assumptions. These should not be advertised as implemented MVP features.
+Select an available Gemini model during implementation; no particular model ID or account entitlement is promised. See [Gemini documentation](https://ai.google.dev/gemini-api/docs) and [function calling](https://ai.google.dev/gemini-api/docs/function-calling).
+
+## Hosting: Vultr
+
+Vultr is the chosen application hosting target, described in the [build plan](BUILD_AND_DEMO.md). Demonstrate the actual deployed frontend/backend and describe what is running there. GPU infrastructure is unnecessary for this plan. Keep a local cached demo as backup.
+
+## Optional: Snowflake API
+
+Snowflake is a possible additional track, not an MVP dependency. Its useful role is still undecided. One candidate is an optional comparison between Gemini and a Snowflake-hosted model answering the same evidence-backed question. Another is a specific analytical capability that solves a demonstrated gap.
+
+Before implementing, establish available account access, a concrete user benefit, a small integration contract and enough remaining time. Keep Tiger Data as the core store; avoid duplicating the entire pipeline merely to add a sponsor name. If no useful integration is completed, describe Snowflake as unimplemented exploration and omit any claim of using it.
+
+Consult [Snowflake Cortex REST API documentation](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-rest-api) when implementing; model availability and credentials depend on the account. Keep credentials server-side. Sponsor eligibility must be checked against the event's current rules at submission time.
+
+## Other enhancements
+
+Only after the MVP is stable: day comparisons, export, richer historical exploration and scenario controls that the existing algorithms actually support. Preserve explanations of input assumptions and units. No model-training or learned-model explanation work is scheduled.
+
+## Limitations to communicate
+
+- Algorithm capabilities and interpretation come from their owner; complexity alone does not establish accuracy.
+- Indicators are not probabilities unless the algorithm supports that interpretation with evidence.
+- Retrospective observations differ from forecasts available at a historical cutoff.
+- Historical price records may reflect later settlement revisions.
+- Missing historical forecast versions limit what can be claimed about earlier-known signals.
+- Selected historical events illustrate behaviour; they do not establish representative predictive performance.
+- Wind and demand alone cannot explain all market movements, and this app does not measure physical grid reliability.
+- AI answers must be grounded in retrieved evidence and cannot establish causality by narration.
+
+## Background references
+
+These references motivate the domain; they are not validation of the team's algorithms.
+
+- [Elexon Insights API](https://bmrs.elexon.co.uk/api-documentation/endpoint): source datasets and endpoint catalogue.
+- [Elexon settlement guidance](https://www.elexon.co.uk/bsc/settlement/): settlement-period context.
+- Goodarzi, Perera & Bunn (2019), [renewable forecast errors and electricity prices](https://doi.org/10.1016/j.enpol.2019.06.035): German-market research context.
+- Browell & Gilbert (2022), [GB imbalance-price forecasting context](https://doi.org/10.3390/en15103645): background rather than a deliverable to reproduce.
