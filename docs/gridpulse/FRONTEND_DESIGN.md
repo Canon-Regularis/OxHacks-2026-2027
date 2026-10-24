@@ -2,6 +2,8 @@
 
 This records requirements supplied by the team in chat and Discord. It is a design brief, not a claim that the components or features are implemented. The core dashboard remains the MVP; weather mapping and the Gemini agent remain extensions.
 
+For the approved evolution of Explore into Terminal, read [the Terminal implementation plan](TERMINAL_IMPLEMENTATION_PLAN.md). It records docking, linked widgets, saved workspaces, stored-run constraints and staged verification; earlier Explore references below describe the original scope.
+
 ## Confirmed pages and immediate focus
 
 The frontend MVP includes **Overview, Explore and Methods**. Work currently focuses only on **Overview**; Explore and Methods remain in MVP scope for subsequent implementation. **Investigate** and the synoptic/weather-map view remain extensions, not MVP delivery requirements.
