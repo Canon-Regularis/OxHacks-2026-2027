@@ -259,3 +259,190 @@ test('compact navigation leaves the desktop layout intact and old Explore redire
     ),
   ).toEqual(layout);
 });
+
+test('native drag previews reject small splits and keyboard dividers snap discretely', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/terminal');
+  await expect(
+    page.locator('path[data-terminal-series="price"]'),
+  ).toBeVisible();
+  const divider = page.getByRole('slider', { name: 'Resize tiles' }).first();
+  const step = Number(await divider.getAttribute('aria-valuenow'));
+  await divider.focus();
+  await page.keyboard.press('ArrowLeft');
+  await expect(divider).toHaveAttribute('aria-valuenow', String(step - 1));
+  await page.getByRole('button', { name: 'Undo workspace change' }).click();
+  await expect(divider).toHaveAttribute('aria-valuenow', String(step));
+  const source = page.getByRole('tab', {
+    name: 'Context & notes',
+    exact: true,
+  });
+  const dest = page.getByRole('group', {
+    name: 'Period inspector',
+    exact: true,
+  });
+  const box = (await dest.boundingBox())!;
+  const dt = await page.evaluateHandle(() => new DataTransfer());
+  await source.dispatchEvent('dragstart', { dataTransfer: dt });
+  await dest.dispatchEvent('dragover', {
+    dataTransfer: dt,
+    clientX: box.x + 4,
+    clientY: box.y + box.height / 2,
+  });
+  await expect(page.locator('.terminal-drop-preview.invalid')).toContainText(
+    'No room',
+  );
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.terminal-drop-preview')).toHaveCount(0);
+});
+
+test('algorithm overlays retain source data and shared units', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/terminal');
+  await expect(
+    page.locator('path[data-terminal-series="price"]'),
+  ).toBeVisible();
+  await page.getByRole('button', { name: /Search \/ Add/ }).click();
+  await page
+    .getByLabel('Search data algorithms and widgets')
+    .fill('price_naive');
+  await page
+    .getByRole('button', { name: 'Add outputs to chart', exact: true })
+    .click();
+  await page
+    .getByRole('button', { name: 'Apply algorithm', exact: true })
+    .click();
+  await expect(
+    page.locator('path[data-terminal-series="source:price"]'),
+  ).toBeVisible();
+  await expect(
+    page.locator('path[data-terminal-series="source:wind"]'),
+  ).toBeVisible();
+  await expect(
+    page.locator('path[data-terminal-series="persistence_forecast"]'),
+  ).toBeVisible();
+});
+
+test('saved presets duplicate into independent workspaces and imports can be undone', async ({
+  page,
+}) => {
+  await page.goto('/terminal');
+  await expect(
+    page.locator('path[data-terminal-series="price"]'),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Workspaces', exact: true }).click();
+  await page.getByLabel('Workspace name', { exact: true }).fill('My analysis');
+  await page.getByLabel('Workspace name', { exact: true }).press('Tab');
+  await page
+    .getByRole('button', { name: 'Save current view as preset', exact: true })
+    .click();
+  await page.getByRole('button', { name: 'Close drawer' }).click();
+  await page.getByRole('button', { name: /Search \/ Add/ }).click();
+  await page
+    .getByLabel('Search data algorithms and widgets')
+    .fill('My analysis');
+  await page
+    .getByRole('button', { name: 'My analysis Saved preset ↗', exact: true })
+    .click();
+  await expect(
+    page.getByRole('tab', { name: 'My analysis', exact: true }),
+  ).toHaveCount(2);
+  await expect(page.locator('.terminal-status')).toContainText('Saved locally');
+  const saved = await page.evaluate(() =>
+    localStorage.getItem('eisengrau:terminal:v1')!,
+  );
+  const parsed = JSON.parse(saved);
+  expect(parsed.presets).toHaveLength(1);
+  const ids = parsed.workspaces.flatMap(
+    (w: { widgets: Record<string, unknown> }) => Object.keys(w.widgets),
+  );
+  expect(new Set(ids).size).toBe(ids.length);
+  await page.getByRole('button', { name: 'Workspaces', exact: true }).click();
+  await page.getByLabel('Import configuration', { exact: true }).setInputFiles({
+    name: 'workspace.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(saved),
+  });
+  await expect(page.getByText('Import preview', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Cancel import' }).click();
+  await page.getByLabel('Import configuration', { exact: true }).setInputFiles({
+    name: 'bad.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from('{"version":999}'),
+  });
+  await expect(
+    page
+      .getByRole('status')
+      .filter({ hasText: 'Unsupported workspace version' }),
+  ).toBeVisible();
+});
+
+test('linked groups isolate cursors and compact mode does not issue hover requests', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/terminal');
+  await expect(
+    page.locator('path[data-terminal-series="price"]'),
+  ).toBeVisible();
+  await page
+    .getByRole('button', { name: 'Settings for Period inspector', exact: true })
+    .click();
+  await page.getByLabel('Linked group', { exact: true }).selectOption('__new');
+  await expect(page.getByLabel('Linked group', { exact: true })).toHaveValue(
+    'B',
+  );
+  await page.getByRole('button', { name: 'Close drawer' }).click();
+  const before = requests.length;
+  await page
+    .getByRole('slider', { name: 'Chart selected period' })
+    .hover({ position: { x: 250, y: 100 } });
+  await expect(page.locator('.terminal-inspector-preview')).toHaveCount(0);
+  expect(requests.length).toBe(before);
+  await page
+    .getByRole('button', { name: 'Settings for Period inspector', exact: true })
+    .click();
+  await page.getByLabel('Linked group', { exact: true }).selectOption('A');
+  await page.getByRole('button', { name: 'Close drawer' }).click();
+  await page
+    .getByRole('slider', { name: 'Chart selected period' })
+    .hover({ position: { x: 300, y: 100 } });
+  await expect(page.locator('.terminal-inspector-preview')).toBeVisible();
+});
+
+test('uncomputed algorithms stay local and never submit a computation', async ({
+  page,
+}) => {
+  await page.route('**/api/analysis?**', (r) =>
+    r.fulfill({
+      status: 404,
+      json: {
+        detail: {
+          code: 'no_run',
+          message: 'No stored result for these settings.',
+        },
+      },
+    }),
+  );
+  await page.goto('/terminal');
+  await expect(
+    page.locator('path[data-terminal-series="price"]'),
+  ).toBeVisible();
+  await page.getByRole('button', { name: /Search \/ Add/ }).click();
+  await page
+    .getByLabel('Search data algorithms and widgets')
+    .fill('price_naive');
+  await page
+    .getByRole('button', { name: 'Open analysis layout', exact: true })
+    .click();
+  await expect(page.getByText('Not computed yet', { exact: true })).toHaveCount(
+    3,
+  );
+  await expect(
+    page.getByRole('button', { name: 'Workspaces', exact: true }),
+  ).toBeEnabled();
+});

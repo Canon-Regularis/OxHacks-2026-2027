@@ -23,9 +23,15 @@ export interface Group extends LinkContext {
   name: string;
   color: string;
 }
-export type Binding =
-  | { id: string; kind: 'source'; ids: string[] }
-  | { id: string; kind: 'algorithm'; algorithm: string; runId: number | null };
+export type NewBinding =
+  | { kind: 'source'; ids: string[] }
+  | {
+      kind: 'algorithm';
+      algorithm: string;
+      runId: number | null;
+      sources?: string[];
+    };
+export type Binding = NewBinding & { id: string };
 export interface Widget {
   id: string;
   type: WidgetType;
@@ -56,6 +62,7 @@ export interface TerminalDocument {
   version: 1;
   active: string;
   workspaces: Workspace[];
+  presets?: Workspace[];
 }
 export interface Size {
   width: number;

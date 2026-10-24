@@ -901,3 +901,33 @@
     }
   }
 }
+
+.terminal-plot {
+  overflow: auto;
+}
+.terminal-inspector-preview {
+  font-size: 11px;
+  line-height: 1.5;
+  flex: none;
+}
+.terminal-inspector-preview > p:first-child {
+  color: var(--orange);
+}
+.terminal-inspector-preview dl {
+  margin: 8px 0;
+}
+.terminal-inspector-preview dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 9px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+.terminal-inspector-preview dt {
+  color: var(--muted-foreground);
+}
+.terminal-inspector-preview dd {
+  margin: 0;
+  font-family: 'DM Mono', monospace;
+  text-align: right;
+}

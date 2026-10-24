@@ -1,14 +1,14 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte';
-  import type { Catalog, RunInfo } from '$lib/types';
+  import type { Catalog, RunInfo, RunTables, Table } from '$lib/types';
   import type {
     Widget,
     Workspace,
     Position,
     Binding,
+    NewBinding,
     WidgetType,
   } from '../model/types';
-  import { runs } from '../data/client';
+  import { runs, pool } from '../data/client';
   let {
     widget,
     workspace,
@@ -25,7 +25,7 @@
     workspace: Workspace;
     catalog: Catalog;
     onchange: (widget: Widget) => void;
-    onbinding: (binding: Omit<Binding, 'id'> | null) => void;
+    onbinding: (binding: NewBinding | null) => void;
     onrun: (id: number | null) => void;
     onlink: (group: string | null) => void;
     onmove: (target: string, position: Position) => void;
@@ -53,7 +53,17 @@
             catalog.series.find((s) => s.id === id)?.unit ?? '',
           ]),
         )
-      : (algo?.outputs ?? {}),
+      : {
+          ...(algo?.outputs ?? {}),
+          ...Object.fromEntries(
+            (binding?.kind === 'algorithm' ? (binding.sources ?? []) : []).map(
+              (id) => [
+                'source:' + id,
+                catalog.series.find((s) => s.id === id)?.unit ?? '',
+              ],
+            ),
+          ),
+        },
   );
   $effect(() => {
     const id = algo?.id;
@@ -78,6 +88,35 @@
       lease.release();
     };
   });
+  let resultTables = $state<Record<string, Table>>({});
+  let selectedTable = $derived(
+    resultTables[widget.settings.table] ?? Object.values(resultTables)[0],
+  );
+  let metricColumns = $derived(
+    selectedTable?.columns.filter((_, i) =>
+      selectedTable.rows.some((row) => typeof row[i] === 'number'),
+    ) ?? [],
+  );
+  $effect(() => {
+    const id = binding?.kind === 'algorithm' ? binding.runId : null;
+    if (widget.type !== 'comparison' || !id) {
+      resultTables = {};
+      return;
+    }
+    let alive = true;
+    const lease = pool.acquire<RunTables>(`/analysis/runs/${id}/tables`);
+    lease.promise
+      .then((response) => {
+        if (alive) resultTables = response.tables;
+      })
+      .catch(() => {
+        if (alive) resultTables = {};
+      });
+    return () => {
+      alive = false;
+      lease.release();
+    };
+  });
   function setting(key: keyof Widget['settings'], value: unknown) {
     onchange({ ...widget, settings: { ...widget.settings, [key]: value } });
   }
@@ -88,12 +127,8 @@
         kind: 'algorithm',
         algorithm: value.slice(5),
         runId: null,
-      } as Omit<Binding, 'id'>);
-    else
-      onbinding({ kind: 'source', ids: [value.slice(7)] } as Omit<
-        Binding,
-        'id'
-      >);
+      } as NewBinding);
+    else onbinding({ kind: 'source', ids: [value.slice(7)] } as NewBinding);
   }
 </script>
 
@@ -153,9 +188,30 @@
                   ids: binding.ids.includes(s.id)
                     ? binding.ids.filter((id) => id !== s.id)
                     : [...binding.ids, s.id],
-                } as Omit<Binding, 'id'>);
+                } as NewBinding);
             }}
           />{s.label}<small>{s.unit}</small></label
+        >{/each}
+    </fieldset>{/if}
+  {#if algo && widget.type === 'chart' && binding?.kind === 'algorithm'}<fieldset
+    >
+      <legend>Overlay source data</legend>{#each catalog.series as source}<label
+          class="terminal-check"
+          ><input
+            type="checkbox"
+            checked={binding.sources?.includes(source.id) ?? false}
+            onchange={() => {
+              if (binding?.kind === 'algorithm') {
+                const sources = binding.sources ?? [];
+                onbinding({
+                  ...binding,
+                  sources: sources.includes(source.id)
+                    ? sources.filter((id) => id !== source.id)
+                    : [...sources, source.id],
+                });
+              }
+            }}
+          />{source.label}<small>{source.unit}</small></label
         >{/each}
     </fieldset>{/if}
   {#if algo}<label
@@ -269,19 +325,25 @@
     ></label
   >{/if}
 {#if widget.type === 'comparison'}<label
-    >Numeric column<input
+    >Numeric column<select
       aria-label="Comparison metric"
-      placeholder="e.g. mae_gbp_mwh (blank = first numeric)"
       value={widget.settings.metric}
       onchange={(e) => setting('metric', e.currentTarget.value)}
-    /></label
+      ><option value="">First numeric column</option
+      >{#each metricColumns as column}<option value={column}
+          >{column.replaceAll('_', ' ')}</option
+        >{/each}</select
+    ></label
   ><label
-    >Category column<input
+    >Category column<select
       aria-label="Comparison category"
-      placeholder="model"
       value={widget.settings.category}
       onchange={(e) => setting('category', e.currentTarget.value)}
-    /></label
+      ><option value="">Model / first column</option
+      >{#each selectedTable?.columns ?? [] as column}<option value={column}
+          >{column.replaceAll('_', ' ')}</option
+        >{/each}</select
+    ></label
   >{/if}
 <fieldset>
   <legend>Move without dragging</legend><label

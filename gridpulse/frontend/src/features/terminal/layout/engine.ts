@@ -40,7 +40,7 @@ export function fits(node: Layout | null, ws: Workspace, size: Size): boolean {
   if (node.kind === 'stack') return true;
   const total =
     (node.axis === 'horizontal' ? size.width : size.height) - DIVIDER;
-  const first = (total * node.step) / 24;
+  const first = (total * node.step) / (node.axis === 'horizontal' ? 24 : 16);
   return node.children.every((child, i) =>
     fits(
       child,
@@ -123,7 +123,7 @@ export function place(
       id: uid(),
       axis:
         position === 'left' || position === 'right' ? 'horizontal' : 'vertical',
-      step: 12,
+      step: position === 'left' || position === 'right' ? 12 : 8,
       children: before ? [stack(widget), n] : [n, stack(widget)],
     };
   });
@@ -147,11 +147,14 @@ export function resize(
   if (ws.locked) throw new Error('Layout is locked.');
   const layout =
     ws.layout &&
-    mapNode(ws.layout, id, (n) =>
-      n.kind === 'split'
-        ? { ...n, step: Math.max(1, Math.min(23, Math.round(step))) }
-        : n,
-    );
+    mapNode(ws.layout, id, (n) => {
+      if (n.kind !== 'split') return n;
+      const snapped = Math.round(step),
+        max = n.axis === 'horizontal' ? 23 : 15;
+      if (snapped < 1 || snapped > max)
+        throw new Error('Divider step is outside its grid.');
+      return { ...n, step: snapped };
+    });
   const result = { ...ws, layout };
   if (!fits(layout, result, size))
     throw new Error('Minimum widget size reached.');

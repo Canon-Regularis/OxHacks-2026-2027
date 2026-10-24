@@ -50,10 +50,15 @@
     ...new Set(keys.map((k) => columns[k].unit || 'unitless')),
   ]);
   let panes = $derived(
-    settings.display === 'panes' || units.length > 2 ? units : ['all'],
+    settings.display === 'indexed'
+      ? ['all']
+      : settings.display === 'panes' || units.length > 2
+        ? units
+        : ['all'],
   );
+  let plotHeight = $derived(Math.max(height, panes.length * 110 + 32));
   let paneHeight = $derived(
-    Math.max(90, (Math.max(140, height) - 32) / Math.max(1, panes.length)),
+    Math.max(90, (Math.max(140, plotHeight) - 32) / Math.max(1, panes.length)),
   );
   let plotRight = $derived(Math.max(210, width) - 58);
   let mark = $derived(
@@ -186,6 +191,11 @@
 {#if settings.display === 'indexed'}<p class="terminal-hint">
     Indexed to first non-zero value = 100 · raw values retained in settings
   </p>{/if}
+{#if (settings.outputs.length || Object.keys(columns).length) > 12}<p
+    class="terminal-hint"
+  >
+    Showing up to 12 series. Choose visible outputs in settings.
+  </p>{/if}
 <div class="terminal-plot" bind:clientWidth={width} bind:clientHeight={height}>
   {#if keys.length && indices.length}
     <div
@@ -198,6 +208,7 @@
       aria-valuetext={selected ? time(selected) : 'No selected period'}
       onkeydown={keyboard}
       class="terminal-chart-interaction"
+      style={`height:${plotHeight}px`}
       onpointermove={move}
       onpointerdown={(e) => {
         drag = indexAt(e);
@@ -212,7 +223,7 @@
       }}
     >
       <svg
-        viewBox={`0 0 ${Math.max(210, width)} ${Math.max(140, height)}`}
+        viewBox={`0 0 ${Math.max(210, width)} ${Math.max(140, plotHeight)}`}
         role="img"
         aria-label="Time series. Drag to zoom; arrow keys select a period."
       >
@@ -292,11 +303,11 @@
             height={Math.max(1, panes.length * paneHeight - 40)}
             fill="#e6b08022"
           />{/if}
-        <text x="58" y={Math.max(140, height) - 5} class="terminal-axis"
+        <text x="58" y={Math.max(140, plotHeight) - 5} class="terminal-axis"
           >{time(t[indices[0]])}</text
         ><text
           x={plotRight}
-          y={Math.max(140, height) - 5}
+          y={Math.max(140, plotHeight) - 5}
           text-anchor="end"
           class="terminal-axis">{time(t[indices[indices.length - 1]])}</text
         >

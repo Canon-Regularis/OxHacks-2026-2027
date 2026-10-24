@@ -71,7 +71,7 @@ export function preset(
         kind: 'split',
         id: uid(),
         axis: 'vertical',
-        step: 13,
+        step: 9,
         children: [stack(inspector.id), stack(notes.id)],
       },
     ],
@@ -188,7 +188,12 @@ export function parseDocument(raw: string): TerminalDocument {
       throw new Error('Duplicate or invalid workspace ID.');
     globalIds.add(id);
   };
-  for (const ws of d.workspaces) {
+  if (
+    d.presets !== undefined &&
+    (!Array.isArray(d.presets) || d.presets.length > LIMITS.workspaces)
+  )
+    throw new Error('Invalid preset list.');
+  for (const ws of [...d.workspaces, ...((d.presets ?? []) as unknown[])]) {
     if (
       !object(ws) ||
       !str(ws.name) ||
@@ -229,6 +234,14 @@ export function parseDocument(raw: string): TerminalDocument {
           !b.ids.every(str))
       )
         throw new Error('Invalid source selection.');
+      if (
+        b.kind === 'algorithm' &&
+        b.sources !== undefined &&
+        (!Array.isArray(b.sources) ||
+          b.sources.length > 30 ||
+          !b.sources.every(str))
+      )
+        throw new Error('Invalid source overlay.');
       if (
         b.kind === 'algorithm' &&
         (!str(b.algorithm) ||
@@ -305,7 +318,7 @@ export function parseDocument(raw: string): TerminalDocument {
           !['horizontal', 'vertical'].includes(String(n.axis)) ||
           !Number.isInteger(n.step) ||
           Number(n.step) < 1 ||
-          Number(n.step) > 23 ||
+          Number(n.step) > (n.axis === 'horizontal' ? 23 : 15) ||
           !Array.isArray(n.children) ||
           n.children.length !== 2
         )

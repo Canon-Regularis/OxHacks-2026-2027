@@ -31,7 +31,24 @@ export class RequestPool {
       expires: number;
     }
   >();
+  private active = 0;
+  private waiting: (() => void)[] = [];
   constructor(private transport: typeof fetch = fetch) {}
+  private async fetchBounded(url: string, signal: AbortSignal) {
+    if (this.active >= 4)
+      await new Promise<void>((resolve) => this.waiting.push(resolve));
+    else this.active++;
+    try {
+      if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
+      return await this.transport(url, {
+        signal: AbortSignal.any([signal, AbortSignal.timeout(25000)]),
+      });
+    } finally {
+      const next = this.waiting.shift();
+      if (next) next();
+      else this.active--;
+    }
+  }
   acquire<T>(
     path: string,
     query: Record<string, string | number | undefined> = {},
@@ -54,7 +71,7 @@ export class RequestPool {
         expires: 0,
         promise: Promise.resolve(null) as Promise<unknown>,
       };
-      entry.promise = this.transport(key, { signal: controller.signal })
+      entry.promise = this.fetchBounded(key, controller.signal)
         .then(async (response) => {
           const body = await response.json().catch(() => null);
           if (!response.ok) {
@@ -329,6 +346,37 @@ export function loadWidget(
     result.run = response.run;
     result.warnings = response.warnings;
     result.limitations = response.algorithm.limitations;
+    if (widget.type === 'chart' && binding.sources?.length) {
+      if (
+        binding.sources.some((id) => !catalog.series.some((s) => s.id === id))
+      )
+        throw new TerminalError(
+          'unknown_series',
+          'An overlay source is no longer available.',
+        );
+      const source = await get<SeriesResponse>('/series', {
+        ...range,
+        ids: binding.sources.join(','),
+        resolution: response.resolution,
+      });
+      validateSeries(source.t, source.series);
+      const byTime = new Map(source.t.map((t, i) => [Date.parse(t), i]));
+      result.columns = { ...result.columns };
+      for (const [id, column] of Object.entries(source.series))
+        result.columns['source:' + id] = {
+          ...column,
+          values: result.t.map((t) => {
+            const i = byTime.get(Date.parse(t));
+            return i === undefined ? null : column.values[i];
+          }),
+        };
+      if (response.run.cutoff_utc)
+        result.warnings = [
+          ...result.warnings,
+          'Overlay source data is retrospective; the stored algorithm run uses a historical cutoff.',
+        ];
+    }
+
     if (widget.type === 'table' || widget.type === 'comparison') {
       const responseTables = await get<RunTables>(
         `/analysis/runs/${response.run.run_id}/tables`,

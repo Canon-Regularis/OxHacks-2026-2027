@@ -22,6 +22,7 @@
     type Widget,
     type WidgetType,
     type Binding,
+    type NewBinding,
     type LinkContext,
     type Position,
   } from './model/types';
@@ -174,8 +175,20 @@
       ws.widgets[w.id] = plain(w);
     });
   }
-  function rebind(w: Widget, b: Omit<Binding, 'id'> | null) {
+  function rebind(w: Widget, b: NewBinding | null) {
     mutate((ws) => {
+      const previous = w.binding ? ws.bindings[w.binding] : undefined;
+      if (
+        b &&
+        previous &&
+        b.kind === 'algorithm' &&
+        previous.kind === 'algorithm' &&
+        b.algorithm === previous.algorithm
+      ) {
+        ws.bindings[previous.id] = { ...b, id: previous.id };
+        ws.widgets[w.id].settings.outputs = [];
+        return;
+      }
       const id = uid();
       if (b) ws.bindings[id] = { ...b, id } as Binding;
       ws.widgets[w.id].binding = b ? id : null;
@@ -396,7 +409,16 @@
       kind: 'algorithm',
       algorithm: existingAlgorithm,
       runId: null,
-    } as Omit<Binding, 'id'>);
+      sources:
+        w.binding && workspace?.bindings[w.binding]?.kind === 'source'
+          ? (
+              workspace.bindings[w.binding] as Extract<
+                Binding,
+                { kind: 'source' }
+              >
+            ).ids
+          : [],
+    } as NewBinding);
     drawer = null;
   }
   function undo(redo = false) {
@@ -792,6 +814,20 @@
     onclose={() => (drawer = null)}
     ><Catalogue
       {catalog}
+      savedPresets={doc?.presets ?? []}
+      onsaved={(id) => {
+        mutate((_ws, d) => {
+          if (d.workspaces.length >= LIMITS.workspaces)
+            throw new Error('Maximum 16 workspaces.');
+          const saved = d.presets?.find((p) => p.id === id);
+          if (!saved) return;
+          const next = duplicateWorkspace(saved);
+          next.name = saved.name;
+          d.workspaces.push(next);
+          d.active = next.id;
+        });
+        drawer = null;
+      }}
       onadd={add}
       onalgorithm={algorithm}
       onpreset={(kind) => newWorkspace(kind)}
@@ -914,7 +950,32 @@
         void initialize();
         notice = 'Refreshing data. Pinned runs remain pinned.';
       }}>Refresh data</button
-    ><button onclick={() => exportDoc()}>Export configuration</button>
+    >
+    <button
+      onclick={() => {
+        mutate((ws, d) => {
+          if ((d.presets?.length ?? 0) >= LIMITS.workspaces)
+            throw new Error('Maximum 16 saved presets.');
+          const saved = duplicateWorkspace(ws);
+          saved.name = ws.name;
+          d.presets = [...(d.presets ?? []), saved];
+        });
+        notice = 'Saved as a reusable preset in Search / Add.';
+      }}>Save current view as preset</button
+    >
+    {#if doc.presets?.length}<details>
+        <summary>Saved presets ({doc.presets.length})</summary
+        >{#each doc.presets as saved}<div class="terminal-action-row">
+            <span>{saved.name}</span><button
+              onclick={() =>
+                mutate(
+                  (_ws, d) =>
+                    (d.presets = d.presets?.filter((p) => p.id !== saved.id)),
+                )}>Delete preset</button
+            >
+          </div>{/each}
+      </details>{/if}
+    <button onclick={() => exportDoc()}>Export configuration</button>
     <label
       >Import configuration<input
         type="file"

@@ -29,3 +29,28 @@ it('exposes missing computation separately from a network failure', async () => 
   await expect(lease.promise).rejects.toMatchObject({ code: 'no_run' });
   lease.release();
 });
+it('limits concurrency and skips a released queued request', async () => {
+  let active = 0,
+    peak = 0;
+  const release: (() => void)[] = [];
+  const pool = new RequestPool(async () => {
+    active++;
+    peak = Math.max(peak, active);
+    await new Promise<void>((resolve) => release.push(resolve));
+    active--;
+    return Response.json({ ok: true });
+  });
+  const leases = Array.from({ length: 6 }, (_, i) =>
+    pool.acquire('/test', { i }),
+  );
+  const settled = Promise.allSettled(leases.map((l) => l.promise));
+  leases[5].release();
+  expect(peak).toBe(4);
+  while (release.length) {
+    release.shift()!();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+  await settled;
+  expect(peak).toBe(4);
+  leases.forEach((l) => l.release());
+});

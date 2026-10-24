@@ -70,7 +70,13 @@
       node.axis === 'horizontal'
         ? (event.clientX - box.left) / box.width
         : (event.clientY - box.top) / box.height;
-    const step = Math.max(1, Math.min(23, Math.round(part * 24)));
+    const step = Math.max(
+      1,
+      Math.min(
+        node.axis === 'horizontal' ? 23 : 15,
+        Math.round(part * (node.axis === 'horizontal' ? 24 : 16)),
+      ),
+    );
     if (canResize(node.id, step)) proposed = step;
   }
   function end() {
@@ -87,7 +93,7 @@
     class:horizontal={node.axis === 'horizontal'}
     style={node.axis === 'horizontal'
       ? `grid-template-columns:minmax(0,${proposed ?? node.step}fr) 8px minmax(0,${24 - (proposed ?? node.step)}fr)`
-      : `grid-template-rows:minmax(0,${proposed ?? node.step}fr) 8px minmax(0,${24 - (proposed ?? node.step)}fr)`}
+      : `grid-template-rows:minmax(0,${proposed ?? node.step}fr) 8px minmax(0,${16 - (proposed ?? node.step)}fr)`}
   >
     <DockNode
       node={node.children[0]}
@@ -112,7 +118,7 @@
       aria-label="Resize tiles"
       aria-orientation={node.axis === 'horizontal' ? 'vertical' : 'horizontal'}
       aria-valuemin="1"
-      aria-valuemax="23"
+      aria-valuemax={node.axis === 'horizontal' ? 23 : 15}
       aria-valuenow={proposed ?? node.step}
       class="terminal-divider"
       class:locked={workspace.locked}

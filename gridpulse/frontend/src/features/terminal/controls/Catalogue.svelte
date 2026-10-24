@@ -1,13 +1,17 @@
 <script lang="ts">
   import type { Catalog } from '$lib/types';
-  import type { WidgetType } from '../model/types';
+  import type { WidgetType, Workspace } from '../model/types';
   let {
     catalog,
+    savedPresets,
+    onsaved,
     onadd,
     onalgorithm,
     onpreset,
   }: {
     catalog: Catalog;
+    savedPresets: Workspace[];
+    onsaved: (id: string) => void;
     onadd: (type: WidgetType, source?: string) => void;
     onalgorithm: (
       id: string,
@@ -100,6 +104,11 @@
       ><span>Add +</span></button
     >{/each}{/if}
 {#if section === 'All' || section === 'Presets'}<h3>Starter views</h3>
+  {#each savedPresets.filter((p) => matches(p.name)) as saved}<button
+      class="terminal-catalogue-source"
+      onclick={() => onsaved(saved.id)}
+      ><strong>{saved.name}</strong><span>Saved preset ↗</span></button
+    >{/each}
   {#each ['market', 'blank'] as kind}{#if matches(kind)}<button
         class="terminal-catalogue-source"
         onclick={() => onpreset(kind as 'market' | 'blank')}
