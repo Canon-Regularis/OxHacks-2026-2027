@@ -2,7 +2,7 @@
 
 How to present each algorithm's outputs and tables. Endpoints, fields and errors are in [FRONTEND_API.md](FRONTEND_API.md); response types are in [`gridpulse/frontend/src/lib/types.ts`](../../gridpulse/frontend/src/lib/types.ts). Visual style, motion and page layout follow [FRONTEND_DESIGN.md](FRONTEND_DESIGN.md).
 
-The two reference algorithms are live. The eight others are planned: build them against [`contracts/examples/algorithms/`](../../gridpulse/contracts/examples/algorithms/), and show an algorithm only when it appears in `/api/catalog`.
+Three algorithms are live: the two references and `price_forecast_backtest`. The seven others are planned: build them against [`contracts/examples/algorithms/`](../../gridpulse/contracts/examples/algorithms/), and show an algorithm only when it appears in `/api/catalog`.
 
 ## Rules for every algorithm
 
@@ -51,7 +51,7 @@ Format table cells by column name:
 | `interval_score_*`, `msis_*`, `pinball_*` | 1 decimal; lower is better |
 | `p_value` | 2 significant figures in scientific notation below 0.001; `0` means below about 1e-16, so show "< 1e-16"; `null` shows "n/a" |
 | `lag_periods`, `lag_hours` | Integer; `lag_hours` is `lag_periods / 2` |
-| `status` | A chip: `ok` neutral; `insufficient_data`, `degenerate_data`, `failed` muted with `message` as tooltip |
+| `status` | A chip: `ok` neutral; `missing_data`, `insufficient_data`, `degenerate_data`, `failed` muted with `message` as tooltip. An `ok` fold may still carry a `message`: a fit warning, such as a forecast spanning a clock change |
 | `n_*` | Integer count |
 | anything else | Numbers to 3 significant figures; text as is |
 
@@ -95,11 +95,12 @@ These recur across algorithms. Build each once as a component.
 - **Show:** the scorecard first. These are the benchmarks; the message is "how hard is this to beat". Offer the forecast-vs-actual chart with all eight hidden except `seasonal_naive_day`.
 - **Wording:** "Each forecast uses only prices settled before the previous day ended."
 
-### `price_forecast_backtest` (planned)
+### `price_forecast_backtest` (live)
 
 - **Page:** Overview (headline chart), Explore (tables).
 - **Outputs:** `seasonal_naive_forecast`, `ets_forecast`, `arima_forecast`, with 80% and 95% bands for ETS and ARIMA.
-- **Tables:** `metrics`, `by_horizon`, `folds`, plus `fold_params` (`model`, `origin_utc`, `parameter`, `value`): the fitted parameters at each origin.
+- **Tables:** `metrics`, `by_horizon`, `folds`, plus `fold_params` (`model`, `origin_utc`, `parameter`, `value`): the fitted parameters at each origin. ETS reports `alpha` and `gamma` (and `beta`/`phi` with a trend); ARIMA reports its coefficients (`ar.L1`, `ar.L2`, `ma.L1`), `sigma2` and `aicc`. The seasonal naive has none.
+- **Range:** a run covers at most about 60 days (`max_folds`), so the Overview chart should default to its latest week. Excluded folds (`missing_data`, `failed`) are gaps in the series.
 - **Show:** the forecast-vs-actual chart with ETS bands on by default, and the scorecard comparing ETS and ARIMA with the seasonal naive benchmark. Use `coverage_80`/`coverage_95` to show whether the bands are honest: near 80%/95% is well calibrated, lower means the bands were too narrow. On Explore, chart `fold_params` as one small line chart per parameter over `origin_utc`; drift there means the fitted model was unstable.
 - **Wording:** "Out-of-sample: each day's forecast was made the day before, from a model refitted on the previous 28 days."
 
@@ -161,7 +162,7 @@ These recur across algorithms. Build each once as a component.
 
 | Page | Algorithms |
 |---|---|
-| Overview | `price_forecast_backtest` (forecast vs actual), `price_day_ahead_forecast` (tomorrow), `price_rolling_signals` (overlays), `wind_price_correlation`, `price_naive_backtest` until the planned backtests land |
+| Overview | `price_forecast_backtest` (forecast vs actual), `price_day_ahead_forecast` (tomorrow), `price_rolling_signals` (overlays), `wind_price_correlation`, `price_naive_backtest` as a fallback |
 | Explore | All backtest scorecards, by-horizon charts and fold timelines; `price_driver_correlograms`; `worst_misses` and extremes linking to the period inspector |
 | Methods | Every algorithm's `description`, `inputs` and `datasets` (with each dataset's source), `params` with `param_descriptions`, and `limitations`; `calendar_fourier_terms`; `price_residual_diagnostics`; dataset coverage from the catalog, with the series built from each dataset |
 

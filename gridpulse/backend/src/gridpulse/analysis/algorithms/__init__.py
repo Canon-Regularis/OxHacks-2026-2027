@@ -5,6 +5,9 @@ analysis/contract.py and example_correlation.py), then add it to the list below.
 tests/analysis/ run every registered algorithm against the contract automatically.
 """
 
-from gridpulse.analysis.algorithms import example_backtest, example_correlation
+from gridpulse.analysis.algorithms import example_backtest, example_correlation, price_forecast_backtest
 
-ALGORITHMS = {algorithm.id: algorithm for algorithm in [example_correlation.ALGORITHM, example_backtest.ALGORITHM]}
+ALGORITHMS = {
+    algorithm.id: algorithm
+    for algorithm in [example_correlation.ALGORITHM, example_backtest.ALGORITHM, price_forecast_backtest.ALGORITHM]
+}

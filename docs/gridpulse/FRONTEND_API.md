@@ -4,8 +4,8 @@ Everything the frontend needs to call the backend, without reading backend code.
 
 ## What is live and what is planned
 
-- **Live now:** every endpoint below, and two reference algorithms, `wind_price_correlation` and `price_naive_backtest`.
-- **Planned:** eight algorithms built on the Orchid methods (forecast backtests, a day-ahead forecast, rolling signals, correlograms, diagnostics). Their exact responses are in [`contracts/examples/algorithms/`](../../gridpulse/contracts/examples/algorithms/). Build against those files now; the real responses will have the same shape.
+- **Live now:** every endpoint below; two reference algorithms, `wind_price_correlation` and `price_naive_backtest`; and the first Orchid algorithm, `price_forecast_backtest`.
+- **Planned:** seven more algorithms built on the Orchid methods (baseline and regression backtests, a day-ahead forecast, rolling signals, correlograms, diagnostics, Fourier terms). Their exact responses are in [`contracts/examples/algorithms/`](../../gridpulse/contracts/examples/algorithms/). Build against those files now; the real responses will have the same shape.
 
 Build every algorithm panel from `/api/catalog` rather than hard-coding ids. New algorithms then appear without frontend changes.
 
@@ -167,7 +167,7 @@ A period number that does not exist on that day (e.g. 49 on a 48-period day) ret
 
 ### `GET /api/analysis`
 
-The time-series outputs of one algorithm run. Example: [`analysis.json`](../../gridpulse/contracts/examples/analysis.json), and one per planned algorithm in [`contracts/examples/algorithms/`](../../gridpulse/contracts/examples/algorithms/).
+The time-series outputs of one algorithm run. Example: [`analysis.json`](../../gridpulse/contracts/examples/analysis.json), and one per Orchid algorithm, live or planned, in [`contracts/examples/algorithms/`](../../gridpulse/contracts/examples/algorithms/).
 
 | Query | Meaning |
 |---|---|
