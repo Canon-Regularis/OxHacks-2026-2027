@@ -1,0 +1,32 @@
+# Production stack on the Vultr VPS. The deploy workflow copies this file and deploy.sh to
+# /opt/gridpulse; settings and secrets live beside them in /opt/gridpulse/.env.
+name: gridpulse
+
+services:
+  backend:
+    image: ${REGISTRY:-ghcr.io/canon-regularis}/gridpulse-backend:${IMAGE_TAG:-latest}
+    env_file: .env
+    restart: unless-stopped
+    ports:
+      # Only for curl on the VPS itself; the public reaches the API through Caddy.
+      - "127.0.0.1:8000:8000"
+
+  web:
+    image: ${REGISTRY:-ghcr.io/canon-regularis}/gridpulse-frontend:${IMAGE_TAG:-latest}
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      # Certificates survive redeploys, which keeps clear of Let's Encrypt rate limits.
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

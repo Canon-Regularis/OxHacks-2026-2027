@@ -11,6 +11,7 @@ AGENTS.md                         # Repository-wide guidance and reuse sources
 README.md                         # Project overview and setup status
 LICENSE
 .gitignore
+.github/workflows/deploy.yml      # CI/CD: tests, images, Vultr deploy
 docs/                             # Team documentation
 gridpulse/                        # All application code and operational files
   .env.example                      # Server-side configuration placeholders
@@ -64,7 +65,8 @@ gridpulse/                        # All application code and operational files
     raw/                            # Ignored local CSVs
     demo/                           # Permitted real-data demo cache
   scripts/                          # Thin operational commands
-  deploy/                           # Vultr deployment configuration
+  deploy/                           # Vultr: Compose stack, Caddyfile, deploy script
+  backend/Dockerfile, frontend/Dockerfile  # Images; build context is gridpulse/
 ```
 
 Python package directories also contain `__init__.py`. Framework-specific entry points, manifests and dependencies should be added after checking WWW/Components compatibility; do not infer a framework from the folder names. Root README and workstream READMEs must gain exact startup commands when these exist.
