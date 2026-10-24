@@ -29,7 +29,12 @@ No model training is planned. Algorithm formulas, score semantics and supported 
 
 Start with the [project overview](docs/gridpulse/README.md), then the [data pipeline](docs/gridpulse/DATA_PIPELINE.md), [algorithms and API contracts](docs/gridpulse/ALGORITHMS_AND_ANALYSIS.md), [25-hour build and demo plan](docs/gridpulse/BUILD_AND_DEMO.md), and [extensions](docs/gridpulse/RESEARCH_AND_EXTENSIONS.md). The [sponsor reference](docs/sponsors.md) contains background on available tracks.
 
+The [frontend design brief](docs/gridpulse/FRONTEND_DESIGN.md) records confirmed KCPC reuse requirements and the synoptic/electricity-map and animated Gemini investigation extensions. Weather providers and exact agent UI tools remain undecided.
+
 ## Repository layout
+
+**Confirmed frontend scope:** Overview, Explore and Methods are MVP pages. The immediate implementation focus is Overview only. Investigate/Gemini and the synoptic weather map remain extensions.
+
 
 - `gridpulse/frontend/`: dashboard, UI components, charts and API client.
 - `gridpulse/backend/`: Python package for routes, ingestion, database access, algorithms and optional agent.

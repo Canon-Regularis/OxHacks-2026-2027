@@ -28,6 +28,9 @@ CSV is the current upstream handoff; reuse the exporter already being built. Tig
 
 ## MVP acceptance criteria
 
+**Confirmed frontend scope:** Overview, Explore and Methods are MVP pages. The immediate implementation focus is Overview only. Investigate/Gemini and the synoptic weather map remain extensions.
+
+
 1. Real exported CSV data can be imported repeatedly into Tiger Data without duplicate logical records.
 2. The backend runs the existing algorithms on stored data and returns documented outputs.
 3. The dashboard shows a selected period's forecasts, prices and available algorithm indicators with clear units.
@@ -50,6 +53,8 @@ Keep retrospective observations distinguishable from forecasts. If presenting an
 - **Snowflake API:** optional sponsor-track exploration. Decide on a useful role, such as comparing a hosted model's analysis of the same evidence, before implementation. No duplicate data platform is required for the MVP.
 
 ## Document map
+
+- [FRONTEND_DESIGN.md](FRONTEND_DESIGN.md): confirmed reuse patterns, agent-driven view changes and synoptic-map requirements.
 
 - [REPOSITORY_STRUCTURE.md](REPOSITORY_STRUCTURE.md): agreed folders, ownership and frontend-to-backend request flow.
 

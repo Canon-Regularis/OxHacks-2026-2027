@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1170" viewBox="0 0 1440 1170">
+<title>GridPulse Investigate — synthetic design concept</title>
+<circle cx="43" cy="39" r="13" fill="#111111" stroke="#e4b47a"/>
+<polyline points="35,40 40,40 43,32 47,46 51,38" fill="none" stroke="#e4b47a" stroke-width="2" stroke-linejoin="round"/>
+<text x="65" y="44.86" font-family="DM Sans, Arial, sans-serif" font-size="23" fill="#efeee9" font-weight="700">GridPulse</text>
+<text x="320" y="43.48" font-family="DM Sans, Arial, sans-serif" font-size="14" fill="#9c9c98" font-weight="400">Overview</text>
+<text x="445" y="43.48" font-family="DM Sans, Arial, sans-serif" font-size="14" fill="#9c9c98" font-weight="400">Explore</text>
+<text x="550" y="43.48" font-family="DM Sans, Arial, sans-serif" font-size="14" fill="#efeee9" font-weight="400">Investigate</text>
+<polyline points="550,69 638,69" fill="none" stroke="#e4b47a" stroke-width="2" stroke-linejoin="round"/>
+<text x="688" y="43.48" font-family="DM Sans, Arial, sans-serif" font-size="14" fill="#9c9c98" font-weight="400">Methods</text>
+<rect x="1100" y="25" width="155" height="28" rx="14" fill="#191919" stroke="#303030"/>
+<text x="1112" y="41.019999999999996" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="400">Illustrative concept</text>
+<text x="1280" y="43.019999999999996" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#9c9c98" font-weight="400">GB / UTC</text>
+<polyline points="28,79 1412,79" fill="none" stroke="#303030" stroke-width="1" stroke-linejoin="round"/>
+<text x="40" y="116.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="700">INVESTIGATE / GRIDPULSE</text>
+<text x="40" y="171.16" font-family="DM Serif Text, Georgia, serif" font-size="38" fill="#efeee9" font-weight="400">Ask a question. Follow the evidence.</text>
+<text x="42" y="205.48" font-family="DM Sans, Arial, sans-serif" font-size="14" fill="#9c9c98" font-weight="400">A contextual research workspace where Gemini can bring relevant views into focus.</text>
+<polyline points="40,1104 1400,1104" fill="none" stroke="#303030" stroke-width="1" stroke-linejoin="round"/>
+<text x="42" y="1135.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">GRIDPULSE / OXHACK 2026</text>
+<text x="420" y="1136.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="400">Design exploration · synthetic data · not a working application</text>
+<rect x="40" y="233" width="264" height="28" rx="14" fill="#191919" stroke="#303030"/>
+<text x="52" y="249.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#efeee9" font-weight="400">24 Oct 2026 / 17:00–17:30 UTC</text>
+<rect x="318" y="233" width="186" height="28" rx="14" fill="#191919" stroke="#303030"/>
+<text x="330" y="249.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="400">Gemini extension</text>
+<rect x="1177" y="233" width="223" height="28" rx="14" fill="#191919" stroke="#303030"/>
+<text x="1189" y="249.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#9c9c98" font-weight="400">Illustrative conversation</text>
+<rect x="40" y="282" width="460" height="793" rx="12" fill="#191919" stroke="#303030"/>
+<text x="62" y="324.86" font-family="DM Serif Text, Georgia, serif" font-size="23" fill="#efeee9" font-weight="400">Investigation</text>
+<text x="62" y="356.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#9c9c98" font-weight="400">Selected event carried over from Explore</text>
+<rect x="62" y="389" width="416" height="86" rx="10" fill="#292720"/>
+<text x="80" y="418.48" font-family="DM Sans, Arial, sans-serif" font-size="14" fill="#efeee9" font-weight="400">What changed around the 17:00</text>
+<text x="80" y="444.48" font-family="DM Sans, Arial, sans-serif" font-size="14" fill="#efeee9" font-weight="400">price increase? Show the evidence.</text>
+<text x="62" y="516.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#e4b47a" font-weight="700">GEMINI / EXAMPLE RESPONSE</text>
+<text x="62" y="554.66" font-family="DM Sans, Arial, sans-serif" font-size="13" fill="#9c9c98" font-weight="400">I would start by checking wind forecast</text>
+<text x="62" y="580.66" font-family="DM Sans, Arial, sans-serif" font-size="13" fill="#9c9c98" font-weight="400">revisions and demand around this period.</text>
+<text x="62" y="624.66" font-family="DM Sans, Arial, sans-serif" font-size="13" fill="#9c9c98" font-weight="400">The panels on the right illustrate the</text>
+<text x="62" y="650.66" font-family="DM Sans, Arial, sans-serif" font-size="13" fill="#9c9c98" font-weight="400">evidence I could retrieve. No investigation</text>
+<text x="62" y="676.66" font-family="DM Sans, Arial, sans-serif" font-size="13" fill="#9c9c98" font-weight="400">has actually run in this design preview.</text>
+<rect x="62" y="714" width="175" height="28" rx="14" fill="#191919" stroke="#303030"/>
+<text x="74" y="730.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#78c6ba" font-weight="400">[1] Wind revisions</text>
+<rect x="250" y="714" width="178" height="28" rx="14" fill="#191919" stroke="#303030"/>
+<text x="262" y="730.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#90b9e6" font-weight="400">[2] Source records</text>
+<polyline points="62,778 478,778" fill="none" stroke="#303030" stroke-width="1" stroke-linejoin="round"/>
+<text x="62" y="810.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="700">VIEW ACTIVITY / EXAMPLE</text>
+<text x="62" y="848.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="400">01</text>
+<text x="94" y="848.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#efeee9" font-weight="400">Focus selected timeframe</text>
+<text x="62" y="881.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="400">02</text>
+<text x="94" y="881.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#efeee9" font-weight="400">Reveal wind revision chart</text>
+<text x="62" y="914.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="400">03</text>
+<text x="94" y="914.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#efeee9" font-weight="400">Open supporting source records</text>
+<rect x="62" y="977" width="416" height="75" rx="12" fill="#242424" stroke="#303030"/>
+<text x="80" y="1005.66" font-family="DM Sans, Arial, sans-serif" font-size="13" fill="#9c9c98" font-weight="400">Ask a follow-up question…</text>
+<text x="401" y="1034.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="400">Send →</text>
+<rect x="520" y="282" width="880" height="95" rx="12" fill="#24251f" stroke="#303030"/>
+<text x="542" y="314.76" font-family="DM Serif Text, Georgia, serif" font-size="18" fill="#efeee9" font-weight="400">Gemini is bringing evidence into view</text>
+<text x="542" y="343.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#9c9c98" font-weight="400">Animated panel reveal / focus transition · concept only</text>
+<rect x="1234" y="298" width="143" height="28" rx="14" fill="#191919" stroke="#303030"/>
+<text x="1246" y="314.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#efeee9" font-weight="400">Stop / undo</text>
+<rect x="520" y="397" width="880" height="342" rx="12" fill="#191919" stroke="#303030"/>
+<text x="542" y="438.86" font-family="DM Serif Text, Georgia, serif" font-size="23" fill="#efeee9" font-weight="400">01 / Wind forecast revisions</text>
+<text x="542" y="465.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#9c9c98" font-weight="400">Illustrative evidence panel · same delivery period</text>
+<polyline points="563,500.0 1359,500.0" fill="none" stroke="#303030" stroke-width="1" stroke-linejoin="round"/>
+<polyline points="563,553.0 1359,553.0" fill="none" stroke="#303030" stroke-width="1" stroke-linejoin="round"/>
+<polyline points="563,606.0 1359,606.0" fill="none" stroke="#303030" stroke-width="1" stroke-linejoin="round"/>
+<polyline points="563,659.0 1359,659.0" fill="none" stroke="#303030" stroke-width="1" stroke-linejoin="round"/>
+<polyline points="563.0,564.0874302462178 571.2916666666666,567.7537163386368 579.5833333333334,573.270279404639 587.875,580.134464072822 596.1666666666666,587.6237307205879 604.4583333333334,594.9026613294137 612.75,601.1480640600732 621.0416666666666,605.672558144362 629.3333333333334,608.0272525806142 637.625,608.0674222725636 645.9166666666666,605.9709144271972 654.2083333333334,602.2064661772191 662.5,597.4570059061948 670.7916666666666,592.5101000540593 679.0833333333334,588.1328753709283 687.375,584.9511780926205 695.6666666666666,583.352042831931 703.9583333333334,583.4248442295242 712.25,584.9503780812229 720.5416666666666,587.4395333419232 728.8333333333334,590.2153700132601 737.125,592.5255495597526 745.4166666666666,593.6672588336912 753.7083333333334,593.1047844987263 762.0,590.5610460802001 770.2916666666666,586.0685004771369 778.5833333333334,579.9712411336802 786.875,572.8778191093725 795.1666666666666,565.5720947336866 803.4583333333334,558.8960588316961 811.75,553.6229948026809 820.0416666666667,550.3408872247468 828.3333333333333,549.3643767151257 836.625,550.6890678107966 844.9166666666667,553.99532571659 853.2083333333333,558.7009017820935 861.5,564.0540369923115 869.7916666666667,569.2523214028545 878.0833333333333,573.5685408388258 886.375,576.4636587932947 894.6666666666667,577.6691319621749 902.9583333333333,577.2256181280225 911.25,575.4720374574135 919.5416666666667,572.9868026235822 927.8333333333333,570.4905991293563 936.125,568.7261798558045 944.4166666666667,568.3342760371364 952.7083333333333,569.7453437627986 961.0,573.1043559732145 969.2916666666667,578.2405901758261 977.5833333333333,584.6871315494203 985.875,591.7466484783686 994.1666666666667,598.5920322227736 1002.4583333333333,604.3838447065584 1010.75,608.3823816052812 1019.0416666666667,610.0320702642038 1027.3333333333333,609.0018927917031 1035.625,605.1792113023464 1043.9166666666667,598.6345587269525 1052.2083333333333,589.5941165816511 1060.5,578.4602015256953 1068.7916666666667,565.8936855164354 1077.0833333333335,552.9167074990905 1085.375,540.9379861183439 1093.6666666666665,531.5951804458947 1101.9583333333335,526.3825275544731 1110.25,526.1652068541489 1118.5416666666665,530.7925696508553 1126.8333333333335,539.021398003008 1135.125,548.8263577517679 1143.4166666666665,557.9833157585756 1151.7083333333335,564.6830649609685 1160.0,567.9428447443244 1168.2916666666665,567.7077882652738 1176.5833333333335,564.6827229970588 1184.875,560.0222439365664 1193.1666666666665,555.00930034663 1201.4583333333335,550.8015366130483 1209.75,548.2681757095808 1218.0416666666665,547.9071572517703 1226.3333333333335,549.8244226384165 1234.625,553.7620396376195 1242.9166666666665,559.1670150021803 1251.2083333333335,565.2930002265631 1259.5,571.3235402033093 1267.7916666666665,576.5012079440611 1276.0833333333335,580.2445854613749 1284.375,582.2358521370769 1292.6666666666665,582.4657442112903 1300.9583333333335,581.2290828796879 1309.25,579.0717584407004 1317.5416666666665,576.6976868740858 1325.8333333333335,574.8505679579786 1334.125,574.1892531500536 1342.4166666666665,575.1765414466446 1350.7083333333335,577.99910058387 1359.0,582.5312935041368" fill="none" stroke="#78c6ba" stroke-width="3" stroke-linejoin="round"/>
+<text x="555.0" y="681.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">00:00</text>
+<text x="754.0" y="681.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">06:00</text>
+<text x="953.0" y="681.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">12:00</text>
+<text x="1152.0" y="681.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">18:00</text>
+<text x="1351.0" y="681.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">23:30</text>
+<rect x="520" y="759" width="880" height="316" rx="12" fill="#191919" stroke="#303030"/>
+<text x="542" y="801.86" font-family="DM Serif Text, Georgia, serif" font-size="23" fill="#efeee9" font-weight="400">02 / Supporting records</text>
+<text x="542" y="830.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#9c9c98" font-weight="400">Example table · publication times distinguish forecast versions</text>
+<text x="543" y="874.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="700">PUBLISHED UTC</text>
+<text x="790" y="874.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="700">DELIVERY UTC</text>
+<text x="1045" y="874.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="700">FORECAST WIND</text>
+<text x="1256" y="874.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="700">SOURCE</text>
+<polyline points="542,896 1378,896" fill="none" stroke="#303030" stroke-width="1" stroke-linejoin="round"/>
+<text x="543" y="918.66" font-family="DM Sans, Arial, sans-serif" font-size="13" fill="#efeee9" font-weight="400">10:00</text>
+<text x="790" y="918.66" font-family="DM Sans, Arial, sans-serif" font-size="13" fill="#efeee9" font-weight="400">17:00</text>
+<text x="1045" y="918.66" font-family="DM Sans, Arial, sans-serif" font-size="13" fill="#78c6ba" font-weight="400">13,200 MW</text>
+<text x="1256" y="917.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#9c9c98" font-weight="400">Fixture</text>
+<polyline points="542,940 1378,940" fill="none" stroke="#303030" stroke-width="1" stroke-linejoin="round"/>
+<text x="543" y="962.66" font-family="DM Sans, Arial, sans-serif" font-size="13" fill="#efeee9" font-weight="400">13:00</text>
+<text x="790" y="962.66" font-family="DM Sans, Arial, sans-serif" font-size="13" fill="#efeee9" font-weight="400">17:00</text>
+<text x="1045" y="962.66" font-family="DM Sans, Arial, sans-serif" font-size="13" fill="#78c6ba" font-weight="400">12,760 MW</text>
+<text x="1256" y="961.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#9c9c98" font-weight="400">Fixture</text>
+<polyline points="542,984 1378,984" fill="none" stroke="#303030" stroke-width="1" stroke-linejoin="round"/>
+<text x="543" y="1006.66" font-family="DM Sans, Arial, sans-serif" font-size="13" fill="#efeee9" font-weight="400">16:00</text>
+<text x="790" y="1006.66" font-family="DM Sans, Arial, sans-serif" font-size="13" fill="#efeee9" font-weight="400">17:00</text>
+<text x="1045" y="1006.66" font-family="DM Sans, Arial, sans-serif" font-size="13" fill="#78c6ba" font-weight="400">12,340 MW</text>
+<text x="1256" y="1005.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#9c9c98" font-weight="400">Fixture</text>
+<text x="542" y="1055.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#9c9c98" font-weight="400">Example evidence, not a causal explanation or validated forecasting result.</text>
+</svg>
