@@ -7,7 +7,48 @@ name = "gridpulse-backend"
 version = "0.1.0"
 description = "GridPulse data ingestion and analysis backend"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "tzdata",  # zoneinfo data for hosts without a system database (Windows, slim containers)
+]
+
+[project.optional-dependencies]
+dev = [
+    "mypy>=2.4",
+    "numpy>=2.3",  # only for the differential oracles in the ported Orchid suites
+    "pytest>=9.1",
+    "ruff>=0.17",
+    "scipy>=1.16",  # only for the differential oracles in the ported Orchid suites
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--import-mode=importlib", "--strict-markers", "--strict-config", "-ra"]
+xfail_strict = true
+
+[tool.ruff]
+line-length = 100
+# Orchid modules and their suites are vendored verbatim.
+extend-exclude = ["src/gridpulse/analysis/algorithms/orchid/[a-z]*.py", "tests/analysis/orchid"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "SIM", "C4", "PT", "RUF", "N", "RET", "PIE"]
+ignore = ["E501"]  # the formatter owns line length
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+mypy_path = "src"
+files = ["src", "tests"]
+exclude = ["^tests/analysis/orchid/"]
+
+[[tool.mypy.overrides]]
+module = [
+    "gridpulse.analysis.algorithms.orchid.autoregressive",
+    "gridpulse.analysis.algorithms.orchid.forecasting_baseline",
+    "gridpulse.analysis.algorithms.orchid.smoothing",
+    "gridpulse.analysis.algorithms.orchid.spectral",
+]
+ignore_errors = true
