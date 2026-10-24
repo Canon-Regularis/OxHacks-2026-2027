@@ -1,6 +1,6 @@
 # Shared API contracts
 
-Frontend and backend owners agree changes here before integration. This directory is a shared specification, not another runtime service. Backend runtime request/response validation belongs in `backend/src/gridpulse/api/schemas.py`.
+Frontend and backend owners agree changes here before integration. This directory is a shared specification, not another runtime service. Backend runtime request/response validation belongs in `gridpulse/backend/src/gridpulse/api/schemas.py`.
 
 Proposed endpoints:
 

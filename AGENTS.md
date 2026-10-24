@@ -69,7 +69,7 @@ Preserve `(settlement_date, settlement_period)` identities, UTC instants and 46/
 
 ## Repository layout
 
-Follow [the repository structure and request flow](docs/gridpulse/REPOSITORY_STRUCTURE.md). Frontend code lives in `frontend/`; Python code in `backend/src/gridpulse/`; SQL migrations in `db/migrations/`; shared API examples in `contracts/`. Algorithms belong in `analysis/algorithms/` and are called through `analysis/service.py`. Keep HTTP, database access and pure calculations separate. Skeleton files are not implemented features.
+Follow [the repository structure and request flow](docs/gridpulse/REPOSITORY_STRUCTURE.md). Frontend code lives in `gridpulse/frontend/`; Python code in `gridpulse/backend/src/gridpulse/`; SQL migrations in `gridpulse/db/migrations/`; shared API examples in `gridpulse/contracts/`. Algorithms belong in `analysis/algorithms/` and are called through `analysis/service.py`. Keep HTTP, database access and pure calculations separate. Skeleton files are not implemented features.
 
 ## Related project documents
 

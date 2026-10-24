@@ -10,6 +10,6 @@ Frontend/product owner works here. Framework setup is pending inspection of WWW 
 - `src/styles/`: shared styles and design tokens.
 - `public/`: static assets with appropriate attribution.
 
-Use [contract examples](../contracts/examples/) during parallel development, visibly labelled as fixtures. Read the [request flow](../docs/gridpulse/REPOSITORY_STRUCTURE.md#request-flow) before connecting the API. Database credentials and Gemini keys belong only on the backend.
+Use [contract examples](../contracts/examples/) during parallel development, visibly labelled as fixtures. Read the [request flow](../../docs/gridpulse/REPOSITORY_STRUCTURE.md#request-flow) before connecting the API. Database credentials and Gemini keys belong only on the backend.
 
 Record exact install/development/build commands here after choosing the framework. Configure a same-origin `/api` proxy or an explicit public backend URL; public frontend configuration must contain no secrets.
