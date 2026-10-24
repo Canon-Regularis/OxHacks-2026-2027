@@ -4,8 +4,8 @@ Everything the frontend needs to call the backend, without reading backend code.
 
 ## What is live and what is planned
 
-- **Live now:** every endpoint below; two reference algorithms, `wind_price_correlation` and `price_naive_backtest`; and the first Orchid algorithm, `price_forecast_backtest`.
-- **Planned:** seven more algorithms built on the Orchid methods (baseline and regression backtests, a day-ahead forecast, rolling signals, correlograms, diagnostics, Fourier terms). Their exact responses are in [`contracts/examples/algorithms/`](../../gridpulse/contracts/examples/algorithms/). Build against those files now; the real responses will have the same shape.
+- **Live:** every endpoint below, the two reference algorithms (`wind_price_correlation`, `price_naive_backtest`) and eight algorithms built on the Orchid methods: three backtests, a day-ahead forecast, rolling signals, correlograms, residual diagnostics and Fourier terms. Example responses are in [`contracts/examples/algorithms/`](../../gridpulse/contracts/examples/algorithms/); tests keep their metadata and table columns identical to the real algorithms.
+- **Computed per environment:** each algorithm shows results only after someone runs it against that environment's database (`latest_run` is `null` until then).
 
 Build every algorithm panel from `/api/catalog` rather than hard-coding ids. New algorithms then appear without frontend changes.
 

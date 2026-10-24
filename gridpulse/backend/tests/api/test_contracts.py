@@ -1,6 +1,7 @@
 """The frontend builds against gridpulse/contracts/examples/; keep them parseable by the real schemas."""
 
 import json
+import sys
 
 import pytest
 
@@ -90,6 +91,11 @@ def test_examples_of_implemented_algorithms_match_the_registry():
             continue  # planned, not built yet
         served = algorithm_info(algorithm).model_dump(mode="json", exclude={"latest_run"})
         assert {k: v for k, v in example.items() if k != "latest_run"} == served, example["id"]
+        tables_path = path.with_name(f"{example['id']}.tables.json")
+        if tables_path.exists():  # columns as the adapter declares them in its TABLE_COLUMNS
+            declared = sys.modules[algorithm.run.__module__].TABLE_COLUMNS
+            tables = json.loads(tables_path.read_text())["tables"]
+            assert {name: t["columns"] for name, t in tables.items()} == declared, example["id"]
         implemented += 1
     assert implemented, "at least one planned algorithm is implemented"
 

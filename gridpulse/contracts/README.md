@@ -21,18 +21,18 @@ Conventions: `from`/`to` are inclusive settlement dates (`YYYY-MM-DD`). Instants
 
 ## Planned algorithm adapters
 
-`examples/algorithms/` holds a `/api/analysis` response (`<id>.analysis.json`) and, where the algorithm declares tables, a `/api/analysis/runs/{run_id}/tables` response (`<id>.tables.json`) for each adapter planned around the P0 Orchid modules. Together they cover every public method in the 14 P0 families (see [the P0 table](../../docs/gridpulse/ALGORITHMS_AND_ANALYSIS.md#p0-algorithms-issue-6)). `price_forecast_backtest` is implemented, and a test keeps its example identical to the registered algorithm's metadata and table columns. The others are proposals to build the frontend against; their ids, outputs and table columns may change when they are implemented.
+`examples/algorithms/` holds a `/api/analysis` response (`<id>.analysis.json`) and, where the algorithm declares tables, a `/api/analysis/runs/{run_id}/tables` response (`<id>.tables.json`) for each adapter built on the P0 Orchid modules. Together they cover every public method in the 14 P0 families (see [the P0 table](../../docs/gridpulse/ALGORITHMS_AND_ANALYSIS.md#p0-algorithms-issue-6)). All eight are implemented, and `test_contracts.py` keeps each example's metadata identical to the registered algorithm and its table columns identical to the adapter's `TABLE_COLUMNS`. Values are synthetic.
 
 | Algorithm id | Page | Series outputs | Tables | P0 methods |
 |---|---|---|---|---|
 | `price_baseline_backtest` | Explore | Day-ahead forecast per baseline | `metrics`, `by_horizon`, `folds` | `Naive`, `SeasonalNaive` (48, 336), `Naive2`, `Drift`, `Mean`, `MovingAverage`, `WeightedMovingAverage` |
-| `price_forecast_backtest` (live) | Overview, Explore | Seasonal naive, ETS and ARIMA forecasts with 80%/95% bands | `metrics`, `by_horizon`, `folds`, `fold_params` | `ETS`, `ARIMA` |
+| `price_forecast_backtest` | Overview, Explore | Seasonal naive, ETS and ARIMA forecasts with 80%/95% bands | `metrics`, `by_horizon`, `folds`, `fold_params` | `ETS`, `ARIMA` |
 | `price_regression_backtest` | Explore | Day-ahead forecast per regression | `metrics`, `by_horizon`, `folds` | `TrendRegression`, `SeasonalDummyRegression`, `FourierRegression`, `CalendarRegression` |
-| `price_day_ahead_forecast` | Overview | Next-day AutoETS and AutoARIMA forecasts with 80%/95% bands | `selected_models`, `fit_warnings` | `AutoETS`, `AutoARIMA` |
+| `price_day_ahead_forecast` | Overview | Next-day AutoETS and AutoARIMA forecasts with 80%/95% bands | `forecast_day`, `selected_models`, `fit_warnings` | `AutoETS`, `AutoARIMA` |
 | `price_rolling_signals` | Overview | Trailing mean, weighted mean, EWMA, variance, std, median, RMS, p10/p90, changes | none | every `signals` function |
 | `calendar_fourier_terms` | Methods | Daily and weekly sine/cosine terms | none | `calendar.fourier_terms` |
-| `price_driver_correlograms` | Explore | none (`indicators` empty) | `acf_price`, `pacf_price`, `ccf_residual_demand`, `ccf_wind` | `autocorrelation`, `partial_autocorrelation`, `cross_correlation` |
-| `price_residual_diagnostics` | Methods | none | `ljung_box`, `tests` | `residual_diagnostics` |
+| `price_driver_correlograms` | Explore | none (`indicators` empty) | `sample`, `acf_price`, `pacf_price`, `ccf_residual_demand`, `ccf_wind` | `autocorrelation`, `partial_autocorrelation`, `cross_correlation` |
+| `price_residual_diagnostics` | Methods | none | `sample`, `ljung_box`, `tests` | `residual_diagnostics` |
 
 Every backtest uses `evaluation.backtest`, and its `metrics` table carries every accuracy and interval metric: MAE, RMSE, WMAPE, sMAPE, MASE, RMSSE, coverage, interval score, MSIS and pinball loss. The backtests share column names so the frontend can render them with one component. Run `AutoETS`, `ARIMA`, `AutoARIMA` and every backtest of a fitted model in batch jobs only.
 

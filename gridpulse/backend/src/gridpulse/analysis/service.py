@@ -205,6 +205,11 @@ def served_run(conn: Connection, algorithm: Algorithm) -> dict | None:
     return queries.find_run(conn, algorithm.id, algorithm.version, with_params(algorithm))
 
 
+def served_runs(conn: Connection, algorithms: list[Algorithm]) -> dict[str, dict]:
+    """served_run for every algorithm in one query: algorithm id -> run (absent if none)."""
+    return queries.served_runs(conn, [(a.id, a.version, with_params(a)) for a in algorithms])
+
+
 def period_results(conn: Connection, algorithms: list[Algorithm], delivery_start: datetime) -> list[dict]:
     """Every algorithm's indicators for one period, from the run that would be served by default."""
     served = [(a.id, a.version, with_params(a)) for a in algorithms]

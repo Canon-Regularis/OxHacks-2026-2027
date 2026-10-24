@@ -130,6 +130,23 @@ Run `AutoETS`, `ARIMA`, `AutoARIMA` and backtests of fitted models in batch jobs
 
   It requires at least 30 residuals and does not apply pass/fail thresholds.
 
+### Registered algorithms
+
+The P0 methods reach the API through eight algorithms in `analysis/algorithms/`. Runtimes are wall-clock times of `gridpulse analyse` from a laptop against the Tiger dev database, including loading inputs and storing results (about 15 s of each).
+
+| Algorithm | Methods | Range to run | Runtime |
+|---|---|---|---|
+| `price_forecast_backtest` | `ETS`, `ARIMA`, `SeasonalNaive` via `backtest` | at most about 60 days (`max_folds`) | 110 s for 53 days |
+| `price_baseline_backtest` | `Naive`, `SeasonalNaive`, `Naive2`, `Drift`, `Mean`, `MovingAverage`, `WeightedMovingAverage` | at most about 60 days | 22 s for 53 days |
+| `price_regression_backtest` | `TrendRegression`, `SeasonalDummyRegression`, `FourierRegression`, `CalendarRegression` | at most about 60 days | 46 s for 53 days |
+| `price_day_ahead_forecast` | `AutoETS`, `AutoARIMA`, `SeasonalNaive` | `--from` and `--to` the last settled day; forecasts the next | 20 s |
+| `price_rolling_signals` | every `signals` function | any | 19 s for 115 days |
+| `price_driver_correlograms` | `autocorrelation`, `partial_autocorrelation`, `cross_correlation` | any; uses its longest gap-free stretch | 14 s for 53 days |
+| `price_residual_diagnostics` | `residual_diagnostics` on `ETS` and `ARIMA` residuals | any; fits the latest 56 gap-free days | 18 s for 53 days |
+| `calendar_fourier_terms` | `fourier_terms` | any | 17 s for 61 days |
+
+The three backtests share `_backtest.py`, which backtests one origin at a time so that a missing price excludes only the folds containing it (status `missing_data`). The correlograms and diagnostics use the longest gap-free stretch of the range and report it in a `sample` table. Run them with `gridpulse analyse <id> --from … --to …`; see the frontend's [display guide](ALGORITHM_DISPLAY.md) for how each is shown.
+
 ## Execution and result format
 
 Start with explicit batch processing after an import. Store completed runs and serve their results quickly; avoid rerunning expensive algorithms whenever a chart renders. For interactive requests, bound date ranges and use caching or return a running status if needed. Never expose partial results as a completed run.

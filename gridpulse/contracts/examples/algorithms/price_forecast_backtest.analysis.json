@@ -49,7 +49,7 @@
         }
       }
     },
-    "limitations": "Out-of-sample: each forecast uses only prices settled before its origin, and every model is refitted at every origin. Origins step by elapsed half-hours, so they shift by an hour of local time across a clock change. Intervals are model-based (the seasonal naive's are not stored); WMAPE and sMAPE are fractions. A fold with a missing price in its window or targets is excluded, not imputed. Not a probability of a price spike or a trading signal.",
+    "limitations": "Out-of-sample: each forecast uses only prices settled before its origin, and every model is refitted at every origin. Origins step by elapsed half-hours, so they shift by an hour of local time across a clock change. Intervals are model-based; WMAPE and sMAPE are fractions. A fold with a missing price in its window or targets is excluded, not imputed. Not a probability of a price spike or a trading signal. The seasonal naive's intervals are scored but not stored as series.",
     "datasets": [
       "elexon_system_prices"
     ],

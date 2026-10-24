@@ -9,32 +9,24 @@
     "outputs": {
       "seasonal_naive_forecast": "GBP/MWh",
       "auto_ets_forecast": "GBP/MWh",
+      "auto_arima_forecast": "GBP/MWh",
       "auto_ets_lower_80": "GBP/MWh",
       "auto_ets_upper_80": "GBP/MWh",
       "auto_ets_lower_95": "GBP/MWh",
       "auto_ets_upper_95": "GBP/MWh",
-      "auto_arima_forecast": "GBP/MWh",
       "auto_arima_lower_80": "GBP/MWh",
       "auto_arima_upper_80": "GBP/MWh",
       "auto_arima_lower_95": "GBP/MWh",
       "auto_arima_upper_95": "GBP/MWh"
     },
     "tables": {
+      "forecast_day": "The settlement day forecast, its first and last period, how many periods it has (46, 48 or 50) and the history used",
       "selected_models": "Each model's selected specification and fitted parameters, one row per parameter",
-      "fit_warnings": "Conditions flagged while fitting, such as history spanning a clock change"
+      "fit_warnings": "Conditions flagged while fitting, and models that could not forecast"
     },
-    "limitations": "A forecast of the day after the range, from prices settled by its end. The selection itself is not backtested here; compare price_forecast_backtest for out-of-sample accuracy. Intervals are model-based, not probabilities of a price event.",
-    "datasets": [
-      "elexon_system_prices"
-    ],
-    "version": "0.1.0",
+    "limitations": "A forecast of the settlement day after the range, from prices settled by its end. The model selection is not backtested here; price_forecast_backtest shows how accurate such forecasts have been. Seasonal lags count elapsed half-hours, so a forecast day with a clock change is offset by an hour after the change. Intervals are model-based, not probabilities of a price event.",
     "params": {
       "history_periods": 1344,
-      "horizon": 48,
-      "levels": [
-        0.8,
-        0.95
-      ],
       "models": {
         "seasonal_naive": {
           "season_length": 48
@@ -44,17 +36,19 @@
         },
         "auto_arima": {
           "season_length": 48,
-          "seasonal_differencing": null,
+          "seasonal_differencing": 1,
           "max_p": 3,
           "max_q": 2
         }
       }
     },
+    "datasets": [
+      "elexon_system_prices"
+    ],
+    "version": "0.1.0",
     "param_descriptions": {
-      "history_periods": "Settled periods before the forecast day used to select and fit each model (1344 = 28 days)",
-      "horizon": "Periods forecast (48 = the next settlement day; 46 or 50 on clock-change days)",
-      "levels": "Central prediction-interval levels, as fractions",
-      "models": "Model name -> its settings; null seasonal_differencing lets a test choose"
+      "history_periods": "Settled periods before the forecast day used to select and fit each model; at most 1344 (28 days)",
+      "models": "Settings of each model; null seasonal_differencing would let a test choose, which on these prices drops the daily cycle"
     },
     "latest_run": {
       "run_id": 26,
@@ -62,11 +56,6 @@
       "algorithm_version": "0.1.0",
       "params": {
         "history_periods": 1344,
-        "horizon": 48,
-        "levels": [
-          0.8,
-          0.95
-        ],
         "models": {
           "seasonal_naive": {
             "season_length": 48
@@ -76,7 +65,7 @@
           },
           "auto_arima": {
             "season_length": 48,
-            "seasonal_differencing": null,
+            "seasonal_differencing": 1,
             "max_p": 3,
             "max_q": 2
           }
@@ -98,11 +87,6 @@
     "algorithm_version": "0.1.0",
     "params": {
       "history_periods": 1344,
-      "horizon": 48,
-      "levels": [
-        0.8,
-        0.95
-      ],
       "models": {
         "seasonal_naive": {
           "season_length": 48
@@ -112,7 +96,7 @@
         },
         "auto_arima": {
           "season_length": 48,
-          "seasonal_differencing": null,
+          "seasonal_differencing": 1,
           "max_p": 3,
           "max_q": 2
         }
@@ -272,10 +256,9 @@
       ]
     }
   },
-  "warnings": [
-    "Forecast day 2026-10-25 has 50 periods; seasonal models count elapsed half-hours."
-  ],
+  "warnings": [],
   "tables": [
+    "forecast_day",
     "selected_models",
     "fit_warnings"
   ]

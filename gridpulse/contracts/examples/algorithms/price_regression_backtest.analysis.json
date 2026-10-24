@@ -17,11 +17,7 @@
       "by_horizon": "MAE, RMSE and 80%/95% coverage per model and lead step",
       "folds": "Every forecast origin per model with its status; excluded folds carry a message"
     },
-    "limitations": "Only calendar_forecast follows the Europe/London clock, so it alone is exact on 46- and 50-period days; the others count elapsed half-hours. Each forecast uses only prices settled before its origin (the previous day's end). Intervals come from each model's interval_method; sqrt-horizon is a heuristic. WMAPE and sMAPE are fractions. Not a probability of a price spike or a trading signal.",
-    "datasets": [
-      "elexon_system_prices"
-    ],
-    "version": "0.1.0",
+    "limitations": "Only calendar follows the Europe/London clock, so it alone is exact on 46- and 50-period days; the others count elapsed half-hours. Point forecasts only are stored. Out-of-sample: each forecast uses only prices settled before its origin, and every model is refitted at every origin. Origins step by elapsed half-hours, so they shift by an hour of local time across a clock change. Intervals are model-based; WMAPE and sMAPE are fractions. A fold with a missing price in its window or targets is excluded, not imputed. Not a probability of a price spike or a trading signal.",
     "params": {
       "horizon": 48,
       "window": 1344,
@@ -47,6 +43,10 @@
         }
       }
     },
+    "datasets": [
+      "elexon_system_prices"
+    ],
+    "version": "0.1.0",
     "param_descriptions": {
       "horizon": "Periods forecast from each origin, which is also the step between origins (48 = one day ahead, once a day)",
       "window": "Settled periods each fit uses, ending at the origin; at most 1344 (28 days)",

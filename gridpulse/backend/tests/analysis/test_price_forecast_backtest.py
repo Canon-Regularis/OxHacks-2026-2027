@@ -1,6 +1,5 @@
 """price_forecast_backtest: fold geometry, availability, gaps and the stored tables."""
 
-import json
 import math
 from typing import Any
 
@@ -14,7 +13,6 @@ from gridpulse.analysis.algorithms.forecasting import ETS
 from gridpulse.analysis.algorithms.series import HalfHourlySeries
 from gridpulse.analysis.contract import AlgorithmResult
 from gridpulse.analysis.service import check_output, check_tables
-from gridpulse.config import APP_DIR
 
 FOLDS = 2
 WINDOW = 336  # a 7-day fit keeps the tests fast; the range still starts after pfb.WINDOW
@@ -151,9 +149,5 @@ def test_a_frame_shorter_than_the_window_gives_no_folds() -> None:
     assert (table(out, "metrics")["n_ok_folds"] == 0).all()
 
 
-def test_contract_example_has_the_real_table_columns(result: AlgorithmResult) -> None:
-    path = APP_DIR / "contracts" / "examples" / "algorithms" / "price_forecast_backtest.tables.json"
-    example = json.loads(path.read_text())["tables"]
-    assert {name: t["columns"] for name, t in example.items()} == {
-        name: list(frame.columns) for name, frame in result.tables.items()
-    }
+def test_tables_have_the_declared_columns(result: AlgorithmResult) -> None:
+    assert {name: list(t.columns) for name, t in result.tables.items()} == pfb.TABLE_COLUMNS

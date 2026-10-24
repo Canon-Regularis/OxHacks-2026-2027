@@ -40,10 +40,11 @@ def health(request: Request) -> Health:
 def catalog(conn: Connection = Depends(get_conn)) -> Catalog:
     """Series, data coverage and algorithms: enough to build command autocomplete and panels."""
     settings = get_settings()
+    served = service.served_runs(conn, list(ALGORITHMS.values()))
     return Catalog(
         series=[SeriesInfo(**series_info(sid)) for sid in SERIES],
         datasets=[DatasetCoverage(**row) for row in queries.coverage(conn)],
-        algorithms=[algorithm_info(a, service.served_run(conn, a)) for a in ALGORITHMS.values()],
+        algorithms=[algorithm_info(a, served.get(a.id)) for a in ALGORITHMS.values()],
         limits=Limits(max_points=settings.max_points, max_range_days=settings.max_range_days),
         data_updated_at_utc=queries.data_updated_at(conn),
     )
