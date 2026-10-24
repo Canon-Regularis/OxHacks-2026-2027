@@ -1,6 +1,6 @@
 # Repository structure and ownership
 
-This is the agreed layout. The folders and base files are scaffolded; HTTP handlers, database integration, algorithms and frontend framework setup remain to be implemented. Avoid introducing parallel locations for the same responsibility.
+This is the agreed layout. The backend, the P0 algorithm layer and the Vultr deployment are implemented; frontend framework setup remains (see [implementation status](#implementation-status)). Avoid introducing parallel locations for the same responsibility.
 
 ## Layout
 
@@ -49,13 +49,15 @@ gridpulse/                        # All application code and operational files
         contract.py                 # Algorithm interface and input columns
         features.py                 # ASOF/latest input frame built in SQL
         service.py                  # Prepare → calculate → check → store/retrieve
-        algorithms/                 # One module per algorithm, registered in __init__.py
+        algorithms/                 # Registered algorithms (see __init__.py) and the Orchid P0 adapters
+          orchid/                   # Orchid modules vendored verbatim
       agent/
         service.py                  # Optional Gemini orchestration
         tools.py                    # Existing-service adapters
     tests/                          # pytest; no database needed
       ingestion/
-      analysis/                     # Contract tests run on every registered algorithm
+      analysis/                     # Contract tests for every registered algorithm; adapter tests
+        orchid/                     # Orchid's upstream test suites, ported
       api/
   db/migrations/                    # Re-runnable gridpulse schema: views over raw, analysis tables
   contracts/
@@ -116,10 +118,10 @@ For expensive calculations, run analysis after an import and return stored compl
 
 ## Reference code and fixtures
 
-Inspect Orchid, WWW and Components before reuse. Keep reference checkouts outside the application tree; bring selected files into their responsibility folders with licence/attribution, and record upstream revisions in [AGENTS.md](../../AGENTS.md). No reference code is included in this scaffold.
+Inspect Orchid, WWW and Components before reuse. Keep reference checkouts outside the application tree; bring selected files into their responsibility folders with licence/attribution, and record upstream revisions in [AGENTS.md](../../AGENTS.md). Orchid's P0 modules are vendored in `analysis/algorithms/orchid/`. No WWW or Components code is included yet.
 
 Synthetic API examples belong in `gridpulse/contracts/examples/` and must be visibly labelled during UI development. Real cached demo data belongs in `gridpulse/data/demo/` with provenance. Raw downloads stay in ignored `gridpulse/data/raw/`.
 
 ## Implementation status
 
-The backend infrastructure runs end to end against Tiger Data. That covers the API, the `gridpulse` views over the loader's `raw` schema, the algorithm runner, result storage and the demo cache, with one reference algorithm. Data modelling, the real algorithms, Gemini, the frontend and the Vultr deployment are not implemented; see [BACKEND_DESIGN.md](BACKEND_DESIGN.md#open-items). Do not present stubs or fixtures as implemented functionality. Add meaningful tests as each real implementation lands.
+The backend infrastructure runs end to end against Tiger Data. That covers the API, the `gridpulse` views over the loader's `raw` schema, the algorithm runner, result storage and the demo cache, with example algorithms. GitHub Actions tests each change and deploys `main` to development and `production` to production on Vultr ([deployment](../../gridpulse/deploy/README.md)). The Orchid P0 methods (issue #6) are implemented and tested as pure adapters in `analysis/algorithms/`, but no registered algorithm uses them yet. Data modelling, Gemini and the frontend are not implemented; see [BACKEND_DESIGN.md](BACKEND_DESIGN.md#open-items). Do not present stubs or fixtures as implemented functionality. Add meaningful tests as each real implementation lands.
