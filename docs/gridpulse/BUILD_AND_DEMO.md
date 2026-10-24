@@ -37,25 +37,13 @@ Loading, empty, error and cached-mode states are part of the core UI. Synthetic 
 
 Use Vultr as the application hosting target and Tiger Data as the managed database. Choose the simplest deployment the team can operate, such as one VM serving frontend and backend. Containerise only if it helps the team ship faster.
 
-Keep `DATABASE_URL`, `GEMINI_API_KEY` and any optional Snowflake credentials on the server. Configure frontend/backend routing, permitted frontend origins where needed, database connectivity and HTTPS for the public app. Document deployed URL, deployment/update steps and local startup commands in the root README. Verify reboot/restart behaviour and test the URL from another device before relying on it for judging.
+Keep `DATABASE_URL`, `GEMINI_API_KEY` and any optional Snowflake credentials on the server. Configure gridpulse/frontend/backend routing, permitted frontend origins where needed, database connectivity and HTTPS for the public app. Document deployed URL, deployment/update steps and local startup commands in the root README. Verify reboot/restart behaviour and test the URL from another device before relying on it for judging.
 
-## Suggested repository layout
+## Repository layout
 
-```text
-frontend/             # Dashboard and API client
-backend/              # API, ingestion, database access, algorithm adapters
-backend/algorithms/   # Existing implementations or integration wrappers
-backend/tests/        # Meaningful ingestion and algorithm contract checks
-db/                   # Schema/migrations
-scripts/              # Import, demo export and deployment helpers
-data/demo/            # Small permitted real-data cache with provenance
-data/raw/             # Ignored CSV downloads
-docs/gridpulse/       # Project plan
-.env.example          # Configuration placeholders
-README.md             # Exact setup, launch and demo instructions
-```
+Follow the [repository structure and request flow](REPOSITORY_STRUCTURE.md). The skeleton now exists, with frontend, backend, database migrations, shared contracts, data, scripts and deployment areas. Base modules are stubs; framework setup and application behaviour remain to be implemented.
 
-This is a proposed structure, not existing application code. Keep one repository and avoid extra services beyond the frontend, backend and database.
+The algorithm integration location is `gridpulse/backend/src/gridpulse/analysis/algorithms/`. The shared frontend HTTP boundary is `gridpulse/frontend/src/lib/api.ts`; backend routes live in `gridpulse/backend/src/gridpulse/api/`. Keep one repository and avoid extra services beyond the frontend, backend and database.
 
 ## Demo sequence (2–3 minutes)
 
@@ -64,7 +52,7 @@ This is a proposed structure, not existing application code. Keep one repository
 3. Open one period and explain the existing algorithm's output and inputs.
 4. Demonstrate Tiger Data's role and the Vultr-hosted application.
 5. If complete, ask Gemini a question and show the evidence used in its answer.
-6. State limitations and show reproducible data/run metadata.
+6. State limitations and show reproducible gridpulse/data/run metadata.
 
 ## Final checks
 

@@ -218,3 +218,15 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# GridPulse local data and frontend build outputs
+/gridpulse/data/raw/*
+!/gridpulse/data/raw/.gitkeep
+node_modules/
+/gridpulse/frontend/dist/
+/gridpulse/frontend/build/
+.env.*
+!.env.example
+
+# Frontend source directory (the Python template ignores lib/ globally).
+!/gridpulse/frontend/src/lib/
