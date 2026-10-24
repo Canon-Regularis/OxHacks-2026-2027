@@ -1,0 +1,112 @@
+{
+  "_fixture": "Synthetic example for UI development; not real data. Complete for this synthetic run.",
+  "run": {
+    "run_id": 26,
+    "algorithm_id": "price_day_ahead_forecast",
+    "algorithm_version": "0.1.0",
+    "params": {
+      "history_periods": 1344,
+      "horizon": 48,
+      "levels": [
+        0.8,
+        0.95
+      ],
+      "models": {
+        "seasonal_naive": {
+          "season_length": 48
+        },
+        "auto_ets": {
+          "season_length": 48
+        },
+        "auto_arima": {
+          "season_length": 48,
+          "seasonal_differencing": null,
+          "max_p": 3,
+          "max_q": 2
+        }
+      }
+    },
+    "range_start_utc": "2026-09-25T23:00:00Z",
+    "range_end_utc": "2026-10-24T23:00:00Z",
+    "cutoff_utc": null,
+    "finished_at_utc": "2026-10-24T21:05:00Z"
+  },
+  "tables": {
+    "selected_models": {
+      "description": "Each model's selected specification and fitted parameters, one row per parameter",
+      "columns": [
+        "model",
+        "source",
+        "parameter",
+        "value"
+      ],
+      "rows": [
+        [
+          "auto_ets",
+          "forecasting_baseline.auto_ets",
+          "method",
+          "ETS(A,N,A)"
+        ],
+        [
+          "auto_ets",
+          "forecasting_baseline.auto_ets",
+          "alpha",
+          0.58
+        ],
+        [
+          "auto_ets",
+          "forecasting_baseline.auto_ets",
+          "gamma",
+          0.14
+        ],
+        [
+          "auto_arima",
+          "autoregressive.auto_arima",
+          "order",
+          "(2, 0, 1)"
+        ],
+        [
+          "auto_arima",
+          "autoregressive.auto_arima",
+          "seasonal_order",
+          "(0, 1, 0, 48)"
+        ],
+        [
+          "auto_arima",
+          "autoregressive.auto_arima",
+          "trend",
+          "n"
+        ],
+        [
+          "auto_arima",
+          "autoregressive.auto_arima",
+          "n_models",
+          14
+        ],
+        [
+          "auto_arima",
+          "autoregressive.auto_arima",
+          "sigma2",
+          1688.0
+        ]
+      ]
+    },
+    "fit_warnings": {
+      "description": "Conditions flagged while fitting, such as history spanning a clock change",
+      "columns": [
+        "model",
+        "warning"
+      ],
+      "rows": [
+        [
+          "auto_ets",
+          "forecast horizon spans the 2026-10-25 clock change"
+        ],
+        [
+          "auto_arima",
+          "forecast horizon spans the 2026-10-25 clock change"
+        ]
+      ]
+    }
+  }
+}

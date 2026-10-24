@@ -1,0 +1,170 @@
+{
+  "_fixture": "Synthetic example for UI development; not real data. Six 30-minute points from one evening peak.",
+  "algorithm": {
+    "id": "price_regression_backtest",
+    "description": "Day-ahead imbalance price from linear trend, half-hourly seasonal dummies, daily Fourier terms and GB-clock calendar (daily and weekly) regressions, scored by a rolling-origin backtest.",
+    "inputs": [
+      "price_gbp_mwh"
+    ],
+    "outputs": {
+      "trend_forecast": "GBP/MWh",
+      "seasonal_dummy_forecast": "GBP/MWh",
+      "fourier_forecast": "GBP/MWh",
+      "calendar_forecast": "GBP/MWh"
+    },
+    "tables": {
+      "metrics": "Scores per model, pooled over the ok folds; MASE, RMSSE and MSIS averaged per fold",
+      "by_horizon": "MAE, RMSE and 80%/95% coverage per model and lead step",
+      "folds": "Every forecast origin per model with its status; excluded folds carry a message"
+    },
+    "limitations": "Only calendar_forecast follows the Europe/London clock, so it alone is exact on 46- and 50-period days; the others count elapsed half-hours. Each forecast uses only prices settled before its origin (the previous day's end). Intervals come from each model's interval_method; sqrt-horizon is a heuristic. WMAPE and sMAPE are fractions. Not a probability of a price spike or a trading signal.",
+    "version": "0.1.0",
+    "latest_run": {
+      "run_id": 25,
+      "algorithm_id": "price_regression_backtest",
+      "algorithm_version": "0.1.0",
+      "params": {
+        "initial": 1344,
+        "window": 1344,
+        "horizon": 48,
+        "step": 48,
+        "max_folds": 60,
+        "season_length": 48,
+        "levels": [
+          0.8,
+          0.95
+        ],
+        "models": {
+          "trend": {
+            "degree": 1
+          },
+          "seasonal_dummy": {
+            "season_length": 48,
+            "degree": 1
+          },
+          "fourier": {
+            "season_length": 48,
+            "harmonics": 4,
+            "degree": 1
+          },
+          "calendar": {
+            "daily_harmonics": 4,
+            "weekly_harmonics": 2,
+            "degree": 1
+          }
+        }
+      },
+      "range_start_utc": "2026-08-31T23:00:00Z",
+      "range_end_utc": "2026-10-23T23:00:00Z",
+      "cutoff_utc": null,
+      "finished_at_utc": "2026-10-24T20:42:00Z"
+    }
+  },
+  "run": {
+    "run_id": 25,
+    "algorithm_id": "price_regression_backtest",
+    "algorithm_version": "0.1.0",
+    "params": {
+      "initial": 1344,
+      "window": 1344,
+      "horizon": 48,
+      "step": 48,
+      "max_folds": 60,
+      "season_length": 48,
+      "levels": [
+        0.8,
+        0.95
+      ],
+      "models": {
+        "trend": {
+          "degree": 1
+        },
+        "seasonal_dummy": {
+          "season_length": 48,
+          "degree": 1
+        },
+        "fourier": {
+          "season_length": 48,
+          "harmonics": 4,
+          "degree": 1
+        },
+        "calendar": {
+          "daily_harmonics": 4,
+          "weekly_harmonics": 2,
+          "degree": 1
+        }
+      }
+    },
+    "range_start_utc": "2026-08-31T23:00:00Z",
+    "range_end_utc": "2026-10-23T23:00:00Z",
+    "cutoff_utc": null,
+    "finished_at_utc": "2026-10-24T20:42:00Z"
+  },
+  "from": "2026-10-22",
+  "to": "2026-10-22",
+  "resolution": "30m",
+  "t": [
+    "2026-10-22T15:00:00Z",
+    "2026-10-22T15:30:00Z",
+    "2026-10-22T16:00:00Z",
+    "2026-10-22T16:30:00Z",
+    "2026-10-22T17:00:00Z",
+    "2026-10-22T17:30:00Z"
+  ],
+  "indicators": {
+    "trend_forecast": {
+      "label": "trend_forecast",
+      "unit": "GBP/MWh",
+      "values": [
+        83.1,
+        83.1,
+        83.2,
+        83.2,
+        83.2,
+        83.3
+      ]
+    },
+    "seasonal_dummy_forecast": {
+      "label": "seasonal_dummy_forecast",
+      "unit": "GBP/MWh",
+      "values": [
+        89.8,
+        106.6,
+        129.2,
+        136.0,
+        120.4,
+        99.9
+      ]
+    },
+    "fourier_forecast": {
+      "label": "fourier_forecast",
+      "unit": "GBP/MWh",
+      "values": [
+        95.1,
+        112.0,
+        128.4,
+        130.2,
+        116.9,
+        99.8
+      ]
+    },
+    "calendar_forecast": {
+      "label": "calendar_forecast",
+      "unit": "GBP/MWh",
+      "values": [
+        93.9,
+        110.5,
+        130.3,
+        134.6,
+        119.2,
+        98.6
+      ]
+    }
+  },
+  "warnings": [],
+  "tables": [
+    "metrics",
+    "by_horizon",
+    "folds"
+  ]
+}

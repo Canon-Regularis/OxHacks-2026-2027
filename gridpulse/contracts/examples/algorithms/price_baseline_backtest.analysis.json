@@ -1,0 +1,234 @@
+{
+  "_fixture": "Synthetic example for UI development; not real data. Six 30-minute points from one evening peak.",
+  "algorithm": {
+    "id": "price_baseline_backtest",
+    "description": "Day-ahead imbalance price from naive, seasonal naive (daily and weekly), Naive2, drift, mean and moving-average baselines, scored by a rolling-origin backtest.",
+    "inputs": [
+      "price_gbp_mwh"
+    ],
+    "outputs": {
+      "naive_forecast": "GBP/MWh",
+      "seasonal_naive_day_forecast": "GBP/MWh",
+      "seasonal_naive_week_forecast": "GBP/MWh",
+      "naive2_forecast": "GBP/MWh",
+      "drift_forecast": "GBP/MWh",
+      "mean_forecast": "GBP/MWh",
+      "moving_average_forecast": "GBP/MWh",
+      "weighted_moving_average_forecast": "GBP/MWh"
+    },
+    "tables": {
+      "metrics": "Scores per model, pooled over the ok folds; MASE, RMSSE and MSIS averaged per fold",
+      "by_horizon": "MAE, RMSE and 80%/95% coverage per model and lead step",
+      "folds": "Every forecast origin per model with its status; excluded folds carry a message"
+    },
+    "limitations": "Benchmarks every other forecaster must beat. Each forecast uses only prices settled before its origin (the previous day's end). Intervals come from each model's interval_method; sqrt-horizon is a heuristic. WMAPE and sMAPE are fractions. Not a probability of a price spike or a trading signal.",
+    "version": "0.1.0",
+    "latest_run": {
+      "run_id": 20,
+      "algorithm_id": "price_baseline_backtest",
+      "algorithm_version": "0.1.0",
+      "params": {
+        "initial": 1344,
+        "window": 1344,
+        "horizon": 48,
+        "step": 48,
+        "max_folds": 60,
+        "season_length": 48,
+        "levels": [
+          0.8,
+          0.95
+        ],
+        "models": {
+          "naive": {},
+          "seasonal_naive_day": {
+            "season_length": 48
+          },
+          "seasonal_naive_week": {
+            "season_length": 336
+          },
+          "naive2": {
+            "season_length": 48
+          },
+          "drift": {},
+          "mean": {},
+          "moving_average": {
+            "window": 48
+          },
+          "weighted_moving_average": {
+            "weights": [
+              1,
+              2,
+              3,
+              4
+            ]
+          }
+        }
+      },
+      "range_start_utc": "2026-08-31T23:00:00Z",
+      "range_end_utc": "2026-10-23T23:00:00Z",
+      "cutoff_utc": null,
+      "finished_at_utc": "2026-10-24T20:39:00Z"
+    }
+  },
+  "run": {
+    "run_id": 20,
+    "algorithm_id": "price_baseline_backtest",
+    "algorithm_version": "0.1.0",
+    "params": {
+      "initial": 1344,
+      "window": 1344,
+      "horizon": 48,
+      "step": 48,
+      "max_folds": 60,
+      "season_length": 48,
+      "levels": [
+        0.8,
+        0.95
+      ],
+      "models": {
+        "naive": {},
+        "seasonal_naive_day": {
+          "season_length": 48
+        },
+        "seasonal_naive_week": {
+          "season_length": 336
+        },
+        "naive2": {
+          "season_length": 48
+        },
+        "drift": {},
+        "mean": {},
+        "moving_average": {
+          "window": 48
+        },
+        "weighted_moving_average": {
+          "weights": [
+            1,
+            2,
+            3,
+            4
+          ]
+        }
+      }
+    },
+    "range_start_utc": "2026-08-31T23:00:00Z",
+    "range_end_utc": "2026-10-23T23:00:00Z",
+    "cutoff_utc": null,
+    "finished_at_utc": "2026-10-24T20:39:00Z"
+  },
+  "from": "2026-10-22",
+  "to": "2026-10-22",
+  "resolution": "30m",
+  "t": [
+    "2026-10-22T15:00:00Z",
+    "2026-10-22T15:30:00Z",
+    "2026-10-22T16:00:00Z",
+    "2026-10-22T16:30:00Z",
+    "2026-10-22T17:00:00Z",
+    "2026-10-22T17:30:00Z"
+  ],
+  "indicators": {
+    "naive_forecast": {
+      "label": "naive_forecast",
+      "unit": "GBP/MWh",
+      "values": [
+        71.5,
+        71.5,
+        71.5,
+        71.5,
+        71.5,
+        71.5
+      ]
+    },
+    "seasonal_naive_day_forecast": {
+      "label": "seasonal_naive_day_forecast",
+      "unit": "GBP/MWh",
+      "values": [
+        88.0,
+        104.5,
+        131.0,
+        142.2,
+        118.7,
+        97.3
+      ]
+    },
+    "seasonal_naive_week_forecast": {
+      "label": "seasonal_naive_week_forecast",
+      "unit": "GBP/MWh",
+      "values": [
+        95.5,
+        111.0,
+        123.0,
+        139.5,
+        125.2,
+        100.4
+      ]
+    },
+    "naive2_forecast": {
+      "label": "naive2_forecast",
+      "unit": "GBP/MWh",
+      "values": [
+        86.0,
+        102.0,
+        128.5,
+        138.0,
+        116.0,
+        95.0
+      ]
+    },
+    "drift_forecast": {
+      "label": "drift_forecast",
+      "unit": "GBP/MWh",
+      "values": [
+        71.6,
+        71.6,
+        71.7,
+        71.7,
+        71.8,
+        71.8
+      ]
+    },
+    "mean_forecast": {
+      "label": "mean_forecast",
+      "unit": "GBP/MWh",
+      "values": [
+        83.9,
+        83.9,
+        83.9,
+        83.9,
+        83.9,
+        83.9
+      ]
+    },
+    "moving_average_forecast": {
+      "label": "moving_average_forecast",
+      "unit": "GBP/MWh",
+      "values": [
+        84.6,
+        84.6,
+        84.6,
+        84.6,
+        84.6,
+        84.6
+      ]
+    },
+    "weighted_moving_average_forecast": {
+      "label": "weighted_moving_average_forecast",
+      "unit": "GBP/MWh",
+      "values": [
+        73.2,
+        73.2,
+        73.2,
+        73.2,
+        73.2,
+        73.2
+      ]
+    }
+  },
+  "warnings": [],
+  "tables": [
+    "metrics",
+    "by_horizon",
+    "folds"
+  ]
+}

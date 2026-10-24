@@ -1,0 +1,250 @@
+{
+  "_fixture": "Synthetic example for UI development; not real data. by_horizon truncated to lead steps 1 and 48 for two models; folds truncated.",
+  "run": {
+    "run_id": 25,
+    "algorithm_id": "price_regression_backtest",
+    "algorithm_version": "0.1.0",
+    "params": {
+      "initial": 1344,
+      "window": 1344,
+      "horizon": 48,
+      "step": 48,
+      "max_folds": 60,
+      "season_length": 48,
+      "levels": [
+        0.8,
+        0.95
+      ],
+      "models": {
+        "trend": {
+          "degree": 1
+        },
+        "seasonal_dummy": {
+          "season_length": 48,
+          "degree": 1
+        },
+        "fourier": {
+          "season_length": 48,
+          "harmonics": 4,
+          "degree": 1
+        },
+        "calendar": {
+          "daily_harmonics": 4,
+          "weekly_harmonics": 2,
+          "degree": 1
+        }
+      }
+    },
+    "range_start_utc": "2026-08-31T23:00:00Z",
+    "range_end_utc": "2026-10-23T23:00:00Z",
+    "cutoff_utc": null,
+    "finished_at_utc": "2026-10-24T20:42:00Z"
+  },
+  "tables": {
+    "metrics": {
+      "description": "Scores per model, pooled over the ok folds; MASE, RMSSE and MSIS averaged per fold",
+      "columns": [
+        "model",
+        "interval_method",
+        "n_ok_folds",
+        "n_excluded_folds",
+        "mae_gbp_mwh",
+        "rmse_gbp_mwh",
+        "wmape",
+        "smape",
+        "mase",
+        "rmsse",
+        "coverage_80",
+        "interval_score_80",
+        "msis_80",
+        "coverage_95",
+        "interval_score_95",
+        "msis_95",
+        "pinball_q10_gbp_mwh",
+        "pinball_q90_gbp_mwh"
+      ],
+      "rows": [
+        [
+          "trend",
+          "sqrt-horizon",
+          53,
+          0,
+          51.2,
+          79.4,
+          0.529,
+          0.568,
+          1.32,
+          1.31,
+          0.74,
+          209.9,
+          5.5,
+          0.9,
+          322.6,
+          8.6,
+          9.7,
+          12.3
+        ],
+        [
+          "seasonal_dummy",
+          "sqrt-horizon",
+          53,
+          0,
+          36.0,
+          55.8,
+          0.372,
+          0.4,
+          0.93,
+          0.92,
+          0.74,
+          147.6,
+          3.9,
+          0.9,
+          226.8,
+          6.0,
+          6.8,
+          8.6
+        ],
+        [
+          "fourier",
+          "sqrt-horizon",
+          53,
+          0,
+          35.2,
+          54.6,
+          0.364,
+          0.391,
+          0.9,
+          0.89,
+          0.74,
+          144.3,
+          3.8,
+          0.9,
+          221.8,
+          5.9,
+          6.7,
+          8.4
+        ],
+        [
+          "calendar",
+          "sqrt-horizon",
+          53,
+          0,
+          34.1,
+          52.9,
+          0.352,
+          0.378,
+          0.88,
+          0.87,
+          0.74,
+          139.8,
+          3.7,
+          0.9,
+          214.8,
+          5.7,
+          6.5,
+          8.2
+        ]
+      ]
+    },
+    "by_horizon": {
+      "description": "MAE, RMSE and 80%/95% coverage per model and lead step",
+      "columns": [
+        "model",
+        "horizon_step",
+        "lead_hours",
+        "mae_gbp_mwh",
+        "rmse_gbp_mwh",
+        "coverage_80",
+        "coverage_95"
+      ],
+      "rows": [
+        [
+          "fourier",
+          1,
+          0.5,
+          28.9,
+          44.7,
+          0.78,
+          0.93
+        ],
+        [
+          "fourier",
+          48,
+          24.0,
+          37.3,
+          57.8,
+          0.73,
+          0.9
+        ],
+        [
+          "calendar",
+          1,
+          0.5,
+          28.0,
+          43.3,
+          0.79,
+          0.93
+        ],
+        [
+          "calendar",
+          48,
+          24.0,
+          36.1,
+          56.0,
+          0.74,
+          0.9
+        ]
+      ]
+    },
+    "folds": {
+      "description": "Every forecast origin per model with its status; excluded folds carry a message",
+      "columns": [
+        "model",
+        "origin_utc",
+        "train_start_utc",
+        "train_size",
+        "status",
+        "message",
+        "mae_gbp_mwh"
+      ],
+      "rows": [
+        [
+          "fourier",
+          "2026-08-31T23:00:00Z",
+          "2026-08-03T23:00:00Z",
+          1344,
+          "ok",
+          null,
+          32.7
+        ],
+        [
+          "fourier",
+          "2026-09-01T23:00:00Z",
+          "2026-08-04T23:00:00Z",
+          1344,
+          "ok",
+          null,
+          38.0
+        ],
+        [
+          "calendar",
+          "2026-08-31T23:00:00Z",
+          "2026-08-03T23:00:00Z",
+          1344,
+          "ok",
+          null,
+          31.7
+        ],
+        [
+          "calendar",
+          "2026-09-01T23:00:00Z",
+          "2026-08-04T23:00:00Z",
+          1344,
+          "ok",
+          null,
+          36.8
+        ]
+      ]
+    }
+  }
+}

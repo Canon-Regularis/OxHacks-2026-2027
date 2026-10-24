@@ -1,26 +1,38 @@
 {
-  "_fixture": "Synthetic example for UI development; not real data. by_horizon truncated to 2 lead steps per model; folds truncated to 4 rows.",
+  "_fixture": "Synthetic example for UI development; not real data. by_horizon truncated to lead steps 1 and 48; folds and fold_params truncated.",
   "run": {
     "run_id": 21,
     "algorithm_id": "price_forecast_backtest",
     "algorithm_version": "0.1.0",
     "params": {
-      "models": [
-        "seasonal_naive",
-        "ets",
-        "fourier"
-      ],
       "initial": 1344,
       "window": 1344,
       "horizon": 48,
       "step": 48,
       "max_folds": 60,
       "season_length": 48,
-      "fourier_harmonics": 4,
       "levels": [
         0.8,
         0.95
-      ]
+      ],
+      "models": {
+        "seasonal_naive": {
+          "season_length": 48
+        },
+        "ets": {
+          "trend": null,
+          "damped": false,
+          "seasonal": "additive",
+          "season_length": 48
+        },
+        "arima": {
+          "p": 2,
+          "d": 0,
+          "q": 1,
+          "seasonal_differencing": 1,
+          "season_length": 48
+        }
+      }
     },
     "range_start_utc": "2026-08-31T23:00:00Z",
     "range_end_utc": "2026-10-23T23:00:00Z",
@@ -32,126 +44,157 @@
       "description": "Scores per model, pooled over the ok folds; MASE, RMSSE and MSIS averaged per fold",
       "columns": [
         "model",
+        "interval_method",
         "n_ok_folds",
         "n_excluded_folds",
         "mae_gbp_mwh",
         "rmse_gbp_mwh",
         "wmape",
+        "smape",
         "mase",
         "rmsse",
         "coverage_80",
+        "interval_score_80",
+        "msis_80",
         "coverage_95",
+        "interval_score_95",
         "msis_95",
-        "interval_method"
+        "pinball_q10_gbp_mwh",
+        "pinball_q90_gbp_mwh"
       ],
       "rows": [
         [
           "seasonal_naive",
+          "seasonal-random-walk",
           53,
           0,
           38.9,
-          60.1,
+          60.3,
           0.402,
+          0.432,
           1.0,
-          1.0,
+          0.99,
           0.71,
+          159.5,
+          4.2,
           0.88,
-          14.2,
-          "sqrt-horizon"
+          245.1,
+          6.5,
+          7.4,
+          9.3
         ],
         [
           "ets",
+          "analytic",
           52,
           1,
           33.7,
-          51.8,
+          52.2,
           0.348,
+          0.374,
           0.87,
           0.86,
           0.77,
+          138.2,
+          3.7,
           0.92,
-          11.9,
-          "model"
+          212.3,
+          5.7,
+          6.4,
+          8.1
         ],
         [
-          "fourier",
+          "arima",
+          "analytic",
           53,
           0,
-          35.2,
-          53.4,
-          0.364,
-          0.9,
-          0.89,
-          0.74,
-          0.9,
-          12.6,
-          "model"
+          34.4,
+          53.3,
+          0.355,
+          0.382,
+          0.88,
+          0.87,
+          0.78,
+          141.0,
+          3.7,
+          0.93,
+          216.7,
+          5.7,
+          6.5,
+          8.3
         ]
       ]
     },
     "by_horizon": {
-      "description": "MAE, RMSE and 80% coverage per model and lead step",
+      "description": "MAE, RMSE and 80%/95% coverage per model and lead step",
       "columns": [
         "model",
         "horizon_step",
         "lead_hours",
         "mae_gbp_mwh",
         "rmse_gbp_mwh",
-        "coverage_80"
+        "coverage_80",
+        "coverage_95"
       ],
       "rows": [
         [
           "seasonal_naive",
           1,
           0.5,
-          37.1,
-          57.9,
-          0.72
+          31.9,
+          49.4,
+          0.75,
+          0.9
         ],
         [
           "seasonal_naive",
           48,
           24.0,
-          40.3,
-          62.0,
-          0.7
+          41.2,
+          63.9,
+          0.7,
+          0.87
         ],
         [
           "ets",
           1,
           0.5,
-          29.8,
-          45.6,
-          0.8
+          27.6,
+          42.8,
+          0.81,
+          0.95
         ],
         [
           "ets",
           48,
           24.0,
-          36.9,
-          56.3,
-          0.75
+          35.7,
+          55.4,
+          0.76,
+          0.92
         ],
         [
-          "fourier",
+          "arima",
           1,
           0.5,
-          33.0,
-          50.7,
-          0.76
+          28.2,
+          43.7,
+          0.82,
+          0.95
         ],
         [
-          "fourier",
+          "arima",
           48,
           24.0,
-          37.4,
-          55.9,
-          0.73
+          36.5,
+          56.5,
+          0.77,
+          0.93
         ]
       ]
     },
     "folds": {
-      "description": "Every forecast origin with its status; excluded folds carry a message",
+      "description": "Every forecast origin per model with its status; excluded folds carry a message",
       "columns": [
         "model",
         "origin_utc",
@@ -169,7 +212,7 @@
           1344,
           "ok",
           null,
-          31.4
+          31.3
         ],
         [
           "ets",
@@ -178,7 +221,25 @@
           1344,
           "ok",
           null,
-          28.9
+          36.4
+        ],
+        [
+          "arima",
+          "2026-08-31T23:00:00Z",
+          "2026-08-03T23:00:00Z",
+          1344,
+          "ok",
+          null,
+          32.0
+        ],
+        [
+          "arima",
+          "2026-09-01T23:00:00Z",
+          "2026-08-04T23:00:00Z",
+          1344,
+          "ok",
+          null,
+          37.2
         ],
         [
           "ets",
@@ -188,15 +249,65 @@
           "insufficient_data",
           "training window has 3 missing periods",
           null
+        ]
+      ]
+    },
+    "fold_params": {
+      "description": "Fitted parameters per model and origin (ETS smoothing weights, ARIMA coefficients and sigma2)",
+      "columns": [
+        "model",
+        "origin_utc",
+        "parameter",
+        "value"
+      ],
+      "rows": [
+        [
+          "ets",
+          "2026-08-31T23:00:00Z",
+          "alpha",
+          0.62
         ],
         [
-          "fourier",
+          "ets",
           "2026-08-31T23:00:00Z",
-          "2026-08-03T23:00:00Z",
-          1344,
-          "ok",
-          null,
-          33.2
+          "gamma",
+          0.11
+        ],
+        [
+          "arima",
+          "2026-08-31T23:00:00Z",
+          "ar_1",
+          0.71
+        ],
+        [
+          "arima",
+          "2026-08-31T23:00:00Z",
+          "ar_2",
+          -0.08
+        ],
+        [
+          "arima",
+          "2026-08-31T23:00:00Z",
+          "ma_1",
+          -0.24
+        ],
+        [
+          "arima",
+          "2026-08-31T23:00:00Z",
+          "sigma2",
+          1712.0
+        ],
+        [
+          "ets",
+          "2026-09-01T23:00:00Z",
+          "alpha",
+          0.6
+        ],
+        [
+          "ets",
+          "2026-09-01T23:00:00Z",
+          "gamma",
+          0.12
         ]
       ]
     }
