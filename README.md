@@ -41,8 +41,8 @@ Follow the [full layout, ownership boundaries and request flow](docs/gridpulse/R
 
 ## Setup and demo
 
-Base modules and a Python package manifest are present. They contain no working server, database integration or algorithms, and the frontend framework is not bootstrapped. See the backend README for optional package installation. Copy `gridpulse/.env.example` to a local `gridpulse/.env` when configuring the implementation; automatic environment loading is not yet implemented. Keep database credentials and service keys server-side.
+The backend (FastAPI over Tiger Data) runs end to end against the team's Tiger Cloud instance, reading the loader's `raw` schema through `gridpulse.*` views; data modelling is still to come. Its design is in [BACKEND_DESIGN.md](docs/gridpulse/BACKEND_DESIGN.md), and the migrate, analyse, test and serve commands are in the [backend README](gridpulse/backend/README.md). Put the Tiger Cloud credentials file in the repository root, or a `DATABASE_URL` in `gridpulse/.env`; both are loaded automatically and gitignored. Keep database credentials and service keys server-side. The frontend framework is not yet bootstrapped.
 
-As implementations land, add exact database migration, CSV import, backend/frontend startup and Vultr deployment commands here. No runnable demo command exists yet.
+Add frontend startup and Vultr deployment commands here as they land.
 
 The demo must show which data is cached, its source and freshness, algorithm version and limitations. This is analysis of electricity prices and forecasts; indicators are not claims of grid failure or guaranteed future outcomes.
