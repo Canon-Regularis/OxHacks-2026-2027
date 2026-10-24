@@ -1,6 +1,6 @@
 # Backend design
 
-**Status:** the infrastructure runs end to end against the team's Tiger Data instance. That covers the API, the app-layer views over `raw`, the algorithm runner, result storage and the demo cache. It has 52 unit tests plus 5 opt-in integration tests. **Data modelling is deliberately deferred.** The `gridpulse.*` views are plain views over the raw tables, and the team decides later how to shape them. Two reference algorithms prove the path: `wind_price_correlation` (series) and `price_naive_backtest` (fixed-horizon backtest with tables). The real algorithms are Matthew's.
+**Status:** the infrastructure runs end to end against the team's Tiger Data instance. That covers the API, the app-layer views over `raw`, the algorithm runner, result storage and the demo cache. It has 52 unit tests plus 5 opt-in integration tests. The `gridpulse.*` views read the raw tables; the latest-forecast views go through continuous aggregates (see [Data in Tiger Data](#data-in-tiger-data)). Wider data modelling remains a team decision. Two reference algorithms prove the path: `wind_price_correlation` (series) and `price_naive_backtest` (fixed-horizon backtest with tables). The real algorithms are Matthew's.
 
 ## Principles
 
@@ -67,25 +67,32 @@ All paths are under `gridpulse/backend/src/gridpulse/`.
 | Relation | Contents |
 |---|---|
 | `price_30m` | `bucket`, `price_gbp_mwh` (system sell price = the single imbalance price), `niv_mwh` |
-| `wind_forecast_vintages`, `demand_forecast_vintages` | Every published version, keyed by `delivery_start_utc`, `published_at_utc`. Each hourly WINDFOR value is applied to both settlement periods in its hour |
-| `wind_30m`, `demand_30m` | **Latest version published at or before the period starts** (`last(value, published_at)`). Later versions are excluded: each WINDFOR publish re-issues the previous ~27 h, and a value published after delivery is not a forecast |
+| `wind_forecast_vintages`, `demand_forecast_vintages` | Every published version, keyed by `delivery_start_utc`, `published_at_utc`. Each hourly WINDFOR value is applied to both settlement periods in its hour. `source_start_utc` is the raw `start_time`; bound it in range queries so the shifted WINDFOR half-hour can skip chunks |
+| `wind_forecast_latest_1h`, `demand_forecast_latest_30m` (continuous aggregates) | **Latest version published at or before the period starts** (`last(value, published_at)`), materialised by TimescaleDB. WINDFOR's hourly row holds a value for each half-hour, since a version published in the first half-hour counts for the second. Refresh policies run every 30 min and only recompute ranges the loader wrote to (backfills and revisions included); real-time aggregation adds anything newer, so values are never stale |
+| `wind_30m`, `demand_30m` | The latest-forecast aggregates on the settlement-period grid. Later versions are excluded: each WINDFOR publish re-issues the previous ~27 h, and a value published after delivery is not a forecast |
 | `wind_outturn_30m`, `demand_outturn_30m` | Outturns |
-| `residual_30m` | Latest demand forecast − latest wind forecast. This is one aggregate rather than a join, because Postgres does not carry a time filter across a join |
+| `residual_30m` | Latest demand forecast − latest wind forecast, joining `demand_30m` and `wind_30m` |
 | `analysis_runs`, `analysis_results` (hypertable) | Algorithm runs, and per-period results in long format |
 | `analysis_tables` | Non-time-series results per run (scorecards, ACF by lag, parameters, diagnostics) as `{columns, rows}` JSON |
 
 Every `*_30m` view has one row per settlement period, a `bucket` column and named value columns. The API buckets them to 1h/1d on the fly with each series' aggregate (avg/sum/min/max from `catalog.py`). Daily buckets use `time_bucket('1 day', ts, 'Europe/London')`, so a "day" is a settlement day of 23, 24 or 25 hours. Finer buckets stay in UTC so that the repeated local hour in October is not merged.
 
-**Measured latency.** Times are from a laptop to Tiger Cloud, with a 12 ms round trip:
+`/api/series` reads every requested series in one query: each view is joined once onto the period grid, with the range repeated on every join because Postgres does not carry a range filter across a join.
 
-| Request | Time |
-|---|---|
-| Health, catalog, extremes, stored analysis | 10–150 ms |
-| Snapshot, period detail | ~150 ms |
-| Up to 1 year of any series | 50–300 ms |
-| Full 2.8-year history of 4 forecast series at daily resolution | ~2.4 s |
+**Measured latency.** Times are medians of three in-process requests from a laptop to Tiger Cloud (~10 ms round trip), all nine series, before and after the latest-forecast aggregates and the single series query (2026-10-25):
 
-The slow case comes from re-aggregating every NDF/WINDFOR vintage on each request. **Modelling step:** replace `wind_30m`, `demand_30m` and `residual_30m` with continuous aggregates of the same name and columns (optionally adding 1h/1d hierarchies). Every request then becomes an index read, with no backend change. API connections carry a 15 s `statement_timeout`; a timeout returns 504 "narrow the range".
+| Request | Before | After |
+|---|---|---|
+| Snapshot | 94 ms | 49 ms |
+| Overview day (2 days, 30 min) | 179 ms | 32 ms |
+| 30 days | 304 ms | 113 ms |
+| 1 year (1 h) | 1.0 s | 132 ms |
+| Full 2.8-year history (1 d) | 2.6 s | 297 ms |
+| Extremes, residual demand, 1 year | 479 ms | 39 ms |
+| Period detail | 110 ms | 55 ms |
+| Algorithm input frame, 1000 days | 4.4 s | 0.4 s |
+
+Before, every request re-picked the latest of ~60 NDF versions per period, and the shifted WINDFOR half-hour scanned the whole table even for two days. Responses were checked identical before and after. API connections carry a 15 s `statement_timeout`; a timeout returns 504 "narrow the range".
 
 ## Time conventions
 
@@ -183,7 +190,7 @@ There is deliberately no "run" HTTP endpoint for the MVP. If the demo needs a bu
 | Tool | Wraps | Bound |
 |---|---|---|
 | `get_catalog()` | `/api/catalog` logic | — |
-| `get_series(ids, from, to)` | `queries.series_values` | ≤ 200 points plus min/mean/max summary |
+| `get_series(ids, from, to)` | `queries.series_values` (one query for all ids) | ≤ 200 points plus min/mean/max summary |
 | `find_extremes(series, from, to, order)` | `queries.extremes` | ≤ 20 rows |
 | `inspect_period(date, period)` | period detail | 1 period |
 | `get_analysis(algorithm, from, to)` | `service.get_results` | ≤ 200 points |
@@ -202,7 +209,7 @@ Use one VM in London with Tiger Cloud in the closest region. It runs two environ
 
 ## Open items
 
-1. **Data modelling** (team decision). Choose which views become continuous aggregates. Decide whether to use TSDF, embedded wind and Open-Meteo, and how to treat hourly WINDFOR. Then decide how algorithms get **publication-time inputs**: forecast versions as published by each origin (P0 layer 2), and a revision definition such as "latest − day-ahead version" (P0 items 3–5). Until then, backtests with forecast inputs are provisional.
+1. **Data modelling** (team decision). The latest-forecast views are continuous aggregates; prices and outturns are already one row per period. Decide whether to use TSDF, embedded wind and Open-Meteo, and how to treat hourly WINDFOR. Then decide how algorithms get **publication-time inputs**: forecast versions as published by each origin (P0 layer 2), and a revision definition such as "latest − day-ahead version" (P0 items 3–5). Until then, backtests with forecast inputs are provisional.
 2. **Price revisions.** The loader stores prices "as published at fetch time" (see its catalog note), so later settlement runs are not distinguished.
 3. **The algorithm list** and each algorithm's inputs, outputs and limitations, from Matthew.
 

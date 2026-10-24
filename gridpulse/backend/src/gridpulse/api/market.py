@@ -89,10 +89,10 @@ def series(
 
     if cutoff is None:
         t = bucket_starts(dates.start_utc, dates.end_utc, res)
-        values = {}
-        for sid in series_ids:
-            by_bucket = queries.series_values(conn, SERIES[sid], res, dates.start_utc, dates.end_utc)
-            values[sid] = [by_bucket.get(bucket) for bucket in t]
+        by_series = queries.series_values(
+            conn, {sid: SERIES[sid] for sid in series_ids}, res, dates.start_utc, dates.end_utc
+        )
+        values = {sid: [by_bucket.get(bucket) for bucket in t] for sid, by_bucket in by_series.items()}
     else:
         # What was known at the cutoff, built the same way as algorithm inputs.
         if res != "30m":
