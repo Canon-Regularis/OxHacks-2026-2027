@@ -64,29 +64,46 @@
   let mark = $derived(
     indices.indexOf(t.findIndex((time) => time === selected)),
   );
+  let baselines = $derived(
+    Object.fromEntries(
+      keys.map((k) => [
+        k,
+        columns[k].values.find((v) => v !== null && v !== 0),
+      ]),
+    ),
+  );
   function value(k: string, i: number) {
     const v = columns[k].values[i];
     if (v == null) return null;
     if (settings.display !== 'indexed') return v;
-    const base = columns[k].values.find((n) => n !== null && n !== 0);
+    const base = baselines[k];
     return base == null ? null : (v / base) * 100;
   }
   function x(j: number) {
     return 58 + (j * (plotRight - 58)) / Math.max(1, indices.length - 1);
   }
+  let scales = $derived.by(() => {
+    const bounds = new Map<string, [number, number]>();
+    for (const k of keys)
+      for (const i of indices) {
+        const v = value(k, i);
+        if (v === null) continue;
+        for (const unit of ['all', columns[k].unit || 'unitless']) {
+          const old = bounds.get(unit);
+          bounds.set(
+            unit,
+            old ? [Math.min(old[0], v), Math.max(old[1], v)] : [v, v],
+          );
+        }
+      }
+    for (const [unit, [low, high]] of bounds) {
+      const pad = (high - low || Math.abs(high) * 0.1 || 1) * 0.08;
+      bounds.set(unit, [low - pad, high + pad]);
+    }
+    return bounds;
+  });
   function extent(unit: string) {
-    const vals = keys
-      .filter((k) => unit === 'all' || (columns[k].unit || 'unitless') === unit)
-      .flatMap((k) =>
-        indices.flatMap((i) => {
-          const v = value(k, i);
-          return v == null ? [] : [v];
-        }),
-      );
-    const low = vals.length ? Math.min(...vals) : 0,
-      high = vals.length ? Math.max(...vals) : 1;
-    const pad = (high - low || Math.abs(high) * 0.1 || 1) * 0.08;
-    return [low - pad, high + pad];
+    return scales.get(unit) ?? [0, 1];
   }
   function axis(k: string) {
     return settings.display === 'indexed'
@@ -116,6 +133,17 @@
     }
     return output;
   }
+  let paths = $derived(
+    panes.map((pane, p) =>
+      Object.fromEntries(
+        keys
+          .filter(
+            (k) => pane === 'all' || (columns[k].unit || 'unitless') === pane,
+          )
+          .map((k) => [k, path(k, p)]),
+      ),
+    ),
+  );
   function indexAt(event: PointerEvent) {
     const box = (event.currentTarget as Element).getBoundingClientRect();
     return Math.max(
@@ -274,7 +302,7 @@
               palette[keys.indexOf(k) % palette.length]}
             <path
               data-terminal-series={k}
-              d={path(k, p)}
+              d={paths[p][k] ?? ''}
               fill="none"
               stroke={color}
               stroke-width="1.8"

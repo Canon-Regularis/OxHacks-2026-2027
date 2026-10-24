@@ -147,7 +147,8 @@ const str = (x: unknown): x is string =>
 const date = (x: unknown): x is string =>
   typeof x === 'string' &&
   /^\d{4}-\d{2}-\d{2}$/.test(x) &&
-  !Number.isNaN(Date.parse(x));
+  !Number.isNaN(Date.parse(x)) &&
+  new Date(x).toISOString().slice(0, 10) === x;
 function validContext(x: unknown): boolean {
   return (
     object(x) &&

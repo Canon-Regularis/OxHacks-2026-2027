@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte';
+  import { dev } from '$app/environment';
   import type { Catalog, Health } from '$lib/types';
   import {
     createDocument,
@@ -27,12 +28,13 @@
     type Position,
   } from './model/types';
   import { fits, place, resize, findStack, stack } from './layout/engine';
-  import { bootstrap, pool } from './data/client';
+  import { bootstrap, pool, dateOf } from './data/client';
   import DockNode from './layout/DockNode.svelte';
   import WidgetBody from './widgets/WidgetBody.svelte';
   import Drawer from './controls/Drawer.svelte';
   import Catalogue from './controls/Catalogue.svelte';
   import Settings from './controls/Settings.svelte';
+  import { applyActions, type WorkspaceAction } from './model/actions';
   import './terminal.css';
   let doc = $state<TerminalDocument | null>(null),
     catalog = $state<Catalog | null>(null),
@@ -42,7 +44,8 @@
     saving = $state('Loading'),
     recovery = $state(false),
     external = $state(false),
-    storedError = $state('');
+    storedError = $state(''),
+    storedRaw = $state('');
   let focused = $state<string | null>(null),
     maximised = $state<string | null>(null),
     dragging = $state<string | null>(null),
@@ -54,6 +57,7 @@
     refresh = $state(0),
     historyTick = $state(0),
     cursor = $state<Record<string, string>>({});
+  let widgetStatus = $state<Record<string, string>>({});
   let pending = $state<{ widget: Widget; binding?: Binding } | null>(null),
     target = $state(''),
     placement = $state<Position>('tab'),
@@ -117,6 +121,21 @@
       notice = e instanceof Error ? e.message : 'Workspace action failed';
     }
   }
+  function dispatch(actions: WorkspaceAction[], record = true) {
+    if (!doc) return;
+    try {
+      const before = plain(doc),
+        next = applyActions(before, actions, canvasSize());
+      if (record) {
+        history.record(before, next);
+        historyTick++;
+      }
+      doc = next;
+      notice = '';
+    } catch (e) {
+      notice = (e as Error).message;
+    }
+  }
   function changeWorkspace(next: Workspace) {
     mutate((_ws, d) => {
       d.workspaces[d.workspaces.findIndex((w) => w.id === d.active)] = next;
@@ -135,8 +154,7 @@
     focus(id);
   }
   function close(id: string) {
-    if (!workspace) return;
-    changeWorkspace(closeWidget(plain(workspace), id));
+    dispatch([{ type: 'widget.close', id }]);
     if (focused === id) focused = null;
     if (maximised === id) maximised = null;
   }
@@ -154,7 +172,15 @@
     if (pin)
       mutate((ws) => {
         const base = w.group ? ws.groups[w.group] : ws.widgets[w.id].context;
-        if (base) base.selected = t;
+        if (base) {
+          const day = dateOf(t);
+          if (day < base.from || day > base.to) {
+            base.from = day;
+            base.to = day;
+            base.zoom = null;
+          }
+          base.selected = t;
+        }
       }, false);
   }
   function pin(w: Widget, runId: number) {
@@ -171,9 +197,14 @@
     });
   }
   function updateWidget(w: Widget) {
-    mutate((ws) => {
-      ws.widgets[w.id] = plain(w);
-    });
+    dispatch([
+      {
+        type: 'widget.configure',
+        id: w.id,
+        title: w.title,
+        settings: plain(w.settings),
+      },
+    ]);
   }
   function rebind(w: Widget, b: NewBinding | null) {
     mutate((ws) => {
@@ -303,14 +334,7 @@
     }
   }
   function move(id: string, destination: string, pos: Position) {
-    if (!workspace) return;
-    try {
-      changeWorkspace(
-        place(plain(workspace), id, destination, pos, canvasSize()),
-      );
-    } catch (e) {
-      notice = (e as Error).message;
-    }
+    dispatch([{ type: 'widget.move', id, target: destination, position: pos }]);
   }
   function finishAdd(newTab = false) {
     if (!pending || !workspace) return;
@@ -529,6 +553,7 @@
           doc = parseDocument(raw);
         } catch (e) {
           storedError = (e as Error).message;
+          storedRaw = raw;
           recovery = true;
         }
       }
@@ -612,6 +637,17 @@
           recovery = false;
           storedError = '';
         }}>Use fresh workspace</button
+      ><button
+        onclick={() => {
+          const href = URL.createObjectURL(
+            new Blob([storedRaw], { type: 'application/json' }),
+          );
+          const a = document.createElement('a');
+          a.href = href;
+          a.download = 'eisengrau-terminal-recovery.json';
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(href), 1000);
+        }}>Download saved file</button
       >
     </div>{/if}
   {#if external}<div class="terminal-alert" role="status">
@@ -691,7 +727,9 @@
                     >
                   ).ids.join(' + ')
                 : `run ${(workspace.bindings[w.binding] as Extract<Binding, { kind: 'algorithm' }>)?.runId ?? 'latest'}`
-              : w.type} · {w.group ?? 'independent'}</small
+              : w.type} · {w.group ?? 'independent'}{widgetStatus[w.id]
+              ? ' · ' + widgetStatus[w.id]
+              : ''}</small
           ></button
         >{/each}
       <div class="terminal-history" data-history={historyTick}>
@@ -789,23 +827,35 @@
 {#snippet renderWidget(id: string)}
   {#if workspace && catalog && workspace.widgets[id]}
     {@const w = workspace.widgets[id]}{@const ctx = widgetContext(w)}
-    <WidgetBody
-      widget={w}
-      binding={w.binding ? workspace.bindings[w.binding] : undefined}
-      {ctx}
-      {catalog}
-      onselect={(t) => select(w, t)}
-      onpin={(t) => select(w, t, true)}
-      inspection={(workspace.groups[w.group ?? ''] ?? w.context).selected}
-      onzoom={(z) => zoom(w, z)}
-      onrun={(runId) => pin(w, runId)}
-      onnotes={(notes) =>
-        updateWidget({
-          ...plain(w),
-          settings: { ...plain(w.settings), notes },
-        })}
-      {refresh}
-    />
+    <svelte:boundary
+      onerror={(error) => {
+        if (dev) console.error('Terminal renderer failed', error);
+      }}
+    >
+      <WidgetBody
+        widget={w}
+        binding={w.binding ? workspace.bindings[w.binding] : undefined}
+        {ctx}
+        {catalog}
+        onselect={(t) => select(w, t)}
+        onpin={(t) => select(w, t, true)}
+        inspection={(workspace.groups[w.group ?? ''] ?? w.context).selected}
+        onzoom={(z) => zoom(w, z)}
+        onrun={(runId) => pin(w, runId)}
+        onnotes={(notes) =>
+          updateWidget({
+            ...plain(w),
+            settings: { ...plain(w.settings), notes },
+          })}
+        {refresh}
+        onstatus={(status) => (widgetStatus[id] = status)}
+      />{#snippet failed(_error, reset)}<div class="terminal-widget-error">
+          <p>
+            This widget could not render. Open settings to rebind or remove it.
+          </p>
+          <button onclick={reset}>Retry rendering</button>
+        </div>{/snippet}
+    </svelte:boundary>
   {/if}
 {/snippet}
 

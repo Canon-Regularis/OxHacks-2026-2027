@@ -40,6 +40,9 @@
     allowed = $state(false),
     proposed = $state<number | null>(null),
     resizing = $state(false);
+  $effect(() => {
+    if (!dragging) preview = null;
+  });
   function position(event: DragEvent): Position {
     const r = element.getBoundingClientRect(),
       x = (event.clientX - r.left) / r.width,

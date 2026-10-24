@@ -161,17 +161,29 @@ export function validateCatalog(value: Catalog): Catalog {
       throw new TerminalError('invalid_contract', 'Invalid catalogue series.');
     ids.add(s.id);
   }
-  for (const a of value.algorithms)
+  const algorithms = new Set<string>();
+  for (const a of value.algorithms) {
     if (
       typeof a.id !== 'string' ||
+      algorithms.has(a.id) ||
+      typeof a.version !== 'string' ||
+      typeof a.description !== 'string' ||
       !a.outputs ||
       !a.tables ||
-      typeof a.limitations !== 'string'
+      typeof a.limitations !== 'string' ||
+      !Array.isArray(a.inputs) ||
+      !Array.isArray(a.datasets) ||
+      !a.params ||
+      !a.param_descriptions ||
+      !Object.values(a.outputs).every((v) => typeof v === 'string') ||
+      !Object.values(a.tables).every((v) => typeof v === 'string')
     )
       throw new TerminalError(
         'invalid_contract',
         'Invalid algorithm catalogue.',
       );
+    algorithms.add(a.id);
+  }
   return value;
 }
 function validateSeries(t: string[], columns: Record<string, Column>) {

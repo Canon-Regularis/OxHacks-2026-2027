@@ -16,6 +16,7 @@
     onselect,
     onpin,
     inspection,
+    onstatus,
     onzoom,
     onrun,
     onnotes,
@@ -28,6 +29,7 @@
     onselect: (t: string) => void;
     onpin: (t: string) => void;
     inspection: string | null;
+    onstatus: (status: string) => void;
     onzoom: (z: [number, number] | null) => void;
     onrun: (id: number) => void;
     onnotes: (notes: string) => void;
@@ -89,6 +91,18 @@
       };
     });
   });
+  $effect(() => {
+    const status = loading
+      ? 'Loading'
+      : error
+        ? code === 'no_run'
+          ? 'No run'
+          : 'Error'
+        : data?.warnings.length
+          ? 'Warnings'
+          : '';
+    untrack(() => onstatus(status));
+  });
   let tableName = $derived(
     data?.tables[widget.settings.table]
       ? widget.settings.table
@@ -131,7 +145,7 @@
     />
   {:else if widget.type === 'table'}{#if table}<ResultTable
         {table}
-        {onselect}
+        onselect={onpin}
       />{:else}<p class="terminal-empty">
         {binding?.kind === 'algorithm'
           ? 'This run has no result tables.'
@@ -225,6 +239,21 @@
               </p>{/each}
           </details>{/each}{/if}
     </div>{/if}
+  {#if binding?.kind === 'source' && widget.type !== 'context'}<details
+      class="terminal-provenance"
+    >
+      <summary>Retrospective · source data and coverage</summary
+      >{#each binding.ids as id}{@const source = catalog.series.find(
+          (s) => s.id === id,
+        )}
+        <p>{source?.label ?? id} · {source?.kind} · {source?.unit}</p>
+        {#each source?.datasets ?? [] as name}{@const dataset =
+            catalog.datasets.find((d) => d.dataset === name)}
+          <p>
+            {dataset?.source ?? name} · {dataset?.first_utc ?? 'unknown'} → {dataset?.last_utc ??
+              'unknown'} · loaded {dataset?.loaded_at_utc ?? 'unknown'}
+          </p>{/each}{/each}
+    </details>{/if}
   {#if data.run}<details class="terminal-provenance">
       <summary
         >Run #{data.run.run_id} · v{data.run.algorithm_version} · {data.run

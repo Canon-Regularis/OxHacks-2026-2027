@@ -446,3 +446,241 @@ test('uncomputed algorithms stay local and never submit a computation', async ({
     page.getByRole('button', { name: 'Workspaces', exact: true }),
   ).toBeEnabled();
 });
+
+test('damaged saves are preserved until recovery and storage failure stays usable', async ({
+  page,
+}) => {
+  await page.addInitScript(() =>
+    localStorage.setItem('eisengrau:terminal:v1', '{"version":999}'),
+  );
+  await page.goto('/terminal');
+  await expect(page.getByRole('alert')).toContainText('needs recovery');
+  await expect(
+    page.locator('path[data-terminal-series="price"]'),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() => localStorage.getItem('eisengrau:terminal:v1')),
+  ).toBe('{"version":999}');
+  await expect(
+    page.getByRole('button', { name: 'Download saved file' }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Use fresh workspace' }).click();
+  await page.getByRole('button', { name: 'Workspaces', exact: true }).click();
+  await page.getByLabel('Workspace name', { exact: true }).fill('Recovered');
+  await page.getByLabel('Workspace name', { exact: true }).press('Tab');
+  await page.getByRole('button', { name: 'Close drawer' }).click();
+  await expect(page.locator('.terminal-status')).toContainText('Saved locally');
+});
+
+test('a future catalogue algorithm renders without a new frontend adapter', async ({
+  page,
+}) => {
+  const future = {
+    ...catalog.algorithms[0],
+    id: 'future_signal',
+    description: 'A new arbitrary numeric signal',
+    outputs: { unknown_output: 'widgets/hour' },
+    tables: {},
+    latest_run: null,
+  };
+  await page.route('**/api/catalog', (r) =>
+    r.fulfill({
+      json: { ...catalog, algorithms: [...catalog.algorithms, future] },
+    }),
+  );
+  await page.route('**/api/analysis?**', (r) =>
+    r.fulfill({
+      json: {
+        algorithm: future,
+        run: { ...run, algorithm_id: future.id, run_id: 90 },
+        from: date,
+        to: date,
+        resolution: '30m',
+        t: times,
+        indicators: {
+          unknown_output: {
+            label: 'Unfamiliar signal',
+            unit: 'widgets/hour',
+            values: times.map((_, i) => (i % 4 === 0 ? null : i)),
+          },
+        },
+        warnings: ['Partial coverage in fixture'],
+        tables: [],
+      },
+    }),
+  );
+  await page.goto('/terminal');
+  await expect(
+    page.locator('path[data-terminal-series="price"]'),
+  ).toBeVisible();
+  await page.getByRole('button', { name: /Search \/ Add/ }).click();
+  await page
+    .getByLabel('Search data algorithms and widgets')
+    .fill('future_signal');
+  await page
+    .getByRole('button', { name: 'Open analysis layout', exact: true })
+    .click();
+  await expect(
+    page.locator('path[data-terminal-series="unknown_output"]'),
+  ).toBeVisible();
+  await expect(page.locator('.terminal-chart-legend')).toContainText(
+    'widgets/hour',
+  );
+  await expect(page.locator('.terminal-warnings').first()).toContainText(
+    'Partial coverage',
+  );
+});
+
+test('a valid import replaces only after confirmation and undo restores the document', async ({
+  page,
+}) => {
+  await page.goto('/terminal');
+  await expect(
+    page.locator('path[data-terminal-series="price"]'),
+  ).toBeVisible();
+  await expect(page.locator('.terminal-status')).toContainText('Saved locally');
+  const initial = await page.evaluate(() =>
+    localStorage.getItem('eisengrau:terminal:v1')!,
+  );
+  const imported = JSON.parse(initial);
+  imported.workspaces[0].name = 'Imported research';
+  await page.getByRole('button', { name: 'Workspaces', exact: true }).click();
+  await page.getByLabel('Import configuration', { exact: true }).setInputFiles({
+    name: 'view.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(imported)),
+  });
+  await expect(
+    page.getByRole('tab', { name: 'Market investigation', exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole('button', { name: 'Replace with imported configuration' })
+    .click();
+  await page.getByRole('button', { name: 'Close drawer' }).click();
+  await expect(
+    page.getByRole('tab', { name: 'Imported research', exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Undo workspace change' }).click();
+  await expect(
+    page.getByRole('tab', { name: 'Market investigation', exact: true }),
+  ).toBeVisible();
+});
+
+test('large chart and table responses remain usable without rendering every table row', async ({
+  page,
+}) => {
+  const manyTimes = Array.from({ length: 5000 }, (_, i) =>
+    new Date(Date.parse('2026-07-01T00:00Z') + i * 1800000).toISOString(),
+  );
+  await page.route('**/api/series?**', async (r) => {
+    const ids = (
+      new URL(r.request().url()).searchParams.get('ids') ?? 'price'
+    ).split(',');
+    await r.fulfill({
+      json: {
+        from: date,
+        to: date,
+        resolution: '30m',
+        cutoff_utc: null,
+        t: manyTimes,
+        settlement_date: manyTimes.map(() => date),
+        settlement_period: manyTimes.map((_, i) => (i % 48) + 1),
+        series: Object.fromEntries(
+          ids.map((id) => [
+            id,
+            {
+              label: id,
+              unit: id === 'price' ? 'GBP/MWh' : 'MW',
+              values: manyTimes.map((_, i) =>
+                i % 20 === 0 ? null : Math.sin(i / 30) * 100,
+              ),
+            },
+          ]),
+        ),
+      },
+    });
+  });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/terminal');
+  await expect(
+    page.locator('path[data-terminal-series="price"]'),
+  ).toBeVisible();
+  const plot = page.getByRole('slider', { name: 'Chart selected period' });
+  await plot.hover({ position: { x: 300, y: 100 } });
+  await expect(page.locator('.terminal-inspector-preview')).toBeVisible();
+  await page.route('**/api/analysis/runs/12/tables', (r) =>
+    r.fulfill({
+      json: {
+        run,
+        tables: {
+          metrics: {
+            description: 'Synthetic large result',
+            columns: ['model', 'score'],
+            rows: Array.from({ length: 20000 }, (_, i) => [
+              'Model ' + String(i).padStart(5, '0'),
+              i,
+            ]),
+          },
+        },
+      },
+    }),
+  );
+  await page.getByRole('button', { name: /Search \/ Add/ }).click();
+  await page
+    .getByLabel('Search data algorithms and widgets')
+    .fill('price_naive');
+  await page
+    .getByRole('button', { name: 'Open analysis layout', exact: true })
+    .click();
+  await expect(page.locator('.terminal-table-tools')).toContainText(
+    '20000 / 20000',
+  );
+  expect(
+    await page.locator('.terminal-table-scroll tbody tr').count(),
+  ).toBeLessThan(100);
+  await page.getByLabel('Search result rows').fill('Model 19999');
+  await expect(page.locator('.terminal-table-scroll')).toContainText(
+    'Model 19999',
+  );
+  await expect(page.locator('.terminal-table-tools')).toContainText(
+    '1 / 20000',
+  );
+});
+
+test('disabled browser storage and external changes do not destroy a working session', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Storage.prototype.setItem = () => {
+      throw new DOMException('Storage denied', 'QuotaExceededError');
+    };
+  });
+  await page.goto('/terminal');
+  await expect(
+    page.locator('path[data-terminal-series="price"]'),
+  ).toBeVisible();
+  await expect(page.locator('.terminal-status')).toContainText('Not saved');
+  await page.getByRole('button', { name: 'Workspaces', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Export configuration' }),
+  ).toBeEnabled();
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export configuration' }).click();
+  expect((await download).suggestedFilename()).toBe('eisengrau-terminal.json');
+  await page.getByRole('button', { name: 'Close drawer' }).click();
+  await page.evaluate(() =>
+    window.dispatchEvent(
+      new StorageEvent('storage', {
+        key: 'eisengrau:terminal:v1',
+        newValue: '{"changed":true}',
+      }),
+    ),
+  );
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Another browser tab' }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Keep this tab' }).click();
+  await expect(
+    page.locator('path[data-terminal-series="price"]'),
+  ).toBeVisible();
+});

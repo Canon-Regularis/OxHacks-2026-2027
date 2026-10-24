@@ -29,6 +29,23 @@
     'context',
   ];
   const matches = (s: string) => s.toLowerCase().includes(search.toLowerCase());
+  let resultCount = $derived(
+    (section === 'All' || section === 'Data'
+      ? catalog.series.filter((s) => matches(s.label + ' ' + s.id)).length
+      : 0) +
+      (section === 'All' || section === 'Algorithms'
+        ? catalog.algorithms.filter((a) => matches(a.id + ' ' + a.description))
+            .length
+        : 0) +
+      (section === 'All' || section === 'Widgets'
+        ? types.filter((t) => matches(t)).length
+        : 0) +
+      (section === 'All' || section === 'Presets'
+        ? [...savedPresets.map((p) => p.name), 'market', 'blank'].filter(
+            matches,
+          ).length
+        : 0),
+  );
 </script>
 
 <input
@@ -118,6 +135,9 @@
             : 'Blank workspace'}</strong
         ><span>New workspace ↗</span></button
       >{/if}{/each}{/if}
+{#if search && !resultCount}<p class="terminal-empty">
+    No matches. Try a series name, algorithm or widget type.
+  </p>{/if}
 {#if search}<p class="terminal-hint">
     Only currently registered data and algorithms appear. Clear search to see
     everything.

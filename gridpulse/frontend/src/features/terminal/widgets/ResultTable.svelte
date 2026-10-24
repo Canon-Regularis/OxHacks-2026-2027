@@ -93,7 +93,7 @@
         >{/if}
       {#each rows.slice(start, end) as { row, index } (index)}<tr
           >{#each row as value, i}<td
-              >{#if i === timeColumn && typeof value === 'string'}<button
+              >{#if i === timeColumn && typeof value === 'string' && Number.isFinite(Date.parse(value))}<button
                   class="terminal-cell-link"
                   onclick={() => onselect(value)}>{value}</button
                 >{:else}{cell(value, table.columns[i])}{/if}</td
