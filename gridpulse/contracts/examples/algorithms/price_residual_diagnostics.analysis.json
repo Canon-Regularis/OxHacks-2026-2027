@@ -1,0 +1,59 @@
+{
+  "_fixture": "Synthetic example for UI development; not real data. Tables only, so t and indicators are empty.",
+  "algorithm": {
+    "id": "price_residual_diagnostics",
+    "description": "Ljung-Box, Durbin-Watson, Jarque-Bera and ARCH-LM tests on the in-sample residuals of a seasonal ETS fit to the imbalance price.",
+    "inputs": [
+      "price_gbp_mwh"
+    ],
+    "outputs": {},
+    "tables": {
+      "ljung_box": "Ljung-Box Q statistic, degrees of freedom and p-value at lags 1..K",
+      "tests": "Durbin-Watson, Jarque-Bera and ARCH-LM statistics with p-values"
+    },
+    "limitations": "Retrospective: parameters are estimated on the whole range, so residuals are never features. Statistics and p-values only, with no pass/fail threshold. P-values below about 1e-16 show as 0.",
+    "version": "0.1.0",
+    "latest_run": {
+      "run_id": 24,
+      "algorithm_id": "price_residual_diagnostics",
+      "algorithm_version": "0.1.0",
+      "params": {
+        "model": "ets",
+        "season_length": 48,
+        "ljung_box_lags": 48,
+        "model_df": 0,
+        "arch_lags": 12
+      },
+      "range_start_utc": "2026-08-31T23:00:00Z",
+      "range_end_utc": "2026-10-23T23:00:00Z",
+      "cutoff_utc": null,
+      "finished_at_utc": "2026-10-24T20:46:00Z"
+    }
+  },
+  "run": {
+    "run_id": 24,
+    "algorithm_id": "price_residual_diagnostics",
+    "algorithm_version": "0.1.0",
+    "params": {
+      "model": "ets",
+      "season_length": 48,
+      "ljung_box_lags": 48,
+      "model_df": 0,
+      "arch_lags": 12
+    },
+    "range_start_utc": "2026-08-31T23:00:00Z",
+    "range_end_utc": "2026-10-23T23:00:00Z",
+    "cutoff_utc": null,
+    "finished_at_utc": "2026-10-24T20:46:00Z"
+  },
+  "from": "2026-10-22",
+  "to": "2026-10-22",
+  "resolution": "30m",
+  "t": [],
+  "indicators": {},
+  "warnings": [],
+  "tables": [
+    "ljung_box",
+    "tests"
+  ]
+}

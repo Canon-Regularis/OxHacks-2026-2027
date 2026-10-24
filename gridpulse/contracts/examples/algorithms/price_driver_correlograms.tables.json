@@ -1,0 +1,218 @@
+{
+  "_fixture": "Synthetic example for UI development; not real data. Lags truncated; real tables have every lag from 1 (or -K) to K.",
+  "run": {
+    "run_id": 22,
+    "algorithm_id": "price_driver_correlograms",
+    "algorithm_version": "0.1.0",
+    "params": {
+      "max_lag": 96,
+      "alpha": 0.05
+    },
+    "range_start_utc": "2026-08-31T23:00:00Z",
+    "range_end_utc": "2026-10-23T23:00:00Z",
+    "cutoff_utc": null,
+    "finished_at_utc": "2026-10-24T20:43:00Z"
+  },
+  "tables": {
+    "acf_price": {
+      "description": "Price autocorrelation at lags 1..K with a Bartlett band",
+      "columns": [
+        "lag_periods",
+        "lag_hours",
+        "value",
+        "band"
+      ],
+      "rows": [
+        [
+          1,
+          0.5,
+          0.81,
+          0.041
+        ],
+        [
+          2,
+          1.0,
+          0.66,
+          0.065
+        ],
+        [
+          3,
+          1.5,
+          0.55,
+          0.078
+        ],
+        [
+          24,
+          12.0,
+          0.12,
+          0.097
+        ],
+        [
+          48,
+          24.0,
+          0.47,
+          0.11
+        ],
+        [
+          96,
+          48.0,
+          0.39,
+          0.13
+        ]
+      ]
+    },
+    "pacf_price": {
+      "description": "Price partial autocorrelation at lags 1..K with a +/- z/sqrt(n) band",
+      "columns": [
+        "lag_periods",
+        "lag_hours",
+        "value",
+        "band"
+      ],
+      "rows": [
+        [
+          1,
+          0.5,
+          0.81,
+          0.041
+        ],
+        [
+          2,
+          1.0,
+          -0.03,
+          0.041
+        ],
+        [
+          3,
+          1.5,
+          0.08,
+          0.041
+        ],
+        [
+          24,
+          12.0,
+          -0.02,
+          0.041
+        ],
+        [
+          48,
+          24.0,
+          0.21,
+          0.041
+        ],
+        [
+          96,
+          48.0,
+          0.05,
+          0.041
+        ]
+      ]
+    },
+    "ccf_residual_demand": {
+      "description": "corr(price[t+k], residual_demand[t]) at lags -K..K; k > 0 means demand leads",
+      "columns": [
+        "lag_periods",
+        "lag_hours",
+        "value",
+        "band"
+      ],
+      "rows": [
+        [
+          -48,
+          -24.0,
+          0.29,
+          0.041
+        ],
+        [
+          -2,
+          -1.0,
+          0.41,
+          0.041
+        ],
+        [
+          -1,
+          -0.5,
+          0.43,
+          0.041
+        ],
+        [
+          0,
+          0.0,
+          0.44,
+          0.041
+        ],
+        [
+          1,
+          0.5,
+          0.45,
+          0.041
+        ],
+        [
+          2,
+          1.0,
+          0.43,
+          0.041
+        ],
+        [
+          48,
+          24.0,
+          0.32,
+          0.041
+        ]
+      ]
+    },
+    "ccf_wind": {
+      "description": "corr(price[t+k], wind_forecast[t]) at lags -K..K; k > 0 means wind leads",
+      "columns": [
+        "lag_periods",
+        "lag_hours",
+        "value",
+        "band"
+      ],
+      "rows": [
+        [
+          -48,
+          -24.0,
+          -0.22,
+          0.041
+        ],
+        [
+          -2,
+          -1.0,
+          -0.34,
+          0.041
+        ],
+        [
+          -1,
+          -0.5,
+          -0.35,
+          0.041
+        ],
+        [
+          0,
+          0.0,
+          -0.36,
+          0.041
+        ],
+        [
+          1,
+          0.5,
+          -0.37,
+          0.041
+        ],
+        [
+          2,
+          1.0,
+          -0.36,
+          0.041
+        ],
+        [
+          48,
+          24.0,
+          -0.25,
+          0.041
+        ]
+      ]
+    }
+  }
+}

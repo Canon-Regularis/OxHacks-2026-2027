@@ -44,6 +44,41 @@ def test_table_rows_match_columns():
         assert all(len(row) == len(table["columns"]) for row in table["rows"])
 
 
+# Planned algorithm adapters: algorithms/<id>.analysis.json and, if it declares tables, <id>.tables.json.
+ALGORITHM_EXAMPLES = sorted((EXAMPLES_DIR / "algorithms").glob("*.analysis.json"))
+
+
+@pytest.mark.parametrize("path", ALGORITHM_EXAMPLES, ids=lambda p: p.name)
+def test_algorithm_example(path):
+    body = json.loads(path.read_text())
+    assert body.pop("_fixture"), "label every example as synthetic"
+    analysis = schemas.AnalysisResponse.model_validate(body)
+    algorithm_id = path.name.removesuffix(".analysis.json")
+    assert analysis.algorithm.id == analysis.run.algorithm_id == algorithm_id
+    assert set(analysis.indicators) == set(analysis.algorithm.outputs)
+    assert all(len(column.values) == len(analysis.t) for column in analysis.indicators.values())
+    assert analysis.tables == list(analysis.algorithm.tables)
+
+    tables_path = path.with_name(f"{algorithm_id}.tables.json")
+    if not analysis.tables:
+        assert not tables_path.exists()
+        return
+    body = json.loads(tables_path.read_text())
+    assert body.pop("_fixture"), "label every example as synthetic"
+    tables = schemas.RunTables.model_validate(body)
+    assert tables.run == analysis.run
+    assert list(tables.tables) == analysis.tables
+    for name, table in tables.tables.items():
+        assert table.description == analysis.algorithm.tables[name]
+        assert all(len(row) == len(table.columns) for row in table.rows)
+
+
+def test_every_algorithm_example_is_paired():
+    names = {p.name for p in (EXAMPLES_DIR / "algorithms").glob("*.json")}
+    ids = {p.name.removesuffix(".analysis.json") for p in ALGORITHM_EXAMPLES}
+    assert names <= {f"{i}.analysis.json" for i in ids} | {f"{i}.tables.json" for i in ids}
+
+
 def test_error_example_shape():
     assert set(load("error.json")["detail"]) == {"code", "message"}
 

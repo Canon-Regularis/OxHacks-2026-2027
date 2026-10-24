@@ -18,4 +18,15 @@ Details, including resolution rules, cutoff semantics and error codes, are in th
 
 Conventions: `from`/`to` are inclusive settlement dates (`YYYY-MM-DD`). Instants are UTC with a `Z` suffix. Each series is a `values` array aligned with the shared `t` array, with `null` for missing data, which is never zero. At 30m resolution the response includes `settlement_date`/`settlement_period` arrays. Never assume 48 periods per day.
 
+## Planned algorithm adapters
+
+`examples/algorithms/` holds a `/api/analysis` response (`<id>.analysis.json`) and, where the algorithm declares tables, a `/api/analysis/runs/{run_id}/tables` response (`<id>.tables.json`) for each adapter planned around the P0 Orchid modules. They are proposals to build the frontend against; the adapters are not implemented yet, and ids, outputs and table columns may change when they are.
+
+| Algorithm id | Page | Series outputs | Tables |
+|---|---|---|---|
+| `price_forecast_backtest` | Overview, Explore | Day-ahead forecasts per model, ETS 80%/95% bands | `metrics`, `by_horizon`, `folds` |
+| `price_volatility_signals` | Overview | EWMA, rolling std, 7-day p10/p90, period change | none |
+| `price_driver_correlograms` | Explore | none (`t` and `indicators` empty) | `acf_price`, `pacf_price`, `ccf_residual_demand`, `ccf_wind` |
+| `price_residual_diagnostics` | Methods | none | `ljung_box`, `tests` |
+
 Every example carries a `_fixture` label and contains synthetic values only. Real responses do not have that key. Update examples and `schemas.py` together.

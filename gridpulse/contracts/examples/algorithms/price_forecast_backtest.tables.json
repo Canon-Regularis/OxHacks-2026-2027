@@ -1,0 +1,204 @@
+{
+  "_fixture": "Synthetic example for UI development; not real data. by_horizon truncated to 2 lead steps per model; folds truncated to 4 rows.",
+  "run": {
+    "run_id": 21,
+    "algorithm_id": "price_forecast_backtest",
+    "algorithm_version": "0.1.0",
+    "params": {
+      "models": [
+        "seasonal_naive",
+        "ets",
+        "fourier"
+      ],
+      "initial": 1344,
+      "window": 1344,
+      "horizon": 48,
+      "step": 48,
+      "max_folds": 60,
+      "season_length": 48,
+      "fourier_harmonics": 4,
+      "levels": [
+        0.8,
+        0.95
+      ]
+    },
+    "range_start_utc": "2026-08-31T23:00:00Z",
+    "range_end_utc": "2026-10-23T23:00:00Z",
+    "cutoff_utc": null,
+    "finished_at_utc": "2026-10-24T20:41:00Z"
+  },
+  "tables": {
+    "metrics": {
+      "description": "Scores per model, pooled over the ok folds; MASE, RMSSE and MSIS averaged per fold",
+      "columns": [
+        "model",
+        "n_ok_folds",
+        "n_excluded_folds",
+        "mae_gbp_mwh",
+        "rmse_gbp_mwh",
+        "wmape",
+        "mase",
+        "rmsse",
+        "coverage_80",
+        "coverage_95",
+        "msis_95",
+        "interval_method"
+      ],
+      "rows": [
+        [
+          "seasonal_naive",
+          53,
+          0,
+          38.9,
+          60.1,
+          0.402,
+          1.0,
+          1.0,
+          0.71,
+          0.88,
+          14.2,
+          "sqrt-horizon"
+        ],
+        [
+          "ets",
+          52,
+          1,
+          33.7,
+          51.8,
+          0.348,
+          0.87,
+          0.86,
+          0.77,
+          0.92,
+          11.9,
+          "model"
+        ],
+        [
+          "fourier",
+          53,
+          0,
+          35.2,
+          53.4,
+          0.364,
+          0.9,
+          0.89,
+          0.74,
+          0.9,
+          12.6,
+          "model"
+        ]
+      ]
+    },
+    "by_horizon": {
+      "description": "MAE, RMSE and 80% coverage per model and lead step",
+      "columns": [
+        "model",
+        "horizon_step",
+        "lead_hours",
+        "mae_gbp_mwh",
+        "rmse_gbp_mwh",
+        "coverage_80"
+      ],
+      "rows": [
+        [
+          "seasonal_naive",
+          1,
+          0.5,
+          37.1,
+          57.9,
+          0.72
+        ],
+        [
+          "seasonal_naive",
+          48,
+          24.0,
+          40.3,
+          62.0,
+          0.7
+        ],
+        [
+          "ets",
+          1,
+          0.5,
+          29.8,
+          45.6,
+          0.8
+        ],
+        [
+          "ets",
+          48,
+          24.0,
+          36.9,
+          56.3,
+          0.75
+        ],
+        [
+          "fourier",
+          1,
+          0.5,
+          33.0,
+          50.7,
+          0.76
+        ],
+        [
+          "fourier",
+          48,
+          24.0,
+          37.4,
+          55.9,
+          0.73
+        ]
+      ]
+    },
+    "folds": {
+      "description": "Every forecast origin with its status; excluded folds carry a message",
+      "columns": [
+        "model",
+        "origin_utc",
+        "train_start_utc",
+        "train_size",
+        "status",
+        "message",
+        "mae_gbp_mwh"
+      ],
+      "rows": [
+        [
+          "ets",
+          "2026-08-31T23:00:00Z",
+          "2026-08-03T23:00:00Z",
+          1344,
+          "ok",
+          null,
+          31.4
+        ],
+        [
+          "ets",
+          "2026-09-01T23:00:00Z",
+          "2026-08-04T23:00:00Z",
+          1344,
+          "ok",
+          null,
+          28.9
+        ],
+        [
+          "ets",
+          "2026-09-14T23:00:00Z",
+          "2026-08-17T23:00:00Z",
+          1344,
+          "insufficient_data",
+          "training window has 3 missing periods",
+          null
+        ],
+        [
+          "fourier",
+          "2026-08-31T23:00:00Z",
+          "2026-08-03T23:00:00Z",
+          1344,
+          "ok",
+          null,
+          33.2
+        ]
+      ]
+    }
+  }
+}

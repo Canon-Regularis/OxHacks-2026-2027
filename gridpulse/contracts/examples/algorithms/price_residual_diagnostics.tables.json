@@ -1,0 +1,85 @@
+{
+  "_fixture": "Synthetic example for UI development; not real data. ljung_box truncated to 4 lags.",
+  "run": {
+    "run_id": 24,
+    "algorithm_id": "price_residual_diagnostics",
+    "algorithm_version": "0.1.0",
+    "params": {
+      "model": "ets",
+      "season_length": 48,
+      "ljung_box_lags": 48,
+      "model_df": 0,
+      "arch_lags": 12
+    },
+    "range_start_utc": "2026-08-31T23:00:00Z",
+    "range_end_utc": "2026-10-23T23:00:00Z",
+    "cutoff_utc": null,
+    "finished_at_utc": "2026-10-24T20:46:00Z"
+  },
+  "tables": {
+    "ljung_box": {
+      "description": "Ljung-Box Q statistic, degrees of freedom and p-value at lags 1..K",
+      "columns": [
+        "lag",
+        "statistic",
+        "df",
+        "p_value"
+      ],
+      "rows": [
+        [
+          1,
+          18.4,
+          1,
+          1.8e-05
+        ],
+        [
+          2,
+          21.0,
+          2,
+          2.8e-05
+        ],
+        [
+          24,
+          96.7,
+          24,
+          1.1e-10
+        ],
+        [
+          48,
+          241.3,
+          48,
+          0.0
+        ]
+      ]
+    },
+    "tests": {
+      "description": "Durbin-Watson, Jarque-Bera and ARCH-LM statistics with p-values",
+      "columns": [
+        "test",
+        "statistic",
+        "p_value",
+        "notes"
+      ],
+      "rows": [
+        [
+          "durbin_watson",
+          1.86,
+          null,
+          "Near 2 means little lag-1 autocorrelation"
+        ],
+        [
+          "jarque_bera",
+          15420.0,
+          0.0,
+          "skew 2.9, excess kurtosis 21.4"
+        ],
+        [
+          "arch_lm",
+          612.5,
+          0.0,
+          "12 lags"
+        ]
+      ]
+    }
+  }
+}
