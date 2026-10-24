@@ -22,7 +22,7 @@ Candidate supporting calculations include residual demand, wind forecast revisio
 
 ## P0 algorithms (issue #6)
 
-Pure adapters in `gridpulse.analysis.algorithms` wrap Orchid modules that are vendored verbatim at commit `ca8fc92`. Each method has one Orchid implementation; see [AGENTS.md](../../AGENTS.md) for provenance. The adapters perform no I/O; `analysis/service.py` is expected to call them.
+Pure adapters in `gridpulse.analysis.algorithms` wrap Orchid modules that are vendored verbatim at commit `ca8fc92`. Each method has one Orchid implementation; see [AGENTS.md](../../AGENTS.md) for provenance. The adapters perform no I/O. Algorithms registered with the runner (`analysis/contract.py`) are expected to call them; none does yet.
 
 ### Conventions
 

@@ -1,6 +1,6 @@
 # Repository structure and ownership
 
-This is the agreed layout. The folders and base files are scaffolded; HTTP handlers, database integration and frontend framework setup remain to be implemented, while the pure algorithm layer exists (see [implementation status](#implementation-status)). Avoid introducing parallel locations for the same responsibility.
+This is the agreed layout. The backend, the P0 algorithm layer and the Vultr deployment are implemented; frontend framework setup remains (see [implementation status](#implementation-status)). Avoid introducing parallel locations for the same responsibility.
 
 ## Layout
 
@@ -49,13 +49,15 @@ gridpulse/                        # All application code and operational files
         contract.py                 # Algorithm interface and input columns
         features.py                 # ASOF/latest input frame built in SQL
         service.py                  # Prepare → calculate → check → store/retrieve
-        algorithms/                 # One module per algorithm, registered in __init__.py
+        algorithms/                 # Registered algorithms (see __init__.py) and the Orchid P0 adapters
+          orchid/                   # Orchid modules vendored verbatim
       agent/
         service.py                  # Optional Gemini orchestration
         tools.py                    # Existing-service adapters
     tests/                          # pytest; no database needed
       ingestion/
-      analysis/                     # Contract tests run on every registered algorithm
+      analysis/                     # Contract tests for every registered algorithm; adapter tests
+        orchid/                     # Orchid's upstream test suites, ported
       api/
   db/migrations/                    # Re-runnable gridpulse schema: views over raw, analysis tables
   contracts/
@@ -122,5 +124,4 @@ Synthetic API examples belong in `gridpulse/contracts/examples/` and must be vis
 
 ## Implementation status
 
-The pure algorithm layer (`analysis/algorithms/`, issue #6) is implemented and tested, but no service, API or database calls it yet. Beyond that, the scaffold establishes locations and package metadata only. It does not expose a working API, connect to Tiger Data, run Gemini or deploy to Vultr. Do not present stubs or fixtures as implemented functionality. Add meaningful tests as each real implementation lands.
-The backend infrastructure runs end to end against Tiger Data. That covers the API, the `gridpulse` views over the loader's `raw` schema, the algorithm runner, result storage and the demo cache, with one reference algorithm. Data modelling, the real algorithms, Gemini, the frontend and the Vultr deployment are not implemented; see [BACKEND_DESIGN.md](BACKEND_DESIGN.md#open-items). Do not present stubs or fixtures as implemented functionality. Add meaningful tests as each real implementation lands.
+The backend infrastructure runs end to end against Tiger Data. That covers the API, the `gridpulse` views over the loader's `raw` schema, the algorithm runner, result storage and the demo cache, with example algorithms. GitHub Actions tests each change and deploys `main` to development and `production` to production on Vultr ([deployment](../../gridpulse/deploy/README.md)). The Orchid P0 methods (issue #6) are implemented and tested as pure adapters in `analysis/algorithms/`, but no registered algorithm uses them yet. Data modelling, Gemini and the frontend are not implemented; see [BACKEND_DESIGN.md](BACKEND_DESIGN.md#open-items). Do not present stubs or fixtures as implemented functionality. Add meaningful tests as each real implementation lands.

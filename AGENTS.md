@@ -17,15 +17,12 @@ Use this file as repository-wide guidance when working on GridPulse. It records 
 
 | Source | Intended use | Location / status |
 |---|---|---|
-| **Orchid** | Backend algorithm implementations, adapted behind GridPulse interfaces | [Orchid](https://github.com/Orthant-Research-Group/orchid), local `../orchid/`, cloned revision `ca8fc92` |
+| **Orchid** | Backend algorithm implementations, adapted behind GridPulse interfaces | [Orchid](https://github.com/Orthant-Research-Group/orchid) (private), local `../orchid/`, cloned revision `ca8fc92`; P0 modules vendored in `gridpulse/backend/src/gridpulse/analysis/algorithms/orchid/`. No licence file upstream: confirm terms before this repository is made public |
 | **WWW** | Main website template, page structure and layout reference | [WWW](https://github.com/orthant-kcpc/www), local `../www/`, cloned revision `b16a659`; KCPC app: `apps/kcpc/` |
 | **Components** | Reusable styling and UI components for frontend polish | [Components](https://github.com/orthant-kcpc/components), local `../components/`, cloned revision `9626af5` |
-| **Orchid** | Backend algorithm implementations, adapted behind GridPulse interfaces | <https://github.com/Orthant-Research-Group/orchid> (private), commit `ca8fc9290722fb45ab27e022b76365beba1306c8`; P0 modules vendored in `gridpulse/backend/src/gridpulse/analysis/algorithms/orchid/`. No licence file upstream: confirm terms before this repository is made public |
-| **WWW** | Main website template, page structure and layout reference | Team-provided reference: <https://kcpc.orthant.co.uk/>; source repository URL and local path pending |
-| **Components** | Reusable styling and UI components for frontend polish | Repository URL and local path pending |
 | **Existing exporter** | Fetch Elexon data and write CSVs for ingestion | Being implemented by a teammate; sample files, schema and code location pending |
 
-The team plans to pull the reference repositories locally. Once available, record their exact paths, upstream URLs, revisions, licences and the files actually reused. Inspect compatibility and dependencies before choosing components. Preserve applicable attribution and licence notices.
+The three reference repositories are cloned as siblings of this repository under `/home/david/Documents/Oxhack/`. Revisions above identify the completed clones, not a guarantee that these checkouts will remain unchanged. Orchid's P0 modules are the only reused source files so far (see below). Licence/attribution review remains pending; record applicable terms and exact reused files as integration continues. Inspect compatibility and dependencies before choosing components.
 
 ## Orchid modules in use
 
@@ -41,7 +38,6 @@ The Orchid → GridPulse catalogue and architecture are in issue #3. Its P0 meth
 Each module's upstream `_stress_test.py` is ported to `gridpulse/backend/tests/analysis/orchid/`, with only the import lines changed. GridPulse code calls Orchid only through the adapters in `analysis/algorithms/`, which use one canonical implementation per method; see [algorithms and analysis contracts](docs/gridpulse/ALGORITHMS_AND_ANALYSIS.md). `state_space_template.py` is left for the P1 work (#7). Do not edit vendored files: change Orchid upstream and re-vendor.
 
 **LightGBM status:** the vendored modules contain no LightGBM or other classifier, and the P0 port adds none. The team's candidate list explicitly includes LightGBM classification and logistic regression, both of which require fitted models for predictive use. Library reuse alone does not eliminate fitting. If the MVP must avoid training, omit these methods unless suitable already-fitted artifacts exist and their applicability is established. No such artifacts have been confirmed.
-**LightGBM status:** not verified. Orchid is now cloned locally, but its relevant implementations and dependencies have not yet been audited for GridPulse. The team's candidate list explicitly includes LightGBM classification and logistic regression, both of which require fitted models for predictive use. Library reuse alone does not eliminate fitting. If the MVP must avoid training, omit these methods unless suitable already-fitted artifacts exist and their applicability is established. No such artifacts have been confirmed.
 
 ## Candidate algorithms and scope checks
 
