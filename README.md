@@ -2,7 +2,7 @@
 
 An electricity-market analysis dashboard combining GB wind forecasts, demand forecasts and imbalance settlement prices with the team's existing analysis algorithms.
 
-**Team:** Matthew, Mark, David. **Build window:** 25 hours. **Status:** repository skeleton created; application services and features are not yet implemented.
+**Team:** Matthew, Mark, David. **Build window:** 25 hours. **Status:** repository skeleton plus a tested Orchid P0 algorithm layer (issue #6). The API, database, frontend and deployment are not yet implemented.
 
 ## MVP
 
@@ -41,7 +41,7 @@ Follow the [full layout, ownership boundaries and request flow](docs/gridpulse/R
 
 ## Setup and demo
 
-Base modules and a Python package manifest are present. They contain no working server, database integration or algorithms, and the frontend framework is not bootstrapped. See the backend README for optional package installation. Copy `gridpulse/.env.example` to a local `gridpulse/.env` when configuring the implementation; automatic environment loading is not yet implemented. Keep database credentials and service keys server-side.
+Base modules and a Python package manifest are present. Apart from the algorithm adapters, they contain no working server or database integration, and the frontend framework is not bootstrapped. See the backend README for installation and test commands. Copy `gridpulse/.env.example` to a local `gridpulse/.env` when configuring the implementation; automatic environment loading is not yet implemented. Keep database credentials and service keys server-side.
 
 As implementations land, add exact database migration, CSV import, backend/frontend startup and Vultr deployment commands here. No runnable demo command exists yet.
 
