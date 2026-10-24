@@ -4,6 +4,10 @@ An electricity-market analysis dashboard combining GB wind forecasts, demand for
 
 **Team:** Matthew, Mark, David. **Build window:** 25 hours. **Status:** repository skeleton created; application services and features are not yet implemented.
 
+Development deployment: https://dev.78-141-242-126.sslip.io
+
+Production  deployment: https://78-141-242-126.sslip.io
+
 ## MVP
 
 ```text
