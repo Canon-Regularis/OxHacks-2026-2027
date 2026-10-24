@@ -16,8 +16,8 @@ REPO_DIR = APP_DIR.parent
 MIGRATIONS_DIR = APP_DIR / "db" / "migrations"
 
 # Later files win: a credentials file downloaded from Tiger Cloud into the repo root,
-# then gridpulse/.env for local overrides. Both are gitignored.
-ENV_FILES = (*sorted(REPO_DIR.glob("tiger-cloud-*-credentials.env")), APP_DIR / ".env")
+# then root .env, then gridpulse/.env for local overrides. All are gitignored.
+ENV_FILES = (*sorted(REPO_DIR.glob("tiger-cloud-*-credentials.env")), REPO_DIR / ".env", APP_DIR / ".env")
 
 
 class Settings(BaseSettings):

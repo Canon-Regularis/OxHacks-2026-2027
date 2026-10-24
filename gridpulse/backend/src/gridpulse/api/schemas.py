@@ -173,3 +173,37 @@ class Table(Model):
 class RunTables(Model):
     run: RunInfo
     tables: dict[str, Table]
+
+
+class WeatherLocation(Model):
+    id: str
+    label: str
+    latitude: float
+    longitude: float
+
+
+class WeatherLocations(Model):
+    locations: list[WeatherLocation]
+    warnings: list[str] = []
+
+
+class WeatherPoint(Model):
+    # t is the END of a completed UTC hour. No later observations enter its statistics.
+    t: datetime
+    temperature: float | None
+    pressure: float | None
+    temperature_change: float | None
+    pressure_change: float | None
+    price_change: float | None
+    temperature_correlation: float | None
+    pressure_correlation: float | None
+    temperature_samples: int
+    pressure_samples: int
+
+
+class WeatherResponse(Model):
+    location: WeatherLocation
+    points: list[WeatherPoint]
+    source: str
+    warnings: list[str]
+    window_hours: int

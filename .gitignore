@@ -232,3 +232,11 @@ node_modules/
 
 # Frontend source directory (the Python template ignores lib/ globally).
 !/gridpulse/frontend/src/lib/
+
+# Root server credentials provided for local development.
+/.env
+
+# SvelteKit generated output and browser-test artifacts
+.svelte-kit/
+playwright-report/
+test-results/
