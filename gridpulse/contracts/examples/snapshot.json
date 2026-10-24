@@ -1,0 +1,57 @@
+{
+  "_fixture": "Synthetic example for UI development; not real data.",
+  "as_of_utc": "2026-10-23T11:30:00Z",
+  "settlement_date": "2026-10-23",
+  "settlement_period": 26,
+  "items": [
+    {
+      "id": "price",
+      "label": "Imbalance price",
+      "unit": "GBP/MWh",
+      "value": 92.4,
+      "previous": 78.1,
+      "change": 14.3
+    },
+    {
+      "id": "niv",
+      "label": "Net imbalance volume",
+      "unit": "MWh",
+      "value": 412.0,
+      "previous": 155.0,
+      "change": 257.0
+    },
+    {
+      "id": "wind",
+      "label": "Wind forecast (WINDFOR, latest before delivery)",
+      "unit": "MW",
+      "value": 6120.0,
+      "previous": 6120.0,
+      "change": 0.0
+    },
+    {
+      "id": "wind_outturn",
+      "label": "Wind outturn (FUELHH)",
+      "unit": "MW",
+      "value": 5480.0,
+      "previous": 5610.0,
+      "change": -130.0
+    },
+    {
+      "id": "demand",
+      "label": "National demand forecast (NDF, latest before delivery)",
+      "unit": "MW",
+      "value": 29850.0,
+      "previous": 29400.0,
+      "change": 450.0
+    },
+    {
+      "id": "residual_demand",
+      "label": "Residual demand (demand - wind forecast)",
+      "unit": "MW",
+      "value": 23730.0,
+      "previous": 23280.0,
+      "change": 450.0
+    }
+  ],
+  "data_updated_at_utc": "2026-10-24T14:18:00Z"
+}

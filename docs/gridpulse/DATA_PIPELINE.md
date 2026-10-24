@@ -36,6 +36,8 @@ Repeated imports must be safe. Preserve different forecast publication versions 
 
 ## Proposed logical tables
 
+> **Superseded:** the data is now loaded into Tiger Data's `raw` schema, catalogued in `raw.dataset_catalog`, and the backend reads it through `gridpulse.*` views. See [BACKEND_DESIGN.md](BACKEND_DESIGN.md#data-in-tiger-data). The table below is the original proposal.
+
 These fields describe the application contract, not exact CSV column names. Final database migrations depend on real samples.
 
 | Table | Important fields | Identity / handling |

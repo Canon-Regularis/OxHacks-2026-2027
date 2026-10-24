@@ -59,6 +59,7 @@ Keep retrospective observations distinguishable from forecasts. If presenting an
 - [REPOSITORY_STRUCTURE.md](REPOSITORY_STRUCTURE.md): agreed folders, ownership and frontend-to-backend request flow.
 
 - [DATA_PIPELINE.md](DATA_PIPELINE.md): CSV import, database tables and data quality.
+- [BACKEND_DESIGN.md](BACKEND_DESIGN.md): backend architecture, Tiger Data schema, API, algorithm contract and deployment.
 - [ALGORITHMS_AND_ANALYSIS.md](ALGORITHMS_AND_ANALYSIS.md): integration contracts, backend API and validation.
 - [BUILD_AND_DEMO.md](BUILD_AND_DEMO.md): ownership, 25-hour checkpoints, dashboard and hosting.
 - [RESEARCH_AND_EXTENSIONS.md](RESEARCH_AND_EXTENSIONS.md): Gemini agent, optional Snowflake role and limitations.

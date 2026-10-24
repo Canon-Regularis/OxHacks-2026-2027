@@ -1,0 +1,54 @@
+{
+  "_fixture": "Synthetic example for UI development; not real data.",
+  "settlement_date": "2026-10-14",
+  "settlement_period": 36,
+  "delivery_start_utc": "2026-10-14T16:30:00Z",
+  "delivery_end_utc": "2026-10-14T17:00:00Z",
+  "values": {
+    "price": 1240.0,
+    "price_min": 1240.0,
+    "price_max": 1240.0,
+    "niv": 820.0,
+    "wind": 2100.0,
+    "wind_outturn": 1650.0,
+    "demand": 34100.0,
+    "demand_outturn": null,
+    "residual_demand": 32000.0
+  },
+  "vintages": {
+    "wind": [
+      {
+        "published_at_utc": "2026-10-12T17:00:00Z",
+        "value": 6000.0
+      },
+      {
+        "published_at_utc": "2026-10-13T17:00:00Z",
+        "value": 4300.0
+      },
+      {
+        "published_at_utc": "2026-10-14T12:00:00Z",
+        "value": 2100.0
+      }
+    ],
+    "demand": [
+      {
+        "published_at_utc": "2026-10-13T09:00:00Z",
+        "value": 33800.0
+      },
+      {
+        "published_at_utc": "2026-10-14T09:00:00Z",
+        "value": 34100.0
+      }
+    ]
+  },
+  "analysis": [
+    {
+      "algorithm_id": "wind_price_correlation",
+      "algorithm_version": "0.1.0",
+      "run_id": 7,
+      "indicator": "wind_price_corr",
+      "unit": "",
+      "value": -0.41
+    }
+  ]
+}

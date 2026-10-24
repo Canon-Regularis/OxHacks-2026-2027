@@ -227,6 +227,8 @@ node_modules/
 /gridpulse/frontend/build/
 .env.*
 !.env.example
+# Downloaded service credentials, e.g. Tiger Cloud's tiger-cloud-<service>-credentials.env
+*.env
 
 # Frontend source directory (the Python template ignores lib/ globally).
 !/gridpulse/frontend/src/lib/
