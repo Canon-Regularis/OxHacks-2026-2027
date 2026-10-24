@@ -232,3 +232,6 @@ node_modules/
 
 # Frontend source directory (the Python template ignores lib/ globally).
 !/gridpulse/frontend/src/lib/
+
+# Local override for running the deploy stack (gridpulse/deploy/README.md)
+/gridpulse/deploy/docker-compose.override.yml

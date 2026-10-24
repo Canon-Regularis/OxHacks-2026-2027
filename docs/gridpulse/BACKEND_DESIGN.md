@@ -190,12 +190,13 @@ Guardrails: at most 6 tool calls and a 30 s total timeout. Tool output is passed
 
 ## Deployment (Vultr)
 
-Use one VM in London with Tiger Cloud in the closest region. Docker Compose runs two containers on it; setup and operation are in [gridpulse/deploy/README.md](../../gridpulse/deploy/README.md).
+Use one VM in London with Tiger Cloud in the closest region. It runs two environments with Docker Compose: `production` (from the `production` branch) and `development` (from `main`). Setup and operation are in [gridpulse/deploy/README.md](../../gridpulse/deploy/README.md).
 
-- `web`: Caddy for HTTPS. It serves the Svelte static build and proxies `/api/*` to the backend container, so the frontend and API share an origin and CORS isn't needed.
-- `backend`: `uvicorn gridpulse.main:app` with two workers, with `/opt/gridpulse/.env` holding `DATABASE_URL` and the keys.
+- A shared Caddy proxy terminates HTTPS and routes each environment's host name to its stack.
+- `web`: Caddy serving the Svelte static build and proxying `/api/*` to its backend container, so the frontend and API share an origin and CORS isn't needed.
+- `backend`: `uvicorn gridpulse.main:app` with two workers, with the environment's `.env` (`/opt/gridpulse` or `/opt/gridpulse-dev`) holding `DATABASE_URL` and the keys.
 - Health check: `curl https://<host>/api/health`.
-- Updates: a push to `main` runs [the CI/CD workflow](../../.github/workflows/deploy.yml). It tests, builds both images to GHCR, then on the VM runs `gridpulse migrate` and restarts.
+- Updates: a push to `main` or `production` runs [the CI/CD workflow](../../.github/workflows/deploy.yml). It tests, builds both images to GHCR, then on the VM runs `gridpulse migrate` and restarts.
 
 ## Open items
 
