@@ -65,7 +65,7 @@ gridpulse/                        # All application code and operational files
     raw/                            # Ignored local CSVs
     demo/                           # Permitted real-data demo cache
   scripts/                          # Thin operational commands
-  deploy/                           # Vultr: Compose stack, Caddyfile, deploy script
+  deploy/                           # Vultr: per-environment Compose stack, shared HTTPS proxy, deploy script
   backend/Dockerfile, frontend/Dockerfile  # Images; build context is gridpulse/
 ```
 

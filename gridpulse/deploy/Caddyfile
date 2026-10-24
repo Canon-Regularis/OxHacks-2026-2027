@@ -1,9 +1,14 @@
-# Baked into the frontend image. Serves the frontend build and proxies the API to the backend
-# container on the same origin, so the browser needs no CORS and no backend URL.
-#
-# SITE_ADDRESS is a domain for automatic HTTPS (e.g. gridpulse.example.com, or 203-0-113-10.sslip.io
-# for a bare IP), or :80 for plain HTTP.
-{$SITE_ADDRESS::80} {
+# Baked into the frontend image. Serves the frontend build and proxies the API to this stack's
+# backend on the same origin, so the browser needs no CORS and no backend URL. HTTPS is
+# terminated in front of it by the shared proxy (proxy/Caddyfile).
+{
+	servers {
+		# Keep the proxy's X-Forwarded-* headers (client IP, https) when passing requests on.
+		trusted_proxies static private_ranges
+	}
+}
+
+:80 {
 	encode zstd gzip
 
 	@backend path /api/* /docs /docs/* /openapi.json

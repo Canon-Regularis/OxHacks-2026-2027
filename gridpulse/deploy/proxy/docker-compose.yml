@@ -1,0 +1,33 @@
+# Shared HTTPS proxy on the VPS, in /opt/gridpulse-proxy. It owns ports 80/443 and the
+# gridpulse-edge network, and routes each environment's host name to that stack's web container.
+# The deploy workflow copies this file and Caddyfile (as conf/Caddyfile) here; deploy.sh starts the
+# proxy and reloads it. Host names come from .env beside this file (see ../README.md).
+name: gridpulse-proxy
+
+services:
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    environment:
+      PRODUCTION_ADDRESS: ${PRODUCTION_ADDRESS:?set PRODUCTION_ADDRESS in .env}
+      DEVELOPMENT_ADDRESS: ${DEVELOPMENT_ADDRESS:?set DEVELOPMENT_ADDRESS in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      # A directory rather than the file, so a replaced Caddyfile is visible to `caddy reload`.
+      - ./conf:/etc/caddy:ro
+      # Certificates survive restarts, which keeps clear of Let's Encrypt rate limits.
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - edge
+
+networks:
+  edge:
+    name: gridpulse-edge
+
+volumes:
+  caddy_data:
+  caddy_config:

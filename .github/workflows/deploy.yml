@@ -1,10 +1,11 @@
-# Tests, then builds both images, then deploys them to the Vultr VPS.
-# Pull requests run the tests and image builds only. Setup: gridpulse/deploy/README.md.
+# Tests, then builds both images, then deploys them to the Vultr VPS: the `production` branch to
+# the production environment and `main` to development. Pull requests run the tests and image
+# builds only. Setup: gridpulse/deploy/README.md.
 name: CI/CD
 
 on:
   push:
-    branches: [main]
+    branches: [main, production]
     paths:
       - gridpulse/backend/**
       - gridpulse/frontend/**
@@ -27,9 +28,9 @@ on:
 permissions:
   contents: read
 
-# Superseded pull request runs are cancelled; deploys queue one after another.
+# Superseded pull request runs are cancelled; each branch's deploys queue one after another.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || 'production' }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -99,25 +100,30 @@ jobs:
           context: gridpulse
           file: gridpulse/${{ matrix.component }}/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
+          # sha-<commit> is what gets deployed; the branch tag is what `docker compose up` uses by hand.
           tags: |
             ${{ steps.image.outputs.name }}:sha-${{ github.sha }}
-            ${{ steps.image.outputs.name }}:latest
+            ${{ contains(fromJSON('["main", "production"]'), github.ref_name) && format('{0}:{1}', steps.image.outputs.name, github.ref_name) || '' }}
           labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
           cache-from: type=gha,scope=${{ matrix.component }}
           cache-to: type=gha,mode=max,scope=${{ matrix.component }}
 
   deploy:
-    name: Deploy to Vultr
+    name: Deploy ${{ github.ref_name == 'production' && 'production' || 'development' }}
     needs: images
-    # Skipped until the VPS is configured as described in gridpulse/deploy/README.md.
-    if: github.event_name != 'pull_request' && vars.VPS_HOST != ''
+    # Only the two deployed branches; skipped until the VPS is configured (gridpulse/deploy/README.md).
+    if: >-
+      github.event_name != 'pull_request' && vars.VPS_HOST != ''
+      && contains(fromJSON('["main", "production"]'), github.ref_name)
     runs-on: ubuntu-latest
-    environment: production
+    # Each GitHub environment may set its own PUBLIC_URL and RUN_MIGRATIONS.
+    environment: ${{ github.ref_name == 'production' && 'production' || 'development' }}
     permissions:
       contents: read
       packages: read
     env:
-      APP_DIR: /opt/gridpulse
+      APP_DIR: ${{ github.ref_name == 'production' && '/opt/gridpulse' || '/opt/gridpulse-dev' }}
+      PROXY_DIR: /opt/gridpulse-proxy
       VPS_HOST: ${{ vars.VPS_HOST }}
       VPS_USER: ${{ vars.VPS_USER }}
     steps:
@@ -142,18 +148,23 @@ jobs:
           printf 'Host vps\n  HostName %s\n  User %s\n  IdentityFile ~/.ssh/deploy_key\n  IdentitiesOnly yes\n' \
             "$VPS_HOST" "${VPS_USER:-deploy}" > ~/.ssh/config
 
-      - name: Copy compose file and deploy script
-        run: scp gridpulse/deploy/docker-compose.yml gridpulse/deploy/deploy.sh "vps:$APP_DIR/"
+      - name: Copy compose files, proxy config and deploy script
+        run: |
+          scp gridpulse/deploy/docker-compose.yml gridpulse/deploy/deploy.sh "vps:$APP_DIR/"
+          scp gridpulse/deploy/proxy/docker-compose.yml "vps:$PROXY_DIR/"
+          scp gridpulse/deploy/proxy/Caddyfile "vps:$PROXY_DIR/conf/"
 
       - name: Pull images, migrate and restart
         env:
           # The job's own token: it can read this repository's images and expires with the job.
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ACTOR: ${{ github.actor }}
+          RUN_MIGRATIONS: ${{ vars.RUN_MIGRATIONS || 'true' }}
         run: |
           printf '%s\n' "$GHCR_TOKEN" | ssh vps "
             docker login ghcr.io -u '$ACTOR' --password-stdin > /dev/null || exit 1
-            IMAGE_TAG='sha-$GITHUB_SHA' REGISTRY='ghcr.io/${GITHUB_REPOSITORY_OWNER,,}' bash '$APP_DIR/deploy.sh'
+            IMAGE_TAG='sha-$GITHUB_SHA' REGISTRY='ghcr.io/${GITHUB_REPOSITORY_OWNER,,}' \
+              PROXY_DIR='$PROXY_DIR' RUN_MIGRATIONS='$RUN_MIGRATIONS' bash '$APP_DIR/deploy.sh'
             status=\$?
             docker logout ghcr.io > /dev/null
             exit \$status

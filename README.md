@@ -48,6 +48,6 @@ Follow the [full layout, ownership boundaries and request flow](docs/gridpulse/R
 
 The backend (FastAPI over Tiger Data) runs end to end against the team's Tiger Cloud instance, reading the loader's `raw` schema through `gridpulse.*` views; data modelling is still to come. Its design is in [BACKEND_DESIGN.md](docs/gridpulse/BACKEND_DESIGN.md), and the migrate, analyse, test and serve commands are in the [backend README](gridpulse/backend/README.md). Put the Tiger Cloud credentials file in the repository root, or a `DATABASE_URL` in `gridpulse/.env`; both are loaded automatically and gitignored. Keep database credentials and service keys server-side. The frontend framework is not yet bootstrapped.
 
-Pushes to `main` that change the application are tested and deployed to the Vultr VPS by GitHub Actions; the one-time VPS and repository setup is in [gridpulse/deploy/README.md](gridpulse/deploy/README.md). Add frontend startup commands here as they land.
+Pushes that change the application are tested and deployed to the Vultr VPS by GitHub Actions: `main` to the development site, `production` to the production site; the one-time VPS and repository setup is in [gridpulse/deploy/README.md](gridpulse/deploy/README.md). Add frontend startup commands here as they land.
 
 The demo must show which data is cached, its source and freshness, algorithm version and limitations. This is analysis of electricity prices and forecasts; indicators are not claims of grid failure or guaranteed future outcomes.
