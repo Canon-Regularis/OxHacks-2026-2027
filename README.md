@@ -2,7 +2,7 @@
 
 An electricity-market analysis dashboard combining GB wind forecasts, demand forecasts and imbalance settlement prices with the team's existing analysis algorithms.
 
-**Team:** Matthew, Mark, David. **Build window:** 25 hours. **Status:** repository skeleton created; application services and features are not yet implemented.
+**Team:** Matthew, Mark, David. **Build window:** 25 hours. **Status:** FastAPI backend over Tiger Data, deployed to Vultr by CI/CD, with a tested Orchid P0 algorithm layer (issue #6). The frontend is not yet bootstrapped.
 
 Development deployment: https://dev.78-141-242-126.sslip.io
 

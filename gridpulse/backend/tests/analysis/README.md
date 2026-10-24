@@ -1,0 +1,1 @@
+Tests for the analysis layer. `test_algorithms.py` checks every registered algorithm against the contract; the other `test_*.py` files test the Orchid adapters, with shared fixtures in `conftest.py`. `orchid/` holds the upstream Orchid test suites, ported with only their import lines changed.
