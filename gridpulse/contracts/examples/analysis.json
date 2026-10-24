@@ -1,10 +1,54 @@
 {
-  "is_fixture": true,
-  "mode": "fixture",
-  "from": "2026-10-24",
+  "_fixture": "Synthetic example for UI development; not real data. Truncated to 4 daily points.",
+  "algorithm": {
+    "id": "wind_price_correlation",
+    "version": "0.1.0",
+    "description": "Trailing 7-day Pearson correlation between the latest wind forecast and the imbalance price.",
+    "inputs": [
+      "wind_mw",
+      "price_gbp_mwh"
+    ],
+    "outputs": {
+      "wind_price_corr": ""
+    },
+    "limitations": "Descriptive statistic over past periods. Not a forecast, a probability or evidence of cause.",
+    "latest_run": null,
+    "tables": {}
+  },
+  "run": {
+    "run_id": 7,
+    "algorithm_id": "wind_price_correlation",
+    "algorithm_version": "0.1.0",
+    "params": {
+      "window_periods": 336,
+      "min_periods": 240
+    },
+    "range_start_utc": "2026-08-31T23:00:00Z",
+    "range_end_utc": "2026-10-24T23:00:00Z",
+    "cutoff_utc": null,
+    "finished_at_utc": "2026-10-24T12:10:00Z"
+  },
+  "from": "2026-10-21",
   "to": "2026-10-24",
-  "data_updated_at_utc": null,
-  "run": null,
-  "periods": [],
-  "warnings": ["Synthetic empty response for UI development; no analysis has run."]
+  "resolution": "1d",
+  "t": [
+    "2026-10-20T23:00:00Z",
+    "2026-10-21T23:00:00Z",
+    "2026-10-22T23:00:00Z",
+    "2026-10-23T23:00:00Z"
+  ],
+  "indicators": {
+    "wind_price_corr": {
+      "label": "wind_price_corr",
+      "unit": "",
+      "values": [
+        -0.52,
+        -0.47,
+        null,
+        -0.38
+      ]
+    }
+  },
+  "warnings": [],
+  "tables": []
 }

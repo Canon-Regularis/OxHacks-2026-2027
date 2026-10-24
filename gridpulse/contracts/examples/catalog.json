@@ -1,0 +1,122 @@
+{
+  "_fixture": "Synthetic example for UI development; not real data. Series and dataset lists abbreviated.",
+  "series": [
+    {
+      "id": "price",
+      "label": "Imbalance price",
+      "unit": "GBP/MWh"
+    },
+    {
+      "id": "wind",
+      "label": "Wind forecast (latest WINDFOR)",
+      "unit": "MW"
+    },
+    {
+      "id": "wind_outturn",
+      "label": "Wind outturn (FUELHH)",
+      "unit": "MW"
+    },
+    {
+      "id": "demand",
+      "label": "National demand forecast (latest NDF)",
+      "unit": "MW"
+    },
+    {
+      "id": "residual_demand",
+      "label": "Residual demand (demand - wind forecast)",
+      "unit": "MW"
+    }
+  ],
+  "datasets": [
+    {
+      "dataset": "elexon_system_prices",
+      "source": "Elexon BMRS DISEBSP",
+      "notes": "Half-hourly GB imbalance price in GBP/MWh.",
+      "first_utc": "2024-01-01T00:00:00Z",
+      "last_utc": "2026-10-23T22:30:00Z",
+      "loaded_at_utc": "2026-10-24T14:10:00Z",
+      "approx_rows": 49000
+    },
+    {
+      "dataset": "elexon_windfor",
+      "source": "Elexon BMRS WINDFOR",
+      "notes": "Hourly national wind forecast (MW), one row per vintage.",
+      "first_utc": "2024-01-01T00:00:00Z",
+      "last_utc": "2026-10-25T21:00:00Z",
+      "loaded_at_utc": "2026-10-24T14:12:00Z",
+      "approx_rows": 540000
+    },
+    {
+      "dataset": "elexon_ndf",
+      "source": "Elexon BMRS NDF",
+      "notes": "Half-hourly national demand forecast (MW), multiple vintages.",
+      "first_utc": "2024-01-01T00:30:00Z",
+      "last_utc": "2026-10-25T04:30:00Z",
+      "loaded_at_utc": "2026-10-24T14:18:00Z",
+      "approx_rows": 2900000
+    }
+  ],
+  "algorithms": [
+    {
+      "id": "wind_price_correlation",
+      "version": "0.1.0",
+      "description": "Trailing 7-day Pearson correlation between the latest wind forecast and the imbalance price.",
+      "inputs": [
+        "wind_mw",
+        "price_gbp_mwh"
+      ],
+      "outputs": {
+        "wind_price_corr": ""
+      },
+      "limitations": "Descriptive statistic over past periods. Not a forecast, a probability or evidence of cause.",
+      "latest_run": {
+        "run_id": 7,
+        "algorithm_id": "wind_price_correlation",
+        "algorithm_version": "0.1.0",
+        "params": {
+          "window_periods": 336,
+          "min_periods": 240
+        },
+        "range_start_utc": "2026-06-30T23:00:00Z",
+        "range_end_utc": "2026-10-23T23:00:00Z",
+        "cutoff_utc": null,
+        "finished_at_utc": "2026-10-24T12:10:00Z"
+      },
+      "tables": {}
+    },
+    {
+      "id": "price_naive_backtest",
+      "version": "0.1.0",
+      "description": "Day-ahead imbalance price from persistence and same-period-last-week baselines, with error scorecards.",
+      "inputs": [
+        "price_gbp_mwh"
+      ],
+      "outputs": {
+        "persistence_forecast": "GBP/MWh",
+        "seasonal_naive_forecast": "GBP/MWh"
+      },
+      "tables": {
+        "metrics": "MAE, RMSE and bias per model over the requested range",
+        "worst_misses": "Ten periods with the largest seasonal-naive error"
+      },
+      "limitations": "Numerical price baselines for comparison, not spike probabilities or a trading signal.",
+      "latest_run": {
+        "run_id": 12,
+        "algorithm_id": "price_naive_backtest",
+        "algorithm_version": "0.1.0",
+        "params": {
+          "horizon_periods": 48
+        },
+        "range_start_utc": "2026-06-30T23:00:00Z",
+        "range_end_utc": "2026-10-23T23:00:00Z",
+        "cutoff_utc": null,
+        "finished_at_utc": "2026-10-24T18:02:00Z"
+      }
+    }
+  ],
+  "limits": {
+    "max_points": 5000,
+    "max_range_days": 3660
+  },
+  "data_updated_at_utc": "2026-10-24T14:18:00Z"
+}
