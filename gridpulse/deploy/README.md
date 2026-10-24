@@ -40,7 +40,7 @@ internet ─ 80/443 ─► │ Caddy: HTTPS, routes by host │
 
 Until the frontend framework is set up (no `frontend/package.json`), `web` serves a placeholder page.
 
-**Shared database.** Both environments currently use the same Tiger Cloud database, and each deploy runs `gridpulse migrate`. A migration merged to `main` therefore changes the production database before the code reaches production. Today's migrations only add tables and replace views, so this is usually harmless. To isolate development, fork the Tiger service and put the fork's URL in `/opt/gridpulse-dev/.env`. To stop development from migrating, set the `development` environment variable `RUN_MIGRATIONS=false`.
+**Separate databases.** Each environment has its own Tiger Cloud service, set by `DATABASE_URL` in its `.env`: production uses `prod-koxford-terminator`, development the original `koxford-terminator`. Each deploy runs `gridpulse migrate` against its own environment's database, so migrations reach production only when the code does. Production's copy of the `raw` data does not follow loads into development's service; load new data into both. To stop an environment from migrating, set its GitHub environment variable `RUN_MIGRATIONS=false`.
 
 ## One-time setup
 
