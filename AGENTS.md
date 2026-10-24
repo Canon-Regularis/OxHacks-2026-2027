@@ -84,6 +84,8 @@ Follow [the repository structure and request flow](docs/gridpulse/REPOSITORY_STR
 ## Related project documents
 
 - [Frontend design brief](docs/gridpulse/FRONTEND_DESIGN.md)
+- [Frontend API reference](docs/gridpulse/FRONTEND_API.md)
+- [Displaying algorithm results](docs/gridpulse/ALGORITHM_DISPLAY.md)
 - [Overview](docs/gridpulse/README.md)
 - [Data pipeline](docs/gridpulse/DATA_PIPELINE.md)
 - [Algorithms and analysis contracts](docs/gridpulse/ALGORITHMS_AND_ANALYSIS.md)

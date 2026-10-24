@@ -4,27 +4,48 @@
     {
       "id": "price",
       "label": "Imbalance price",
-      "unit": "GBP/MWh"
+      "unit": "GBP/MWh",
+      "kind": "settlement",
+      "datasets": [
+        "elexon_system_prices"
+      ]
     },
     {
       "id": "wind",
       "label": "Wind forecast (WINDFOR, latest before delivery)",
-      "unit": "MW"
+      "unit": "MW",
+      "kind": "forecast",
+      "datasets": [
+        "elexon_windfor"
+      ]
     },
     {
       "id": "wind_outturn",
       "label": "Wind outturn (FUELHH)",
-      "unit": "MW"
+      "unit": "MW",
+      "kind": "outturn",
+      "datasets": [
+        "elexon_fuelhh"
+      ]
     },
     {
       "id": "demand",
       "label": "National demand forecast (NDF, latest before delivery)",
-      "unit": "MW"
+      "unit": "MW",
+      "kind": "forecast",
+      "datasets": [
+        "elexon_ndf"
+      ]
     },
     {
       "id": "residual_demand",
       "label": "Residual demand (demand - wind forecast)",
-      "unit": "MW"
+      "unit": "MW",
+      "kind": "forecast",
+      "datasets": [
+        "elexon_ndf",
+        "elexon_windfor"
+      ]
     }
   ],
   "datasets": [
@@ -54,6 +75,24 @@
       "last_utc": "2026-10-25T04:30:00Z",
       "loaded_at_utc": "2026-10-24T14:18:00Z",
       "approx_rows": 2900000
+    },
+    {
+      "dataset": "elexon_fuelhh",
+      "source": "Elexon BMRS FUELHH - /datasets/FUELHH",
+      "notes": "Half-hourly outturn generation by fuel type (MW).",
+      "first_utc": "2024-01-01T00:00:00Z",
+      "last_utc": "2026-10-23T22:30:00Z",
+      "loaded_at_utc": "2026-10-24T14:15:00Z",
+      "approx_rows": 49000
+    },
+    {
+      "dataset": "neso_historic_demand",
+      "source": "NESO data portal - historic-demand-data",
+      "notes": "Half-hourly outturn demand (ND, TSD).",
+      "first_utc": "2024-01-01T00:00:00Z",
+      "last_utc": "2026-10-03T22:30:00Z",
+      "loaded_at_utc": "2026-10-24T14:20:00Z",
+      "approx_rows": 49000
     }
   ],
   "algorithms": [
@@ -65,8 +104,20 @@
         "wind_mw",
         "price_gbp_mwh"
       ],
+      "datasets": [
+        "elexon_system_prices",
+        "elexon_windfor"
+      ],
       "outputs": {
         "wind_price_corr": ""
+      },
+      "params": {
+        "window_periods": 336,
+        "min_periods": 240
+      },
+      "param_descriptions": {
+        "window_periods": "Trailing window length in settlement periods (336 = 7 days)",
+        "min_periods": "Fewest non-missing periods in the window for a value; fewer gives null"
       },
       "limitations": "Descriptive statistic over past periods. Not a forecast, a probability or evidence of cause.",
       "latest_run": {
@@ -76,6 +127,11 @@
         "params": {
           "window_periods": 336,
           "min_periods": 240
+        },
+        "overrides": {},
+        "datasets": {
+          "elexon_system_prices": "2026-10-24T14:10:00Z",
+          "elexon_windfor": "2026-10-24T14:12:00Z"
         },
         "range_start_utc": "2026-06-30T23:00:00Z",
         "range_end_utc": "2026-10-23T23:00:00Z",
@@ -91,6 +147,9 @@
       "inputs": [
         "price_gbp_mwh"
       ],
+      "datasets": [
+        "elexon_system_prices"
+      ],
       "outputs": {
         "persistence_forecast": "GBP/MWh",
         "seasonal_naive_forecast": "GBP/MWh"
@@ -99,6 +158,12 @@
         "metrics": "MAE, RMSE and bias per model over the requested range",
         "worst_misses": "Ten periods with the largest seasonal-naive error"
       },
+      "params": {
+        "horizon_periods": 48
+      },
+      "param_descriptions": {
+        "horizon_periods": "Forecast lead time in settlement periods (48 = day-ahead), 1 to 335"
+      },
       "limitations": "Numerical price baselines for comparison, not spike probabilities or a trading signal.",
       "latest_run": {
         "run_id": 12,
@@ -106,6 +171,10 @@
         "algorithm_version": "0.1.0",
         "params": {
           "horizon_periods": 48
+        },
+        "overrides": {},
+        "datasets": {
+          "elexon_system_prices": "2026-10-24T14:10:00Z"
         },
         "range_start_utc": "2026-06-30T23:00:00Z",
         "range_end_utc": "2026-10-23T23:00:00Z",

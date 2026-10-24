@@ -1,0 +1,91 @@
+{
+  "_fixture": "Synthetic example for UI development; not real data. Tables only, so indicators is empty; fetch the tables by run id.",
+  "algorithm": {
+    "id": "price_driver_correlograms",
+    "description": "Autocorrelation of the imbalance price and its cross-correlation with residual demand and the wind forecast, by lag.",
+    "inputs": [
+      "price_gbp_mwh",
+      "residual_demand_mw",
+      "wind_mw"
+    ],
+    "outputs": {},
+    "tables": {
+      "acf_price": "Price autocorrelation at lags 1..K with a Bartlett band",
+      "pacf_price": "Price partial autocorrelation at lags 1..K with a +/- z/sqrt(n) band",
+      "ccf_residual_demand": "corr(price[t+k], residual_demand[t]) at lags -K..K; k > 0 means demand leads",
+      "ccf_wind": "corr(price[t+k], wind_forecast[t]) at lags -K..K; k > 0 means wind leads"
+    },
+    "limitations": "Retrospective association over the whole range, not causation. The cross-correlation band assumes white noise, so it overstates significance between autocorrelated series.",
+    "datasets": [
+      "elexon_ndf",
+      "elexon_system_prices",
+      "elexon_windfor"
+    ],
+    "version": "0.1.0",
+    "params": {
+      "max_lag": 96,
+      "alpha": 0.05
+    },
+    "param_descriptions": {
+      "max_lag": "Largest lag in periods (96 = 48 h); cross-correlations cover -max_lag to +max_lag",
+      "alpha": "Significance level of the band (0.05 = 95% band)"
+    },
+    "latest_run": {
+      "run_id": 22,
+      "algorithm_id": "price_driver_correlograms",
+      "algorithm_version": "0.1.0",
+      "params": {
+        "max_lag": 96,
+        "alpha": 0.05
+      },
+      "overrides": {},
+      "datasets": {
+        "elexon_ndf": "2026-10-24T14:18:00Z",
+        "elexon_system_prices": "2026-10-24T14:10:00Z",
+        "elexon_windfor": "2026-10-24T14:12:00Z"
+      },
+      "range_start_utc": "2026-08-31T23:00:00Z",
+      "range_end_utc": "2026-10-23T23:00:00Z",
+      "cutoff_utc": null,
+      "finished_at_utc": "2026-10-24T20:43:00Z"
+    }
+  },
+  "run": {
+    "run_id": 22,
+    "algorithm_id": "price_driver_correlograms",
+    "algorithm_version": "0.1.0",
+    "params": {
+      "max_lag": 96,
+      "alpha": 0.05
+    },
+    "overrides": {},
+    "datasets": {
+      "elexon_ndf": "2026-10-24T14:18:00Z",
+      "elexon_system_prices": "2026-10-24T14:10:00Z",
+      "elexon_windfor": "2026-10-24T14:12:00Z"
+    },
+    "range_start_utc": "2026-08-31T23:00:00Z",
+    "range_end_utc": "2026-10-23T23:00:00Z",
+    "cutoff_utc": null,
+    "finished_at_utc": "2026-10-24T20:43:00Z"
+  },
+  "from": "2026-10-22",
+  "to": "2026-10-22",
+  "resolution": "30m",
+  "t": [
+    "2026-10-22T15:00:00Z",
+    "2026-10-22T15:30:00Z",
+    "2026-10-22T16:00:00Z",
+    "2026-10-22T16:30:00Z",
+    "2026-10-22T17:00:00Z",
+    "2026-10-22T17:30:00Z"
+  ],
+  "indicators": {},
+  "warnings": [],
+  "tables": [
+    "acf_price",
+    "pacf_price",
+    "ccf_residual_demand",
+    "ccf_wind"
+  ]
+}

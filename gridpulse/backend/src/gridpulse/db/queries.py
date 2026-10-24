@@ -161,7 +161,7 @@ def input_rows(conn: Connection, start: datetime, end: datetime, cutoff: datetim
 # --- Analysis runs and results ----------------------------------------------------------------
 
 _RUN_COLUMNS = (
-    "run_id, algorithm_id, algorithm_version, params,"
+    "run_id, algorithm_id, algorithm_version, params, datasets,"
     " range_start_utc, range_end_utc, cutoff_utc, finished_at_utc"
 )
 
@@ -174,12 +174,14 @@ def create_run(
     start: datetime,
     end: datetime,
     cutoff: datetime | None,
+    datasets: dict[str, datetime | None],
 ) -> int:
+    loads = {name: loaded.isoformat() if loaded else None for name, loaded in datasets.items()}
     row = conn.execute(
         "INSERT INTO gridpulse.analysis_runs"
-        " (algorithm_id, algorithm_version, params, range_start_utc, range_end_utc, cutoff_utc, status)"
-        " VALUES (%s, %s, %s, %s, %s, %s, 'running') RETURNING run_id",
-        (algorithm_id, version, Jsonb(params), start, end, cutoff),
+        " (algorithm_id, algorithm_version, params, datasets, range_start_utc, range_end_utc, cutoff_utc, status)"
+        " VALUES (%s, %s, %s, %s, %s, %s, %s, 'running') RETURNING run_id",
+        (algorithm_id, version, Jsonb(params), Jsonb(loads), start, end, cutoff),
     ).fetchone()
     return row[0]
 
@@ -232,19 +234,30 @@ def get_tables(conn: Connection, run_id: int, name: str | None = None) -> dict[s
     return dict(rows)
 
 
-def find_run(conn: Connection, algorithm_id: str, version: str, start: datetime, end: datetime) -> dict | None:
-    """Latest successful retrospective run of this algorithm version overlapping [start, end).
+def find_run(
+    conn: Connection,
+    algorithm_id: str,
+    version: str,
+    params: dict,
+    start: datetime | None = None,
+    end: datetime | None = None,
+) -> dict | None:
+    """Latest successful retrospective run of this algorithm version with exactly these params.
 
-    Runs with full coverage come first. Cutoff runs are only served when asked for by run id.
+    Params compare as JSON values, so a run made with overrides never stands in for the defaults
+    (or another variant). With a range, only runs overlapping [start, end) count and runs covering
+    all of it come first. Cutoff runs are only served when asked for by run id.
     """
     rows = _dicts(
         conn,
         f"SELECT {_RUN_COLUMNS} FROM gridpulse.analysis_runs"
-        " WHERE algorithm_id = %(id)s AND algorithm_version = %(version)s AND status = 'succeeded'"
-        "   AND cutoff_utc IS NULL AND range_start_utc < %(end)s AND range_end_utc > %(start)s"
-        " ORDER BY (range_start_utc <= %(start)s AND range_end_utc >= %(end)s) DESC, finished_at_utc DESC"
+        " WHERE algorithm_id = %(id)s AND algorithm_version = %(version)s AND params = %(params)s"
+        "   AND status = 'succeeded' AND cutoff_utc IS NULL"
+        "   AND (%(start)s::timestamptz IS NULL OR (range_start_utc < %(end)s AND range_end_utc > %(start)s))"
+        " ORDER BY (%(start)s::timestamptz IS NULL OR (range_start_utc <= %(start)s AND range_end_utc >= %(end)s))"
+        "   DESC, finished_at_utc DESC, run_id DESC"
         " LIMIT 1",
-        {"id": algorithm_id, "version": version, "start": start, "end": end},
+        {"id": algorithm_id, "version": version, "params": Jsonb(params), "start": start, "end": end},
     )
     return rows[0] if rows else None
 
@@ -258,12 +271,13 @@ def get_run(conn: Connection, run_id: int) -> dict | None:
     return rows[0] if rows else None
 
 
-def latest_runs(conn: Connection) -> list[dict]:
-    """Most recent successful retrospective run of each algorithm (what /api/analysis serves)."""
+def list_runs(conn: Connection, algorithm_id: str, limit: int) -> list[dict]:
+    """Successful runs of one algorithm, newest first: every version, params and cutoff."""
     return _dicts(
         conn,
-        f"SELECT DISTINCT ON (algorithm_id) {_RUN_COLUMNS} FROM gridpulse.analysis_runs"
-        " WHERE status = 'succeeded' AND cutoff_utc IS NULL ORDER BY algorithm_id, finished_at_utc DESC",
+        f"SELECT {_RUN_COLUMNS} FROM gridpulse.analysis_runs"
+        " WHERE algorithm_id = %s AND status = 'succeeded' ORDER BY finished_at_utc DESC, run_id DESC LIMIT %s",
+        (algorithm_id, limit),
     )
 
 
@@ -280,16 +294,33 @@ def result_buckets(
     return conn.execute(query, params).fetchall()
 
 
-def period_results(conn: Connection, delivery_start: datetime) -> list[dict]:
-    """Latest successful value of every (algorithm, indicator) for one settlement period."""
+def period_results(
+    conn: Connection, delivery_start: datetime, algorithms: list[tuple[str, str, dict]]
+) -> list[dict]:
+    """Every indicator of one settlement period from each algorithm's served run.
+
+    `algorithms` is (id, version, params) per algorithm. For each, the run is the one find_run
+    would serve for this period, so every indicator of an algorithm comes from the same run.
+    """
+    if not algorithms:
+        return []
+    ids, versions, params = zip(*algorithms, strict=True)
     return _dicts(
         conn,
-        "SELECT DISTINCT ON (r.algorithm_id, res.indicator)"
-        "       r.algorithm_id, r.algorithm_version, r.run_id, res.indicator, res.value"
-        " FROM gridpulse.analysis_results res JOIN gridpulse.analysis_runs r ON r.run_id = res.run_id"
-        " WHERE res.delivery_start_utc = %s AND r.status = 'succeeded'"
-        " ORDER BY r.algorithm_id, res.indicator, r.finished_at_utc DESC",
-        (delivery_start,),
+        "WITH served AS ("
+        "  SELECT DISTINCT ON (r.algorithm_id) r.run_id, r.algorithm_id, r.algorithm_version"
+        "  FROM gridpulse.analysis_runs r"
+        "  JOIN unnest(%(ids)s::text[], %(versions)s::text[], %(params)s::jsonb[]) AS a(id, version, params)"
+        "    ON r.algorithm_id = a.id AND r.algorithm_version = a.version AND r.params = a.params"
+        "  WHERE r.status = 'succeeded' AND r.cutoff_utc IS NULL"
+        "    AND r.range_start_utc <= %(t)s AND r.range_end_utc > %(t)s"
+        "  ORDER BY r.algorithm_id, r.finished_at_utc DESC, r.run_id DESC"
+        ")"
+        " SELECT s.algorithm_id, s.algorithm_version, s.run_id, res.indicator, res.value"
+        " FROM served s JOIN gridpulse.analysis_results res ON res.run_id = s.run_id"
+        " WHERE res.delivery_start_utc = %(t)s"
+        " ORDER BY s.algorithm_id, res.indicator",
+        {"ids": list(ids), "versions": list(versions), "params": [Jsonb(p) for p in params], "t": delivery_start},
     )
 
 
@@ -305,6 +336,15 @@ def coverage(conn: Connection) -> list[dict]:
         "       approximate_row_count(to_regclass('raw.' || quote_ident(table_name))) AS approx_rows"
         " FROM raw.dataset_catalog ORDER BY table_name",
     )
+
+
+def dataset_loads(conn: Connection, names: list[str]) -> dict[str, datetime | None]:
+    """When each named raw dataset was last loaded; None if it is not in raw.dataset_catalog."""
+    rows = conn.execute(
+        "SELECT table_name, loaded_at FROM raw.dataset_catalog WHERE table_name = ANY(%s)", (names,)
+    ).fetchall()
+    found = dict(rows)
+    return {name: found.get(name) for name in names}
 
 
 def data_updated_at(conn: Connection) -> datetime | None:

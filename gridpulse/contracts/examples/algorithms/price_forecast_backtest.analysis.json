@@ -1,0 +1,312 @@
+{
+  "_fixture": "Synthetic example for UI development; not real data. Six 30-minute points from one evening peak.",
+  "algorithm": {
+    "id": "price_forecast_backtest",
+    "description": "Day-ahead imbalance price from seasonal ETS and seasonally differenced ARIMA(2, 0, 1), against a daily seasonal naive benchmark, scored by a rolling-origin backtest.",
+    "inputs": [
+      "price_gbp_mwh"
+    ],
+    "outputs": {
+      "seasonal_naive_forecast": "GBP/MWh",
+      "ets_forecast": "GBP/MWh",
+      "ets_lower_80": "GBP/MWh",
+      "ets_upper_80": "GBP/MWh",
+      "ets_lower_95": "GBP/MWh",
+      "ets_upper_95": "GBP/MWh",
+      "arima_forecast": "GBP/MWh",
+      "arima_lower_80": "GBP/MWh",
+      "arima_upper_80": "GBP/MWh",
+      "arima_lower_95": "GBP/MWh",
+      "arima_upper_95": "GBP/MWh"
+    },
+    "tables": {
+      "metrics": "Scores per model, pooled over the ok folds; MASE, RMSSE and MSIS averaged per fold",
+      "by_horizon": "MAE, RMSE and 80%/95% coverage per model and lead step",
+      "folds": "Every forecast origin per model with its status; excluded folds carry a message",
+      "fold_params": "Fitted parameters per model and origin (ETS smoothing weights, ARIMA coefficients and sigma2)"
+    },
+    "limitations": "ETS and ARIMA are refitted at every origin, so a parameter drifting across folds is a sign of instability, not a finding. Each forecast uses only prices settled before its origin (the previous day's end). Intervals come from each model's interval_method; sqrt-horizon is a heuristic. WMAPE and sMAPE are fractions. Not a probability of a price spike or a trading signal.",
+    "datasets": [
+      "elexon_system_prices"
+    ],
+    "version": "0.1.0",
+    "params": {
+      "initial": 1344,
+      "window": 1344,
+      "horizon": 48,
+      "step": 48,
+      "max_folds": 60,
+      "season_length": 48,
+      "levels": [
+        0.8,
+        0.95
+      ],
+      "models": {
+        "seasonal_naive": {
+          "season_length": 48
+        },
+        "ets": {
+          "trend": null,
+          "damped": false,
+          "seasonal": "additive",
+          "season_length": 48
+        },
+        "arima": {
+          "p": 2,
+          "d": 0,
+          "q": 1,
+          "seasonal_differencing": 1,
+          "season_length": 48
+        }
+      }
+    },
+    "param_descriptions": {
+      "initial": "Settlement periods of history before the first forecast origin (1344 = 28 days)",
+      "window": "Sliding training window in periods; null would use an expanding window",
+      "horizon": "Periods forecast from each origin (48 = one day ahead)",
+      "step": "Periods between consecutive origins (48 = one origin per day)",
+      "max_folds": "Most origins a run may use; a longer range is an error, not a truncation",
+      "season_length": "Seasonal period in half-hours used to scale MASE, RMSSE and MSIS (48 = daily)",
+      "levels": "Central prediction-interval levels scored, as fractions",
+      "models": "Model name -> its settings; names match the output prefixes and the model column of tables"
+    },
+    "latest_run": {
+      "run_id": 21,
+      "algorithm_id": "price_forecast_backtest",
+      "algorithm_version": "0.1.0",
+      "params": {
+        "initial": 1344,
+        "window": 1344,
+        "horizon": 48,
+        "step": 48,
+        "max_folds": 60,
+        "season_length": 48,
+        "levels": [
+          0.8,
+          0.95
+        ],
+        "models": {
+          "seasonal_naive": {
+            "season_length": 48
+          },
+          "ets": {
+            "trend": null,
+            "damped": false,
+            "seasonal": "additive",
+            "season_length": 48
+          },
+          "arima": {
+            "p": 2,
+            "d": 0,
+            "q": 1,
+            "seasonal_differencing": 1,
+            "season_length": 48
+          }
+        }
+      },
+      "overrides": {},
+      "datasets": {
+        "elexon_system_prices": "2026-10-24T14:10:00Z"
+      },
+      "range_start_utc": "2026-08-31T23:00:00Z",
+      "range_end_utc": "2026-10-23T23:00:00Z",
+      "cutoff_utc": null,
+      "finished_at_utc": "2026-10-24T20:41:00Z"
+    }
+  },
+  "run": {
+    "run_id": 21,
+    "algorithm_id": "price_forecast_backtest",
+    "algorithm_version": "0.1.0",
+    "params": {
+      "initial": 1344,
+      "window": 1344,
+      "horizon": 48,
+      "step": 48,
+      "max_folds": 60,
+      "season_length": 48,
+      "levels": [
+        0.8,
+        0.95
+      ],
+      "models": {
+        "seasonal_naive": {
+          "season_length": 48
+        },
+        "ets": {
+          "trend": null,
+          "damped": false,
+          "seasonal": "additive",
+          "season_length": 48
+        },
+        "arima": {
+          "p": 2,
+          "d": 0,
+          "q": 1,
+          "seasonal_differencing": 1,
+          "season_length": 48
+        }
+      }
+    },
+    "overrides": {},
+    "datasets": {
+      "elexon_system_prices": "2026-10-24T14:10:00Z"
+    },
+    "range_start_utc": "2026-08-31T23:00:00Z",
+    "range_end_utc": "2026-10-23T23:00:00Z",
+    "cutoff_utc": null,
+    "finished_at_utc": "2026-10-24T20:41:00Z"
+  },
+  "from": "2026-10-22",
+  "to": "2026-10-22",
+  "resolution": "30m",
+  "t": [
+    "2026-10-22T15:00:00Z",
+    "2026-10-22T15:30:00Z",
+    "2026-10-22T16:00:00Z",
+    "2026-10-22T16:30:00Z",
+    "2026-10-22T17:00:00Z",
+    "2026-10-22T17:30:00Z"
+  ],
+  "indicators": {
+    "seasonal_naive_forecast": {
+      "label": "seasonal_naive_forecast",
+      "unit": "GBP/MWh",
+      "values": [
+        88.0,
+        104.5,
+        131.0,
+        142.2,
+        118.7,
+        97.3
+      ]
+    },
+    "ets_forecast": {
+      "label": "ets_forecast",
+      "unit": "GBP/MWh",
+      "values": [
+        92.4,
+        109.8,
+        126.1,
+        133.9,
+        121.5,
+        101.2
+      ]
+    },
+    "ets_lower_80": {
+      "label": "ets_lower_80",
+      "unit": "GBP/MWh",
+      "values": [
+        61.0,
+        74.2,
+        85.9,
+        90.1,
+        77.8,
+        58.4
+      ]
+    },
+    "ets_upper_80": {
+      "label": "ets_upper_80",
+      "unit": "GBP/MWh",
+      "values": [
+        123.8,
+        145.4,
+        166.3,
+        177.7,
+        165.2,
+        144.0
+      ]
+    },
+    "ets_lower_95": {
+      "label": "ets_lower_95",
+      "unit": "GBP/MWh",
+      "values": [
+        44.4,
+        55.3,
+        64.6,
+        66.9,
+        54.6,
+        35.7
+      ]
+    },
+    "ets_upper_95": {
+      "label": "ets_upper_95",
+      "unit": "GBP/MWh",
+      "values": [
+        140.4,
+        164.3,
+        187.6,
+        200.9,
+        188.4,
+        166.7
+      ]
+    },
+    "arima_forecast": {
+      "label": "arima_forecast",
+      "unit": "GBP/MWh",
+      "values": [
+        90.2,
+        108.0,
+        128.8,
+        136.4,
+        123.1,
+        102.0
+      ]
+    },
+    "arima_lower_80": {
+      "label": "arima_lower_80",
+      "unit": "GBP/MWh",
+      "values": [
+        57.2,
+        70.9,
+        87.8,
+        91.5,
+        77.9,
+        57.4
+      ]
+    },
+    "arima_upper_80": {
+      "label": "arima_upper_80",
+      "unit": "GBP/MWh",
+      "values": [
+        123.2,
+        145.1,
+        169.8,
+        181.3,
+        168.3,
+        146.6
+      ]
+    },
+    "arima_lower_95": {
+      "label": "arima_lower_95",
+      "unit": "GBP/MWh",
+      "values": [
+        39.7,
+        51.2,
+        66.1,
+        67.7,
+        53.9,
+        33.8
+      ]
+    },
+    "arima_upper_95": {
+      "label": "arima_upper_95",
+      "unit": "GBP/MWh",
+      "values": [
+        140.7,
+        164.8,
+        191.5,
+        205.1,
+        192.3,
+        170.2
+      ]
+    }
+  },
+  "warnings": [],
+  "tables": [
+    "metrics",
+    "by_horizon",
+    "folds",
+    "fold_params"
+  ]
+}

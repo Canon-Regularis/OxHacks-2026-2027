@@ -72,6 +72,9 @@ ALGORITHM = Algorithm(
         "worst_misses": "Ten periods with the largest seasonal-naive error",
     },
     params={"horizon_periods": 48},
+    param_descriptions={
+        "horizon_periods": "Forecast lead time in settlement periods (48 = day-ahead), 1 to 335",
+    },
     warmup=WARMUP,
     limitations="Numerical price baselines for comparison, not spike probabilities or a trading signal.",
 )

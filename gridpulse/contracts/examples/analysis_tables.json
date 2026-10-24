@@ -7,6 +7,10 @@
     "params": {
       "horizon_periods": 48
     },
+    "overrides": {},
+    "datasets": {
+      "elexon_system_prices": "2026-10-24T14:10:00Z"
+    },
     "range_start_utc": "2026-06-30T23:00:00Z",
     "range_end_utc": "2026-10-23T23:00:00Z",
     "cutoff_utc": null,
