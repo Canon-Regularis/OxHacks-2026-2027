@@ -11,6 +11,7 @@ AGENTS.md                         # Repository-wide guidance and reuse sources
 README.md                         # Project overview and setup status
 LICENSE
 .gitignore
+.github/workflows/deploy.yml      # CI/CD: tests, images, Vultr deploy
 docs/                             # Team documentation
 gridpulse/                        # All application code and operational files
   .env.example                      # Server-side configuration placeholders
@@ -24,40 +25,48 @@ gridpulse/                        # All application code and operational files
       lib/api.ts                    # Shared HTTP request boundary
       styles/                       # Styles/design tokens; WWW reference
     public/                         # Static assets
-  backend/
-    pyproject.toml                  # Python package; framework and database dependencies pending
+  backend/                          # Design: docs/gridpulse/BACKEND_DESIGN.md
+    pyproject.toml                  # FastAPI, psycopg 3, pandas; `gridpulse` CLI entry point
     src/gridpulse/
-      main.py                       # Application/framework wiring
-      config.py                     # Server configuration
+      main.py                       # FastAPI app wiring, middleware, DB error handlers
+      config.py                     # Server configuration (env / gridpulse/.env)
+      settlement.py                 # Settlement period ↔ UTC, bucket grids (46/48/50)
+      catalog.py                    # Series ids → database relations, labels, units
+      cli.py                        # migrate | analyse | algorithms
       api/
-        analysis.py                 # HTTP analysis endpoint
-        schemas.py                  # Runtime request/response validation
+        system.py                   # /health, /catalog
+        market.py                   # /snapshot, /series, /extremes, /periods
+        analysis.py                 # /analysis (stored results only)
+        deps.py                     # Connection, date range, resolution, errors
+        schemas.py                  # Runtime response validation
+        demo_cache.py               # Record/replay offline demo fallback
       db/
         connection.py               # Tiger Data connections
-        queries.py                  # SQL reads/writes
-      ingestion/csv_import.py        # Existing CSV exporter handoff
+        queries.py                  # All SQL reads/writes
+        migrate.py                  # Applies gridpulse/db/migrations
+      ingestion/csv_import.py       # Placeholder: the team's loader writes Tiger's raw schema
       analysis/
-        features.py                 # ASOF joins and window calculations
-        service.py                  # Query → prepare → calculate → store/retrieve
-        algorithms/                 # Pure calculations: Orchid P0 adapters
-          orchid/                   # Orchid modules vendored verbatim
-          wind_analysis.py          # Wind-analysis adapter placeholder
+        contract.py                 # Algorithm interface and input columns
+        features.py                 # ASOF/latest input frame built in SQL
+        service.py                  # Prepare → calculate → check → store/retrieve
+        algorithms/                 # One module per algorithm, registered in __init__.py
       agent/
         service.py                  # Optional Gemini orchestration
         tools.py                    # Existing-service adapters
-    tests/
+    tests/                          # pytest; no database needed
       ingestion/
-      analysis/                     # Adapter tests; orchid/ holds the ported upstream suites
+      analysis/                     # Contract tests run on every registered algorithm
       api/
-  db/migrations/                    # Versioned database schema changes
+  db/migrations/                    # Re-runnable gridpulse schema: views over raw, analysis tables
   contracts/
     README.md                       # Shared API agreement
-    examples/analysis.json           # Labelled synthetic response fixture
+    examples/*.json                 # Labelled synthetic response per endpoint
   data/
     raw/                            # Ignored local CSVs
     demo/                           # Permitted real-data demo cache
   scripts/                          # Thin operational commands
-  deploy/                           # Vultr deployment configuration
+  deploy/                           # Vultr: per-environment Compose stack, shared HTTPS proxy, deploy script
+  backend/Dockerfile, frontend/Dockerfile  # Images; build context is gridpulse/
 ```
 
 Python package directories also contain `__init__.py`. Framework-specific entry points, manifests and dependencies should be added after checking WWW/Components compatibility; do not infer a framework from the folder names. Root README and workstream READMEs must gain exact startup commands when these exist.
@@ -114,3 +123,4 @@ Synthetic API examples belong in `gridpulse/contracts/examples/` and must be vis
 ## Implementation status
 
 The pure algorithm layer (`analysis/algorithms/`, issue #6) is implemented and tested, but no service, API or database calls it yet. Beyond that, the scaffold establishes locations and package metadata only. It does not expose a working API, connect to Tiger Data, run Gemini or deploy to Vultr. Do not present stubs or fixtures as implemented functionality. Add meaningful tests as each real implementation lands.
+The backend infrastructure runs end to end against Tiger Data. That covers the API, the `gridpulse` views over the loader's `raw` schema, the algorithm runner, result storage and the demo cache, with one reference algorithm. Data modelling, the real algorithms, Gemini, the frontend and the Vultr deployment are not implemented; see [BACKEND_DESIGN.md](BACKEND_DESIGN.md#open-items). Do not present stubs or fixtures as implemented functionality. Add meaningful tests as each real implementation lands.

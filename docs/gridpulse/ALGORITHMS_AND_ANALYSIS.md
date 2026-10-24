@@ -147,7 +147,7 @@ Statuses must distinguish a valid zero, missing inputs and a failed calculation.
 
 ## Proposed backend API
 
-These are proposed contracts to agree in the first hour, not implemented endpoints.
+The implemented design, including `/api/catalog`, `/api/snapshot` and `/api/extremes`, is in [BACKEND_DESIGN.md](BACKEND_DESIGN.md#api), and the algorithm interface is in [its contract section](BACKEND_DESIGN.md#algorithm-contract-matthew). The table below is the original proposal.
 
 | Endpoint | Purpose |
 |---|---|

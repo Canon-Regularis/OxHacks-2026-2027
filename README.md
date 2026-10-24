@@ -4,6 +4,10 @@ An electricity-market analysis dashboard combining GB wind forecasts, demand for
 
 **Team:** Matthew, Mark, David. **Build window:** 25 hours. **Status:** repository skeleton plus a tested Orchid P0 algorithm layer (issue #6). The API, database, frontend and deployment are not yet implemented.
 
+Development deployment: https://dev.78-141-242-126.sslip.io
+
+Production  deployment: https://78-141-242-126.sslip.io
+
 ## MVP
 
 ```text
@@ -29,7 +33,12 @@ No model training is planned. Algorithm formulas, score semantics and supported 
 
 Start with the [project overview](docs/gridpulse/README.md), then the [data pipeline](docs/gridpulse/DATA_PIPELINE.md), [algorithms and API contracts](docs/gridpulse/ALGORITHMS_AND_ANALYSIS.md), [25-hour build and demo plan](docs/gridpulse/BUILD_AND_DEMO.md), and [extensions](docs/gridpulse/RESEARCH_AND_EXTENSIONS.md). The [sponsor reference](docs/sponsors.md) contains background on available tracks.
 
+The [frontend design brief](docs/gridpulse/FRONTEND_DESIGN.md) records confirmed KCPC reuse requirements and the synoptic/electricity-map and animated Gemini investigation extensions. Weather providers and exact agent UI tools remain undecided.
+
 ## Repository layout
+
+**Confirmed frontend scope:** Overview, Explore and Methods are MVP pages. The immediate implementation focus is Overview only. Investigate/Gemini and the synoptic weather map remain extensions.
+
 
 - `gridpulse/frontend/`: dashboard, UI components, charts and API client.
 - `gridpulse/backend/`: Python package for routes, ingestion, database access, algorithms and optional agent.
@@ -41,8 +50,8 @@ Follow the [full layout, ownership boundaries and request flow](docs/gridpulse/R
 
 ## Setup and demo
 
-Base modules and a Python package manifest are present. Apart from the algorithm adapters, they contain no working server or database integration, and the frontend framework is not bootstrapped. See the backend README for installation and test commands. Copy `gridpulse/.env.example` to a local `gridpulse/.env` when configuring the implementation; automatic environment loading is not yet implemented. Keep database credentials and service keys server-side.
+The backend (FastAPI over Tiger Data) runs end to end against the team's Tiger Cloud instance, reading the loader's `raw` schema through `gridpulse.*` views; data modelling is still to come. Its design is in [BACKEND_DESIGN.md](docs/gridpulse/BACKEND_DESIGN.md), and the migrate, analyse, test and serve commands are in the [backend README](gridpulse/backend/README.md). Put the Tiger Cloud credentials file in the repository root, or a `DATABASE_URL` in `gridpulse/.env`; both are loaded automatically and gitignored. Keep database credentials and service keys server-side. The frontend framework is not yet bootstrapped.
 
-As implementations land, add exact database migration, CSV import, backend/frontend startup and Vultr deployment commands here. No runnable demo command exists yet.
+Pushes that change the application are tested and deployed to the Vultr VPS by GitHub Actions: `main` to the development site, `production` to the production site; the one-time VPS and repository setup is in [gridpulse/deploy/README.md](gridpulse/deploy/README.md). Add frontend startup commands here as they land.
 
 The demo must show which data is cached, its source and freshness, algorithm version and limitations. This is analysis of electricity prices and forecasts; indicators are not claims of grid failure or guaranteed future outcomes.

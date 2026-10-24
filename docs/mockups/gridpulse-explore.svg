@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1170" viewBox="0 0 1440 1170">
+<title>GridPulse Explore — synthetic design concept</title>
+<circle cx="43" cy="39" r="13" fill="#111111" stroke="#e4b47a"/>
+<polyline points="35,40 40,40 43,32 47,46 51,38" fill="none" stroke="#e4b47a" stroke-width="2" stroke-linejoin="round"/>
+<text x="65" y="44.86" font-family="DM Sans, Arial, sans-serif" font-size="23" fill="#efeee9" font-weight="700">GridPulse</text>
+<text x="320" y="43.48" font-family="DM Sans, Arial, sans-serif" font-size="14" fill="#9c9c98" font-weight="400">Overview</text>
+<text x="445" y="43.48" font-family="DM Sans, Arial, sans-serif" font-size="14" fill="#efeee9" font-weight="400">Explore</text>
+<polyline points="445,69 501,69" fill="none" stroke="#e4b47a" stroke-width="2" stroke-linejoin="round"/>
+<text x="550" y="43.48" font-family="DM Sans, Arial, sans-serif" font-size="14" fill="#9c9c98" font-weight="400">Investigate</text>
+<text x="688" y="43.48" font-family="DM Sans, Arial, sans-serif" font-size="14" fill="#9c9c98" font-weight="400">Methods</text>
+<rect x="1100" y="25" width="155" height="28" rx="14" fill="#191919" stroke="#303030"/>
+<text x="1112" y="41.019999999999996" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="400">Illustrative concept</text>
+<text x="1280" y="43.019999999999996" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#9c9c98" font-weight="400">GB / UTC</text>
+<polyline points="28,79 1412,79" fill="none" stroke="#303030" stroke-width="1" stroke-linejoin="round"/>
+<text x="40" y="116.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="700">EXPLORE / GRIDPULSE</text>
+<text x="40" y="171.16" font-family="DM Serif Text, Georgia, serif" font-size="38" fill="#efeee9" font-weight="400">Follow the data, period by period.</text>
+<text x="42" y="205.48" font-family="DM Sans, Arial, sans-serif" font-size="14" fill="#9c9c98" font-weight="400">Choose a series, inspect its history and bring the underlying records into view.</text>
+<polyline points="40,1104 1400,1104" fill="none" stroke="#303030" stroke-width="1" stroke-linejoin="round"/>
+<text x="42" y="1135.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">GRIDPULSE / OXHACK 2026</text>
+<text x="420" y="1136.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="400">Design exploration · synthetic data · not a working application</text>
+<rect x="40" y="233" width="95" height="28" rx="14" fill="#191919" stroke="#303030"/>
+<text x="52" y="249.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="400">Chart</text>
+<rect x="147" y="233" width="145" height="28" rx="14" fill="#191919" stroke="#303030"/>
+<text x="159" y="249.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#9c9c98" font-weight="400">Weather map</text>
+<rect x="947" y="233" width="230" height="28" rx="14" fill="#191919" stroke="#303030"/>
+<text x="959" y="249.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#efeee9" font-weight="400">24 Oct 2026 / full day</text>
+<rect x="1190" y="233" width="210" height="28" rx="14" fill="#191919" stroke="#303030"/>
+<text x="1202" y="249.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#9c9c98" font-weight="400">Cutoff: retrospective</text>
+<rect x="40" y="281" width="250" height="795" rx="12" fill="#191919" stroke="#303030"/>
+<text x="60" y="321.22" font-family="DM Serif Text, Georgia, serif" font-size="21" fill="#efeee9" font-weight="400">Data &amp; analysis</text>
+<text x="60" y="365.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="700">SOURCE SERIES</text>
+<text x="60" y="597.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="700">ANALYSIS</text>
+<text x="60" y="854.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="700">DISPLAY</text>
+<circle cx="69" cy="396" r="6" fill="#e4b47a"/>
+<text x="85" y="398.66" font-family="DM Sans, Arial, sans-serif" font-size="13" fill="#efeee9" font-weight="400">Imbalance price</text>
+<text x="85" y="419.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">GBP / MWh</text>
+<circle cx="69" cy="458" r="6" fill="#78c6ba"/>
+<text x="85" y="460.66" font-family="DM Sans, Arial, sans-serif" font-size="13" fill="#efeee9" font-weight="400">Wind forecast</text>
+<text x="85" y="481.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">MW · published versions</text>
+<circle cx="69" cy="520" r="6" fill="#90b9e6"/>
+<text x="85" y="522.66" font-family="DM Sans, Arial, sans-serif" font-size="13" fill="#efeee9" font-weight="400">Demand forecast</text>
+<text x="85" y="543.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">MW · national</text>
+<circle cx="69" cy="628" r="6" fill="#78c6ba"/>
+<text x="85" y="630.66" font-family="DM Sans, Arial, sans-serif" font-size="13" fill="#efeee9" font-weight="400">Wind revisions</text>
+<text x="85" y="651.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">Same delivery interval</text>
+<circle cx="69" cy="690" r="6" fill="#90b9e6"/>
+<text x="85" y="692.66" font-family="DM Sans, Arial, sans-serif" font-size="13" fill="#efeee9" font-weight="400">Residual demand</text>
+<text x="85" y="713.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">Demand less wind</text>
+<circle cx="69" cy="752" r="6" fill="#9c9c98"/>
+<text x="85" y="754.66" font-family="DM Sans, Arial, sans-serif" font-size="13" fill="#efeee9" font-weight="400">Algorithm output</text>
+<text x="85" y="775.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">Available results only</text>
+<text x="61" y="889.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#efeee9" font-weight="400">✓  Align time axes</text>
+<text x="61" y="922.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#efeee9" font-weight="400">✓  Show missing coverage</text>
+<text x="61" y="955.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#9c9c98" font-weight="400">UTC timestamps</text>
+<text x="61" y="1044.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="400">Sources &amp; definitions ↗</text>
+<rect x="310" y="281" width="1090" height="492" rx="12" fill="#191919" stroke="#303030"/>
+<text x="332" y="323.86" font-family="DM Serif Text, Georgia, serif" font-size="23" fill="#efeee9" font-weight="400">Wind revisions and market movement</text>
+<text x="333" y="352.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#9c9c98" font-weight="400">Retrospective view · illustrative series</text>
+<text x="334" y="394.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#e4b47a" font-weight="400">IMBALANCE PRICE / GBP PER MWH</text>
+<polyline points="365,420.0 1361,420.0" fill="none" stroke="#303030" stroke-width="1" stroke-linejoin="round"/>
+<polyline points="365,464.0 1361,464.0" fill="none" stroke="#303030" stroke-width="1" stroke-linejoin="round"/>
+<polyline points="365,508.0 1361,508.0" fill="none" stroke="#303030" stroke-width="1" stroke-linejoin="round"/>
+<polyline points="365,552.0 1361,552.0" fill="none" stroke="#303030" stroke-width="1" stroke-linejoin="round"/>
+<polyline points="365.0,475.44 375.375,474.06323296736485 385.75,474.26530367603834 396.125,475.7145765362627 406.5,477.8943575804348 416.875,480.1901024280928 427.25,481.99173061577716 437.625,482.7947895688682 448.0,482.28440182831673 458.375,480.3886578656948 468.75,477.29295291330254 479.125,473.4129459501813 489.5,469.3303664120619 499.875,465.7017753496016 510.25,463.15467383364717 520.625,462.18736540525396 531.0,463.08840300457626 541.375,465.888374762364 551.75,470.35169263007793 562.125,476.0097464258347 572.5,482.2302680585494 582.875,488.3120452294794 593.25,493.59013134440124 603.625,497.5350488522065 614.0,499.8304370305221 624.375,500.41700167365093 634.75,499.49594533721535 645.125,497.4914526372833 655.5,494.97826585157 665.875,492.58589178580735 676.25,490.89466243081614 686.625,490.34014826098655 697.0,491.14109280052185 707.375,493.2623105486228 717.75,496.4184561020228 728.125,500.1181043596936 738.5,503.74120148699416 748.875,506.63766146206166 759.25,508.2315282078615 769.625,508.1142285011572 780.0,506.1121476262607 790.375,502.3177989219866 800.75,497.0795924225621 811.125,490.9517312015018 821.5,484.6120452888337 831.875,478.7606146882962 842.25,474.0150221644476 852.625,470.8184993294965 863.0,469.37493411518716 873.375,469.6199240733629 883.75,471.2304293157106 894.125,473.6682672909456 904.5,476.246587893286 914.875,478.2061915174228 925.25,478.79262201410853 935.625,477.33552249363527 946.0,473.34351339166426 956.375,466.62942925969935 966.75,457.46036782521435 977.125,446.68510662309154 987.5,435.7511767139213 997.875,426.52466317711963 1008.25,420.8942506475442 1018.625,420.2575781139177 1029.0,425.0836189698075 1039.375,434.74497084635686 1049.75,447.7007359114981 1060.125,461.9471085152308 1070.5,475.5399271635595 1080.875,486.9942500090831 1091.25,495.4624883090695 1101.625,500.7100617697916 1112.0,502.9767926154548 1122.375,502.813633904852 1132.75,500.94436042030696 1143.125,498.15990417129024 1153.5,495.2322470325835 1163.875,492.8356964526881 1174.25,491.4743062702818 1184.625,491.42388598550684 1195.0,492.7003357872834 1205.375,495.06321560266053 1215.75,498.0571096214617 1226.125,501.08614191471736 1236.5,503.510806510147 1246.875,504.7521937789671 1257.25,504.38725488785894 1267.625,502.2200426898728 1278.0,498.31761097704043 1288.375,493.0048117267126 1298.75,486.81870749447256 1309.125,480.4296849541878 1319.5,474.5416085447531 1329.875,469.7866605061734 1340.25,466.63135303422985 1350.625,465.3084372856664 1361.0,465.7853504866816" fill="none" stroke="#e4b47a" stroke-width="3" stroke-linejoin="round"/>
+<text x="357.0" y="574.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">00:00</text>
+<text x="606.0" y="574.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">06:00</text>
+<text x="855.0" y="574.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">12:00</text>
+<text x="1104.0" y="574.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">18:00</text>
+<text x="1353.0" y="574.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">23:30</text>
+<text x="334" y="619.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#78c6ba" font-weight="400">WIND FORECAST REVISION / MW</text>
+<polyline points="365,640.0 1361,640.0" fill="none" stroke="#303030" stroke-width="1" stroke-linejoin="round"/>
+<polyline points="365,660.0 1361,660.0" fill="none" stroke="#303030" stroke-width="1" stroke-linejoin="round"/>
+<polyline points="365,680.0 1361,680.0" fill="none" stroke="#303030" stroke-width="1" stroke-linejoin="round"/>
+<polyline points="365,700.0 1361,700.0" fill="none" stroke="#303030" stroke-width="1" stroke-linejoin="round"/>
+<polyline points="365.0,672.1042547775746 375.375,672.1306123964305 385.75,672.7267595364998 396.125,673.7320846639392 406.5,674.9049453029961 416.875,675.9624407221293 427.25,676.6269881561984 437.625,676.6723117811634 448.0,675.9615414333639 458.375,674.471359654349 468.75,672.2983351052218 479.125,669.6463905473122 489.5,666.7973308109475 499.875,664.0690304565073 510.25,661.7678299648348 520.625,660.1426055351719 531.0,659.3477162266962 541.375,659.4206344581983 551.75,660.2777523742744 562.125,661.7289924559418 572.5,663.5088880755842 582.875,665.3192060930003 593.25,666.876368404024 603.625,667.9561790256529 614.0,668.4287961487825 624.375,668.2784361286779 634.75,667.6047141463524 645.125,666.6054324071594 655.5,665.5435622952767 665.875,664.7036682874938 676.25,664.3446936165623 686.625,664.6566065586354 697.0,665.7278003201401 707.375,667.5284444043539 717.75,669.9124686131505 728.125,672.6379197877848 738.5,675.4025303292524 748.875,677.8889344858208 759.25,679.8124427703565 769.625,680.9638775837228 780.0,681.240748541164 790.375,680.6618817886141 800.75,679.3632240244726 811.125,677.5755076256632 821.5,675.5873201237085 831.875,673.6994183861544 842.25,672.1775026971227 852.625,671.2109015312687 863.0,670.8836769010816 873.375,671.1626905876346 883.75,671.9044817088196 894.125,672.8798129617788 904.5,673.8119000865951 914.875,674.4220567668407 925.25,674.4750655828611 935.625,673.8161974558186 946.0,672.3925628057003 956.375,670.2536012511115 966.75,667.529420768595 977.125,664.3917464607644 987.5,661.0098348078155 997.875,657.5200139047868 1008.25,654.0271868565735 1018.625,650.6445005145266 1029.0,647.5540903615195 1039.375,645.0485568063459 1049.75,643.508305642862 1060.125,643.2969670832553 1070.5,644.6075341228727 1080.875,647.3346746771501 1091.25,651.0500737049124 1101.625,655.1093107185902 1112.0,658.8488263611973 1122.375,661.7852232249734 1132.75,663.7343100574506 1143.125,664.8150003312455 1153.5,665.3588449131204 1163.875,665.7778292932915 1174.25,666.4420862009791 1184.625,667.5976762955341 1195.0,669.3309928280704 1205.375,671.5718912529824 1215.75,674.1233533704209 1226.125,676.7068105782985 1236.5,679.0146232069233 1246.875,680.7626298672333 1257.25,681.7362750567872 1267.625,681.8244822343876 1278.0,681.0368121886095 1288.375,679.5016501351664 1298.75,677.4459060131343 1309.125,675.1595064757215 1319.5,672.9503029664279 1329.875,671.0965090238817 1340.25,669.8041575904695 1350.625,669.1762683538809 1361.0,669.1985598560136" fill="none" stroke="#78c6ba" stroke-width="3" stroke-linejoin="round"/>
+<text x="357.0" y="722.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">00:00</text>
+<text x="606.0" y="722.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">06:00</text>
+<text x="855.0" y="722.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">12:00</text>
+<text x="1104.0" y="722.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">18:00</text>
+<text x="1353.0" y="722.2" font-family="DM Sans, Arial, sans-serif" font-size="10" fill="#9c9c98" font-weight="400">23:30</text>
+<polyline points="1027,398 1027,735" fill="none" stroke="#8e8678" stroke-width="1" stroke-linejoin="round"/>
+<rect x="935" y="373" width="181" height="28" rx="14" fill="#191919" stroke="#303030"/>
+<text x="947" y="389.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#e4b47a" font-weight="400">17:00 · selected</text>
+<rect x="310" y="793" width="530" height="283" rx="12" fill="#191919" stroke="#303030"/>
+<text x="332" y="835.86" font-family="DM Serif Text, Georgia, serif" font-size="23" fill="#efeee9" font-weight="400">Selected period</text>
+<text x="332" y="863.66" font-family="DM Sans, Arial, sans-serif" font-size="13" fill="#e4b47a" font-weight="400">24 October 2026 · 17:00–17:30 UTC</text>
+<text x="332" y="902.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#9c9c98" font-weight="400">Settlement period</text>
+<text x="603" y="902.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#efeee9" font-weight="400">35</text>
+<text x="332" y="936.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#9c9c98" font-weight="400">Actual imbalance price</text>
+<text x="603" y="936.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#efeee9" font-weight="400">£126.40 / MWh</text>
+<text x="332" y="970.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#9c9c98" font-weight="400">Forecast wind revision</text>
+<text x="603" y="970.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#efeee9" font-weight="400">−860 MW</text>
+<text x="332" y="1004.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#9c9c98" font-weight="400">Data mode</text>
+<text x="603" y="1004.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#efeee9" font-weight="400">Synthetic fixture</text>
+<rect x="860" y="793" width="540" height="283" rx="12" fill="#191919" stroke="#303030"/>
+<text x="882" y="835.86" font-family="DM Serif Text, Georgia, serif" font-size="23" fill="#efeee9" font-weight="400">Take the next step</text>
+<text x="882" y="875.48" font-family="DM Sans, Arial, sans-serif" font-size="14" fill="#9c9c98" font-weight="400">Inspect the publication history behind this</text>
+<text x="882" y="901.48" font-family="DM Sans, Arial, sans-serif" font-size="14" fill="#9c9c98" font-weight="400">period, or ask Gemini to investigate it.</text>
+<rect x="882" y="942" width="245" height="40" rx="7" fill="#e4b47a"/>
+<text x="897" y="964.84" font-family="DM Sans, Arial, sans-serif" font-size="12" fill="#111111" font-weight="700">Investigate this period →</text>
+<rect x="882" y="1004" width="198" height="28" rx="14" fill="#191919" stroke="#303030"/>
+<text x="894" y="1020.02" font-family="DM Sans, Arial, sans-serif" font-size="11" fill="#efeee9" font-weight="400">View source records ↗</text>
+</svg>

@@ -1,19 +1,21 @@
 # Shared API contracts
 
-Frontend and backend owners agree changes here before integration. This directory is a shared specification, not another runtime service. Backend runtime request/response validation belongs in `gridpulse/backend/src/gridpulse/api/schemas.py`.
+Frontend and backend owners agree changes here before integration. This directory is a shared specification, not another runtime service. Backend runtime validation lives in `gridpulse/backend/src/gridpulse/api/schemas.py`, and `tests/api/test_contracts.py` checks that every example here still parses with those schemas.
 
-Proposed endpoints:
+| Method/path | Purpose | Example |
+|---|---|---|
+| `GET /api/health` | Mode (`live`/`record`/`replay`) and database status | `health.json` |
+| `GET /api/catalog` | Series, dataset coverage/freshness, algorithms and latest runs, limits | `catalog.json` |
+| `GET /api/snapshot?at=` | Ticker values for the latest (or a historical) settled period | `snapshot.json` |
+| `GET /api/series?ids=&from=&to=&resolution=auto&cutoff=` | Columnar series on one shared time axis | `series.json` |
+| `GET /api/analysis?algorithm=&from=&to=&resolution=auto&run_id=` | Stored per-period algorithm results with run provenance and table names | `analysis.json` |
+| `GET /api/analysis/runs/{run_id}/tables?name=` | A run's tables (scorecards, ACF by lag, diagnostics) as `{description, columns, rows}` | `analysis_tables.json` |
+| `GET /api/extremes?series=&from=&to=&order=desc&limit=10` | Highest/lowest settlement periods | `extremes.json` |
+| `GET /api/periods/{date}/{period}` | One period: values, forecast vintages and analysis outputs | `period.json` |
+| any error | `{"detail": {"code", "message"}}` | `error.json` |
 
-| Method/path | Purpose |
-|---|---|
-| `GET /api/health` | Readiness and database/cache mode |
-| `GET /api/coverage` | Available dates, source freshness and missing coverage |
-| `GET /api/series?from=YYYY-MM-DD&to=YYYY-MM-DD` | Source series over an inclusive settlement-date range |
-| `GET /api/analysis?from=YYYY-MM-DD&to=YYYY-MM-DD` | Completed analysis over that range |
-| `GET /api/periods/{date}/{period}` | Period-level source and analysis details |
+Details, including resolution rules, cutoff semantics and error codes, are in the [backend design](../../docs/gridpulse/BACKEND_DESIGN.md#api).
 
-Endpoints are not implemented. Agree range limits, error responses and forecast-version selection before coding handlers. Use UTC instants with an explicit offset, settlement date/period identities, explicit units and algorithm/run provenance. Never assume 48 periods per day.
+Conventions: `from`/`to` are inclusive settlement dates (`YYYY-MM-DD`). Instants are UTC with a `Z` suffix. Each series is a `values` array aligned with the shared `t` array, with `null` for missing data, which is never zero. At 30m resolution the response includes `settlement_date`/`settlement_period` arrays. Never assume 48 periods per day.
 
-`examples/analysis.json` is a draft synthetic empty response for UI integration. It provides no real algorithm values. A real response must set `is_fixture` to false, supply real freshness/run metadata and include records using the agreed indicator schema. Do not turn missing values into zero.
-
-Update example responses and backend schemas together. Add examples for source series, period details and errors once their actual data shapes are known.
+Every example carries a `_fixture` label and contains synthetic values only. Real responses do not have that key. Update examples and `schemas.py` together.

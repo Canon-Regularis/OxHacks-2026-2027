@@ -25,6 +25,12 @@ If blocked on the database, develop against the agreed CSV fixture while fixing 
 
 ## Dashboard priorities
 
+**Confirmed frontend scope:** Overview, Explore and Methods are MVP pages. The immediate implementation focus is Overview only. Investigate/Gemini and the synoptic weather map remain extensions.
+
+
+Follow the [confirmed frontend brief](FRONTEND_DESIGN.md) for KCPC responsiveness, theme, globe, fade animation, section/card patterns and repository exploration. Reuse selected components rather than reproducing the entire reference website. Gemini-driven animated view changes and the synoptic/electricity map are extension requirements, not core delivery gates.
+
+
 **Core screen:** strong visual hierarchy, coherent colours/typography, responsive layout, date/range controls, freshness and source labels, summary cards, aligned wind/demand/price charts and available algorithm indicators. Charts need clear units, readable tooltips and support for negative prices.
 
 **Next:** historical replay, selected-period details, day comparisons, missing-data explanations and CSV export. A heatmap is useful when an algorithm provides a meaningful period-level indicator; use its documented scale rather than inventing probability percentages.
@@ -37,7 +43,7 @@ Loading, empty, error and cached-mode states are part of the core UI. Synthetic 
 
 Use Vultr as the application hosting target and Tiger Data as the managed database. Choose the simplest deployment the team can operate, such as one VM serving frontend and backend. Containerise only if it helps the team ship faster.
 
-Keep `DATABASE_URL`, `GEMINI_API_KEY` and any optional Snowflake credentials on the server. Configure gridpulse/frontend/backend routing, permitted frontend origins where needed, database connectivity and HTTPS for the public app. Document deployed URL, deployment/update steps and local startup commands in the root README. Verify reboot/restart behaviour and test the URL from another device before relying on it for judging.
+Keep `DATABASE_URL`, `GEMINI_API_KEY` and any optional Snowflake credentials on the server. Configure frontend/backend routing, permitted frontend origins where needed, database connectivity and HTTPS for the public app. Document deployed URL, deployment/update steps and local startup commands in the root README. Verify reboot/restart behaviour and test the URL from another device before relying on it for judging.
 
 ## Repository layout
 
@@ -52,7 +58,7 @@ The algorithm integration location is `gridpulse/backend/src/gridpulse/analysis/
 3. Open one period and explain the existing algorithm's output and inputs.
 4. Demonstrate Tiger Data's role and the Vultr-hosted application.
 5. If complete, ask Gemini a question and show the evidence used in its answer.
-6. State limitations and show reproducible gridpulse/data/run metadata.
+6. State limitations and show reproducible data/run metadata.
 
 ## Final checks
 

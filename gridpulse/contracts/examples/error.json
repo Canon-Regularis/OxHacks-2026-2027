@@ -1,0 +1,6 @@
+{
+  "detail": {
+    "code": "no_run",
+    "message": "No completed wind_price_correlation v0.1.0 run covers this range. Run: gridpulse analyse wind_price_correlation --from 2026-10-01 --to 2026-10-24"
+  }
+}

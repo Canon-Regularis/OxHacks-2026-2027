@@ -26,6 +26,14 @@ Answers should identify supporting periods and calculations, distinguish observa
 
 Select an available Gemini model during implementation; no particular model ID or account entitlement is promised. See [Gemini documentation](https://ai.google.dev/gemini-api/docs) and [function calling](https://ai.google.dev/gemini-api/docs/function-calling).
 
+## Agent-driven dashboard and synoptic extension
+
+The user has requested that Gemini be able to change the displayed view during an investigation, using animations to bring up supporting information. This belongs to the agent extension. The exact tool names, transport and workspace layout remain implementation decisions; no arbitrary UI execution interface is agreed.
+
+The Discord brief also confirms a map extension: adapt KCPC Network's global map to display wind/pressure/fronts with correct isobars, plus an independently selectable UK electricity-use and forecast heatmap. Permit supported charts to be displayed within agent-led investigations. Correct regional inputs and a verified synoptic source are prerequisites, not existing capabilities.
+
+See [FRONTEND_DESIGN.md](FRONTEND_DESIGN.md) for the confirmed visual requirements and [DATA_PIPELINE.md](DATA_PIPELINE.md#weather-and-regional-data-for-the-map-extension) for the outstanding data requirements. The Royal Meteorological Society mention is unverified; no weather provider is selected.
+
 ## Hosting: Vultr
 
 Vultr is the chosen application hosting target, described in the [build plan](BUILD_AND_DEMO.md). Demonstrate the actual deployed frontend/backend and describe what is running there. GPU infrastructure is unnecessary for this plan. Keep a local cached demo as backup.

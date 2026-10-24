@@ -227,6 +227,12 @@ node_modules/
 /gridpulse/frontend/build/
 .env.*
 !.env.example
+# Downloaded service credentials, e.g. Tiger Cloud's tiger-cloud-<service>-credentials.env (or .txt)
+*.env
+tiger-cloud-*credentials*
 
 # Frontend source directory (the Python template ignores lib/ globally).
 !/gridpulse/frontend/src/lib/
+
+# Local override for running the deploy stack (gridpulse/deploy/README.md)
+/gridpulse/deploy/docker-compose.override.yml

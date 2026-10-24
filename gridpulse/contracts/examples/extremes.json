@@ -1,0 +1,12 @@
+{
+  "_fixture": "Synthetic example for UI development; not real data.",
+  "series": {"id": "price", "label": "Imbalance price", "unit": "GBP/MWh"},
+  "from": "2026-10-01",
+  "to": "2026-10-24",
+  "order": "desc",
+  "rows": [
+    {"delivery_start_utc": "2026-10-14T16:30:00Z", "settlement_date": "2026-10-14", "settlement_period": 36, "value": 1240.0},
+    {"delivery_start_utc": "2026-10-14T17:00:00Z", "settlement_date": "2026-10-14", "settlement_period": 37, "value": 980.5},
+    {"delivery_start_utc": "2026-10-03T17:30:00Z", "settlement_date": "2026-10-03", "settlement_period": 38, "value": 610.0}
+  ]
+}

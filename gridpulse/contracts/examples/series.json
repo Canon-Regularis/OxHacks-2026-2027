@@ -1,0 +1,57 @@
+{
+  "_fixture": "Synthetic example for UI development; not real data. Truncated to the first 4 of 48 periods.",
+  "from": "2026-10-24",
+  "to": "2026-10-24",
+  "resolution": "30m",
+  "cutoff_utc": null,
+  "t": [
+    "2026-10-23T23:00:00Z",
+    "2026-10-23T23:30:00Z",
+    "2026-10-24T00:00:00Z",
+    "2026-10-24T00:30:00Z"
+  ],
+  "settlement_date": [
+    "2026-10-24",
+    "2026-10-24",
+    "2026-10-24",
+    "2026-10-24"
+  ],
+  "settlement_period": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "series": {
+    "price": {
+      "label": "Imbalance price",
+      "unit": "GBP/MWh",
+      "values": [
+        71.2,
+        -4.5,
+        null,
+        66.0
+      ]
+    },
+    "wind": {
+      "label": "Wind forecast (WINDFOR, latest before delivery)",
+      "unit": "MW",
+      "values": [
+        9800.0,
+        9800.0,
+        10320.0,
+        10320.0
+      ]
+    },
+    "demand": {
+      "label": "National demand forecast (NDF, latest before delivery)",
+      "unit": "MW",
+      "values": [
+        23100.0,
+        22650.0,
+        22100.0,
+        21800.0
+      ]
+    }
+  }
+}

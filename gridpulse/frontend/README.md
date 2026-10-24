@@ -1,5 +1,9 @@
 # Frontend work area
 
+MVP pages: **Overview, Explore, Methods**. Build **Overview first**; current work should not expand into other pages. Investigate/Gemini and weather mapping remain extensions.
+
+Follow the [confirmed frontend design brief](../../docs/gridpulse/FRONTEND_DESIGN.md) for reuse patterns and extension boundaries. Reference checkouts now exist at workspace level in `../www/` and `../components/` relative to the repository root.
+
 Frontend/product owner works here. Framework setup is pending inspection of WWW and Components; no runnable frontend or dependency manifest exists yet. Preserve this responsibility split when adding framework entry points and build configuration.
 
 - `src/pages/`: dashboard screens and loading/error/result state.
@@ -12,4 +16,4 @@ Frontend/product owner works here. Framework setup is pending inspection of WWW 
 
 Use [contract examples](../contracts/examples/) during parallel development, visibly labelled as fixtures. Read the [request flow](../../docs/gridpulse/REPOSITORY_STRUCTURE.md#request-flow) before connecting the API. Database credentials and Gemini keys belong only on the backend.
 
-Record exact install/development/build commands here after choosing the framework. Configure a same-origin `/api` proxy or an explicit public backend URL; public frontend configuration must contain no secrets.
+Record exact install/development/build commands here after choosing the framework. The production image ([`Dockerfile`](Dockerfile)) runs `npm ci` and `npm run build`, then serves `build/` or `dist/` as static files through Caddy; until `package.json` exists it serves a placeholder page. Use npm with a committed `package-lock.json`, keep the build static (for SvelteKit, `adapter-static` with an `index.html` fallback), and call the API with relative `/api/...` URLs. CI also runs the `check` and `test` scripts when they exist. Deployment: [deploy/README.md](../deploy/README.md). Public frontend configuration must contain no secrets.
