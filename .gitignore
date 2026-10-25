@@ -244,3 +244,5 @@ test-results/
 
 # Local override for running the deploy stack (gridpulse/deploy/README.md)
 /gridpulse/deploy/docker-compose.override.yml
+
+.DS_Store

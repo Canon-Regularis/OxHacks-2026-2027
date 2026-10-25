@@ -72,7 +72,7 @@ Example: [`catalog.json`](../../gridpulse/contracts/examples/catalog.json).
 | Field | Meaning |
 |---|---|
 | `series[]` | `{id, label, unit, kind, datasets}` for every series `/api/series` serves; see [datasets and lineage](#datasets-and-lineage) |
-| `datasets[]` | Raw datasets loaded: `dataset` (its name), `source`, `notes`, `first_utc`, `last_utc`, `loaded_at_utc`, `approx_rows`. Use for a "data coverage" panel on Explore or Methods, and to look up the names in `series[].datasets`, `algorithms[].datasets` and `RunInfo.datasets` |
+| `datasets[]` | Raw datasets loaded: `dataset` (its name), `source`, `notes`, `first_utc`, `last_utc`, `loaded_at_utc`, `approx_rows`. Use for a "data coverage" panel on Terminal or Methods, and to look up the names in `series[].datasets`, `algorithms[].datasets` and `RunInfo.datasets` |
 | `algorithms[]` | One `AlgorithmInfo` per algorithm, described [below](#algorithminfo) |
 | `limits` | `max_points` (5,000) and `max_range_days` (3,660) |
 | `data_updated_at_utc` | When data was last loaded; show it as "data as of …" |
