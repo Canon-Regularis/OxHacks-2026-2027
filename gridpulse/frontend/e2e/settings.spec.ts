@@ -178,34 +178,65 @@ test('time display distinguishes repeated UK hours without changing settlement i
   ).toBeVisible();
 });
 
-test('appearance and motion survive navigation and reload; system appearance follows the device', async ({
+test('dark theme stays fixed and motion preferences survive navigation and reload', async ({
   page,
 }) => {
   await page.emulateMedia({
-    colorScheme: 'dark',
+    colorScheme: 'light',
     reducedMotion: 'no-preference',
   });
   await page.goto('/');
   await open(page);
-  await page.getByLabel('Appearance', { exact: true }).selectOption('light');
+  await expect(page.getByLabel('Appearance', { exact: true })).toHaveCount(0);
   await page.getByLabel('Motion', { exact: true }).selectOption('reduce');
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await expect(page.locator('html')).toHaveAttribute('data-motion', 'reduce');
   await close(page);
   await page.getByRole('link', { name: 'Status', exact: true }).click();
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   await page.reload();
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  await open(page);
-  await page.getByLabel('Appearance', { exact: true }).selectOption('system');
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-  await page.emulateMedia({ colorScheme: 'light' });
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  await page.getByLabel('Motion', { exact: true }).selectOption('system');
-  await page.emulateMedia({ reducedMotion: 'no-preference' });
-  await expect(page.locator('html')).toHaveAttribute('data-motion', 'full');
-  await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect(page.locator('html')).toHaveAttribute('data-motion', 'reduce');
+  await open(page);
+  await page.getByLabel('Motion', { exact: true }).selectOption('system');
+  await expect(page.locator('html')).toHaveAttribute('data-motion', 'full');
+  await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await expect(page.locator('html')).toHaveAttribute('data-motion', 'reduce');
+});
+test('legacy light or system preferences cannot re-enable light mode', async ({
+  page,
+}) => {
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.addInitScript(
+    (key) =>
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          version: 1,
+          appearance: 'light',
+          timeDisplay: 'local',
+          gridlines: false,
+        }),
+      ),
+    settingsKey,
+  );
+  await page.goto('/');
+  await open(page);
+  await expect(page.locator('html')).toHaveClass('dark');
+  await expect(page.getByLabel('Appearance', { exact: true })).toHaveCount(0);
+  await expect(page.getByLabel('Time display', { exact: true })).toHaveValue(
+    'local',
+  );
+  await expect(
+    page.getByLabel('Chart gridlines', { exact: true }),
+  ).not.toBeChecked();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        (key) => JSON.parse(localStorage.getItem(key) ?? '{}').appearance,
+        settingsKey,
+      ),
+    )
+    .toBeUndefined();
 });
 
 test('turning off remembered views clears storage but keeps current view until reload', async ({
@@ -252,7 +283,6 @@ test('reset restores all defaults and resets the visible day and property choice
     .check();
   await page.getByLabel('Scan property').selectOption('wind_outturn');
   await open(page);
-  await page.getByLabel('Appearance', { exact: true }).selectOption('light');
   await page.getByLabel('Time display', { exact: true }).selectOption('local');
   await page.getByLabel('Motion', { exact: true }).selectOption('reduce');
   await page.getByLabel('Chart gridlines', { exact: true }).uncheck();
@@ -262,9 +292,7 @@ test('reset restores all defaults and resets the visible day and property choice
   await page
     .getByRole('button', { name: 'Reset settings', exact: true })
     .click();
-  await expect(page.getByLabel('Appearance', { exact: true })).toHaveValue(
-    'dark',
-  );
+  await expect(page.getByLabel('Appearance', { exact: true })).toHaveCount(0);
   await expect(page.getByLabel('Time display', { exact: true })).toHaveValue(
     'utc',
   );
@@ -297,9 +325,13 @@ test('settings and saved views synchronize across tabs', async ({
   await other.goto('/');
   await expect(other.locator('.scan-period')).toHaveCount(50);
   await open(page);
-  await page.getByLabel('Appearance', { exact: true }).selectOption('light');
+  await page.getByLabel('Time display', { exact: true }).selectOption('local');
   await close(page);
-  await expect(other.locator('html')).toHaveAttribute('data-theme', 'light');
+  await open(other);
+  await expect(other.getByLabel('Time display', { exact: true })).toHaveValue(
+    'local',
+  );
+  await close(other);
   await page.getByLabel('Settlement date').fill('2026-10-24');
   await expect(other.getByLabel('Settlement date')).toHaveValue('2026-10-24');
   await other.close();
@@ -320,12 +352,12 @@ test('invalid preferences and blocked storage do not break the app', async ({
   await page.goto('/');
   await expect(page.locator('.scan-period')).toHaveCount(50);
   await open(page);
-  await page.getByLabel('Appearance', { exact: true }).selectOption('light');
+  await page.getByLabel('Time display', { exact: true }).selectOption('local');
   await close(page);
   await page.getByLabel('Settlement date').fill('2026-10-24');
   await expect(page.locator('.scan-period')).toHaveCount(48);
   await page.getByRole('link', { name: 'About', exact: true }).click();
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   expect(errors).toEqual([]);
 });
 
@@ -340,9 +372,7 @@ test('corrupt storage recovers to defaults', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('.scan-period')).toHaveCount(50);
   await open(page);
-  await expect(page.getByLabel('Appearance', { exact: true })).toHaveValue(
-    'dark',
-  );
+  await expect(page.getByLabel('Appearance', { exact: true })).toHaveCount(0);
   await close(page);
   await expect(page.getByLabel('Settlement date')).toHaveValue('2026-10-25');
 });

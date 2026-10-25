@@ -9,12 +9,7 @@
   let reduced = $derived(reducedMotion(settings));
   let globeWidth = $state(360);
   let ready = $state(false);
-  const globeColor = $derived(
-    settings.appearance === 'light' ||
-      (settings.appearance === 'system' && !settings.systemDark)
-      ? '#514b45'
-      : '#fafafa',
-  );
+  const globeColor = '#fafafa';
   onMount(() => {
     import('$lib/vendor/kcpc/animations/rotating-earth/rotating-earth.svelte')
       .then((m) => {

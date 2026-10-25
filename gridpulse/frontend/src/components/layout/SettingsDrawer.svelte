@@ -88,14 +88,6 @@
   </p>
   <div class="settings-fields">
     <label class="settings-field"
-      ><span>Appearance</span><select
-        aria-label="Appearance"
-        bind:value={settings.appearance}
-        ><option value="dark">Dark</option><option value="light">Light</option
-        ><option value="system">Follow system</option></select
-      ></label
-    >
-    <label class="settings-field"
       ><span>Time display</span><select
         aria-label="Time display"
         aria-describedby="settings-time-help"

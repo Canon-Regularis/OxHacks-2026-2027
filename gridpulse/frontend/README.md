@@ -68,7 +68,7 @@ Start with the [API reference](../../docs/gridpulse/FRONTEND_API.md) and [algori
 
 ## Workspace settings
 
-The navbar gear opens a keyboard-accessible modal drawer on every page. Preferences apply immediately and persist in `gridpulse:settings:v1`: dark/light/system appearance, UTC or UK local time, device/reduced motion, chart gridlines, standard/bold chart lines, and whether to remember the current view. UK time labels include BST/GMT, including the repeated clock-change hour; settlement dates and API requests retain their original meaning.
+The app uses a dark theme. The navbar gear opens a keyboard-accessible modal drawer on every page. Preferences apply immediately and persist in `gridpulse:settings:v1`: UTC or UK local time, device/reduced motion, chart gridlines, standard/bold chart lines, and whether to remember the current view. UK time labels include BST/GMT, including the repeated clock-change hour; settlement dates and API requests retain their original meaning.
 
 The root layout owns settings and saved-view persistence for all routes, with storage events synchronising tabs. Turning off **Remember my view** removes the saved view while keeping the current session's selection; reloading starts with the latest day and default properties. **Reset settings** restores all settings and view defaults. Browser storage failures leave the current session usable. Market values are never saved as preferences.
 

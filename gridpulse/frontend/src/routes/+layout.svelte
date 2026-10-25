@@ -52,14 +52,11 @@
           : initialViewPreference(),
       );
     }
-    const dark = matchMedia('(prefers-color-scheme: dark)');
     const motion = matchMedia('(prefers-reduced-motion: reduce)');
     const syncDevice = () => {
-      settings.systemDark = dark.matches;
       settings.systemReduced = motion.matches;
     };
     syncDevice();
-    dark.addEventListener('change', syncDevice);
     motion.addEventListener('change', syncDevice);
     const syncStorage = (event: StorageEvent) => {
       if (!storage || (event.storageArea && event.storageArea !== storage))
@@ -75,18 +72,14 @@
     window.addEventListener('storage', syncStorage);
     ready = true;
     return () => {
-      dark.removeEventListener('change', syncDevice);
       motion.removeEventListener('change', syncDevice);
       window.removeEventListener('storage', syncStorage);
     };
   });
   $effect(() => {
     if (!ready) return;
-    const dark =
-      settings.appearance === 'dark' ||
-      (settings.appearance === 'system' && settings.systemDark);
-    document.documentElement.classList.toggle('dark', dark);
-    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    document.documentElement.classList.add('dark');
+    document.documentElement.dataset.theme = 'dark';
     document.documentElement.dataset.motion = reducedMotion(settings)
       ? 'reduce'
       : 'full';

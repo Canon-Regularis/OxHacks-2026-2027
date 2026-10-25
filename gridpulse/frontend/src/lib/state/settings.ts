@@ -1,7 +1,6 @@
 export const SETTINGS_KEY = 'gridpulse:settings:v1';
 export interface SettingsPreference {
   version: 1;
-  appearance: 'dark' | 'light' | 'system';
   timeDisplay: 'utc' | 'local';
   motion: 'system' | 'reduce';
   gridlines: boolean;
@@ -11,7 +10,6 @@ export interface SettingsPreference {
 export function defaultSettings(): SettingsPreference {
   return {
     version: 1,
-    appearance: 'dark',
     timeDisplay: 'utc',
     motion: 'system',
     gridlines: true,
@@ -27,12 +25,6 @@ export function normalizeSettings(value: unknown): SettingsPreference {
   if (p.version !== 1) return defaults;
   return {
     ...defaults,
-    appearance:
-      p.appearance === 'dark' ||
-      p.appearance === 'light' ||
-      p.appearance === 'system'
-        ? p.appearance
-        : defaults.appearance,
     timeDisplay: p.timeDisplay === 'local' ? 'local' : 'utc',
     motion: p.motion === 'reduce' ? 'reduce' : 'system',
     gridlines:

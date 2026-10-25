@@ -1,16 +1,6 @@
 :root[data-theme='dark'] {
   color-scheme: dark;
 }
-:root[data-theme='light'] {
-  color-scheme: light;
-  --orange: #995019;
-  --muted-foreground: #65605b;
-  --wind: #397f6b;
-  --demand: #786394;
-}
-:root[data-theme='light'] .status-page {
-  --lvl-bad: #b04439;
-}
 .settings-trigger,
 .settings-close {
   display: inline-flex;
@@ -159,14 +149,6 @@ html[data-motion='reduce'] *::after {
   }
 }
 
-:root[data-theme='light'] .info-popup {
-  background: var(--popover);
-  color: var(--popover-foreground);
-  border-color: var(--border);
-}
-:root[data-theme='light'] .info-button {
-  border-color: var(--border);
-}
 @media (max-width: 580px) {
   /* Planned pages yield navbar space to active destinations and settings. */
   .site-header nav button:disabled {

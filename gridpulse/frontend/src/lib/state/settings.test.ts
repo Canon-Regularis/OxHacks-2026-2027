@@ -38,18 +38,26 @@ describe('saved preferences', () => {
       }),
     ).toEqual({
       ...defaultSettings(),
-      appearance: 'light',
       motion: 'reduce',
       lineThickness: 'bold',
       rememberView: false,
     });
   });
-  it.each(['dark', 'light', 'system'] as const)(
-    'accepts appearance %s',
+  it.each(['dark', 'light', 'system'])(
+    'discards legacy appearance %s without losing other preferences',
     (appearance) => {
       expect(
-        normalizeSettings({ ...defaultSettings(), appearance }).appearance,
-      ).toBe(appearance);
+        normalizeSettings({
+          ...defaultSettings(),
+          appearance,
+          timeDisplay: 'local',
+          gridlines: false,
+        }),
+      ).toEqual({
+        ...defaultSettings(),
+        timeDisplay: 'local',
+        gridlines: false,
+      });
     },
   );
   it.each([false, true])('retains explicit checkbox values %s', (value) => {
