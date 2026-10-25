@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Column } from '$lib/types';
+  import { METRICS } from '../../overview/model';
   import type { Widget } from '../model/types';
   let {
     t,
@@ -30,6 +31,14 @@
     '#85c3c9',
     '#d7acd1',
   ];
+  function colour(key: string) {
+    return (
+      settings.styles[key]?.color ??
+      METRICS.find((metric) => metric.id === key.replace(/^source:/, ''))
+        ?.color ??
+      palette[keys.indexOf(key) % palette.length]
+    );
+  }
   let width = $state(600),
     height = $state(300),
     drag = $state<number | null>(null),
@@ -205,9 +214,7 @@
 
 <div class="terminal-chart-legend">
   {#each keys as k, i}<span
-      ><i
-        style={`background:${settings.styles[k]?.color ?? palette[i % palette.length]}`}
-      ></i>{columns[k].label}
+      ><i style={`background:${colour(k)}`}></i>{columns[k].label}
       <small
         >{settings.display === 'indexed'
           ? 'index'
@@ -298,9 +305,7 @@
             {/each}
           {/each}
           {#each keys.filter((k) => pane === 'all' || (columns[k].unit || 'unitless') === pane) as k}
-            {@const color =
-              settings.styles[k]?.color ??
-              palette[keys.indexOf(k) % palette.length]}
+            {@const color = colour(k)}
             <path
               data-terminal-series={k}
               d={paths[p][k] ?? ''}

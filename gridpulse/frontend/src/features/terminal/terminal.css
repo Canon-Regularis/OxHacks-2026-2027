@@ -18,8 +18,8 @@
 }
 .terminal-page button:hover,
 .terminal-drawer button:hover {
-  background: #29231e;
-  border-color: #806448;
+  background: color-mix(in srgb, var(--orange) 9%, #191919);
+  border-color: color-mix(in srgb, var(--orange) 45%, var(--border));
 }
 .terminal-page button:disabled,
 .terminal-drawer button:disabled {
@@ -66,7 +66,7 @@
   font-size: 11px;
 }
 .terminal-workspace-tabs button[aria-selected='true'] {
-  border-color: #e6b08088;
+  border-color: color-mix(in srgb, var(--orange) 53.33%, transparent);
   color: var(--orange);
 }
 .terminal-range {
@@ -122,8 +122,8 @@
   white-space: nowrap;
 }
 .terminal-widget-bar button.active {
-  background: #e6b0800c;
-  border-color: #e6b08088;
+  background: color-mix(in srgb, var(--orange) 4.71%, transparent);
+  border-color: color-mix(in srgb, var(--orange) 53.33%, transparent);
 }
 .terminal-group-dot {
   width: 6px;
@@ -169,7 +169,7 @@
 }
 .terminal-divider:hover,
 .terminal-divider:focus-visible {
-  background: #e6b08055;
+  background: color-mix(in srgb, var(--orange) 33.33%, transparent);
 }
 .terminal-divider.locked {
   cursor: default;
@@ -186,7 +186,7 @@
   overflow: hidden;
 }
 .terminal-tile.focused {
-  border-color: #a9825e;
+  border-color: color-mix(in srgb, var(--orange) 65%, var(--border));
 }
 .terminal-tile-header {
   display: flex;
@@ -228,7 +228,7 @@
 }
 .terminal-widget-tabs button[aria-selected='true'] {
   color: var(--orange);
-  background: #e6b0800b;
+  background: color-mix(in srgb, var(--orange) 4.31%, transparent);
 }
 .terminal-widget-tabs button[draggable='true'] {
   cursor: grab;
@@ -257,7 +257,7 @@
   position: absolute;
   pointer-events: none;
   z-index: 10;
-  background: #e6b08020;
+  background: color-mix(in srgb, var(--orange) 12.55%, transparent);
   border: 2px solid var(--orange);
   inset: 0;
   display: grid;
@@ -302,13 +302,13 @@
   white-space: nowrap;
 }
 .terminal-status .warning {
-  color: #e6b080;
+  color: var(--orange);
 }
 .terminal-alert,
 .terminal-notice {
   padding: 8px 12px;
-  background: #e6b08010;
-  border: 1px solid #e6b08044;
+  background: color-mix(in srgb, var(--orange) 6.27%, transparent);
+  border: 1px solid color-mix(in srgb, var(--orange) 26.67%, transparent);
   border-radius: 4px;
   font-size: 12px;
   display: flex;
@@ -339,7 +339,7 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  border: 1px dashed #5f4c3a;
+  border: 1px dashed color-mix(in srgb, var(--orange) 30%, var(--border));
   gap: 18px;
   text-align: center;
   padding: 20px;
@@ -371,13 +371,13 @@
   margin-top: 12px;
 }
 .terminal-warnings {
-  color: #e8c6a7;
+  color: color-mix(in srgb, var(--orange) 75%, var(--foreground));
   font-size: 10px;
   max-height: 100px;
   overflow: auto;
   padding: 5px 7px;
-  background: #e6b08009;
-  border: 1px solid #e6b08033;
+  background: color-mix(in srgb, var(--orange) 3.53%, transparent);
+  border: 1px solid color-mix(in srgb, var(--orange) 20%, transparent);
   flex: none;
 }
 .terminal-warnings p {
@@ -394,7 +394,7 @@
   line-height: 1.5;
 }
 .terminal-limitations summary {
-  color: #e1c3a6;
+  color: color-mix(in srgb, var(--orange) 75%, var(--foreground));
 }
 .terminal-provenance summary {
   color: var(--muted-foreground);
@@ -521,7 +521,7 @@
   font-family: 'DM Mono', monospace;
 }
 .terminal-table-scroll tr:hover {
-  background: #e6b08008;
+  background: color-mix(in srgb, var(--orange) 3.14%, transparent);
 }
 .terminal-cell-link {
   color: var(--orange);
@@ -649,7 +649,7 @@
 .terminal-drawer {
   background: #121211;
   color: var(--foreground);
-  border-left: 1px solid #63503d;
+  border-left: 1px solid color-mix(in srgb, var(--orange) 35%, var(--border));
   width: min(460px, 100vw);
   height: 100%;
   padding: 22px;
@@ -717,7 +717,7 @@
 }
 .terminal-filter-tabs .active {
   color: var(--orange);
-  border-color: #a9825e;
+  border-color: color-mix(in srgb, var(--orange) 65%, var(--border));
 }
 .terminal-catalogue-source {
   display: flex;
@@ -797,11 +797,20 @@
   flex-wrap: wrap;
   gap: 7px;
 }
+.terminal-workspace-actions {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+}
 .terminal-drawer .danger {
   color: #dfa5a5;
 }
 .terminal-import-preview {
-  border: 1px solid #a9825e;
+  border: 1px solid color-mix(in srgb, var(--orange) 65%, var(--border));
   padding: 12px;
   font-size: 12px;
   display: flex;
@@ -988,7 +997,7 @@
 }
 .terminal-group-menu > button:hover,
 .terminal-group-menu > button:focus-visible {
-  background: #e6b08018;
+  background: color-mix(in srgb, var(--orange) 9.41%, transparent);
 }
 .terminal-group-menu > button[aria-checked='true'] {
   color: var(--orange);
@@ -1014,4 +1023,130 @@
   color: var(--muted-foreground);
   padding: 6px 7px;
   line-height: 1.5;
+}
+
+/* Session chat shares the docking tree and the Terminal's existing theme. */
+.terminal-chat {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  text-align: left;
+}
+.terminal-chat-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+}
+.terminal-chat-controls span {
+  margin-right: auto;
+  color: var(--muted-foreground);
+}
+.terminal-chat-messages {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  overscroll-behavior: contain;
+}
+.terminal-chat-messages article {
+  max-width: 80ch;
+  margin: 0 0 14px;
+  padding: 10px;
+  border-left: 2px solid #a2c7b8;
+  background: color-mix(in srgb, #a2c7b8 5%, transparent);
+}
+.terminal-chat-messages article.user {
+  border-color: #e6b080;
+  background: color-mix(in srgb, #e6b080 5%, transparent);
+}
+.terminal-chat-messages p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 6px 0;
+}
+.terminal-chat-messages strong {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.terminal-chat-welcome {
+  margin: auto;
+  max-width: 460px;
+  padding: 20px 6px;
+}
+.terminal-chat-welcome h2 {
+  font-size: 22px;
+  line-height: 1.2;
+  margin-bottom: 12px;
+}
+.terminal-chat form {
+  border-top: 1px solid var(--border);
+  padding: 10px;
+}
+.terminal-chat textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 64px;
+  max-height: 160px;
+  background: transparent;
+  border: 1px solid var(--border);
+  padding: 8px;
+  font: inherit;
+  font-size: 13px;
+}
+.terminal-chat form > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 7px;
+}
+.terminal-chat small {
+  font-size: 10px;
+  opacity: 0.65;
+}
+.terminal-evidence {
+  display: block;
+  text-align: left;
+  margin-top: 5px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.terminal-chat-confirm pre {
+  max-height: 160px;
+  overflow: auto;
+  font-size: 10px;
+}
+.terminal-empty-ai {
+  width: min(680px, 100%);
+  height: min(520px, 100%);
+  margin: auto;
+  padding: 16px;
+}
+.terminal-empty-ai > .terminal-chat {
+  flex: 1;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .terminal-chat-messages article {
+    max-width: 80ch;
+    animation: chat-arrive 0.18s ease-out;
+  }
+  @keyframes chat-arrive {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }

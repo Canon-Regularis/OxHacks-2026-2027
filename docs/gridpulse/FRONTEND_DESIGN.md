@@ -90,3 +90,11 @@ This is an extension, not an expansion of the 25-hour core acceptance criteria. 
 ## Scope boundary
 
 The existing overview mockup is a design exploration, not an approved page specification. Its illustrative values are not production data; confirmed behaviour is listed above. Overview, Terminal (formerly Explore) and Methods are confirmed MVP pages; Investigate remains an extension. Extension navigation and exact Gemini frontend tools remain undecided; the synoptic-map source is still unselected.
+
+### Navigation and informational pages
+
+The header groups Overview and Terminal as workspace pages, separated by a divider from Data sources, Quick start, Status and About. Preserve all links, active-page indicators and narrow-screen support. Quick start omits the screenshot capture disclaimer; image provenance remains in its capture metadata.
+
+About's final three story rows pair their text with KCPC Shape Blur (square), Cubes and Liquid Ether illustrations in the alternating spare columns. Load decorative effects near the viewport, respect the shared motion preference and retain static fallbacks when WebGL is unavailable. Source attribution is recorded in the vendored KCPC README.
+
+Status uses specific older-data/input-update labels and an explicit old-data notice instead of the ambiguous “Attention” badge. Preserve connection failures, missing-data states, coverage and timestamps so historical-data warnings do not hide real operational problems.

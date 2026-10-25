@@ -5,12 +5,15 @@ Selected source was adapted from `orthant-kcpc/components` revision `9626af5` (s
 Reused source paths (relative to Components `src/lib/`):
 
 - `components/animations/rotating-earth/`: globe, world geometry and themed variant.
+- `components/backgrounds/dot-background/`: CSS dot grid and radial fade from KCPC’s About and homepage sections, used behind About’s final three story rows. The children snippet is optional for decorative use; background layers are hidden from assistive technology.
 - `components/backgrounds/pixel-blast/`: homepage “work with us” effect, now on About.
 - `components/text/text-shimmer/text-shimmer.svelte`: the accompanying animated About heading.
 - `components/cards/evervault-card/`: committee mouse-following alphanumeric reveal used for decorative context.
 - `components/primitives/card/card.svelte`: shared card primitive.
 - `shadcn.css`: neutral theme tokens in `src/styles/theme.css`.
 
-Imports of `#lib/utils.js` were rewritten to `$lib/vendor/kcpc/utils`, a small local `clsx`/`tailwind-merge` adapter. EvervaultCard has an optional `contentClass` extension so a wide context section can use the original reveal effect without its fixed circular badge layout. The application uses the original animation implementations, with a consumer-level reduced-motion switch and keyed globe resizing. PixelBlast is client-loaded only when WebGL2 is available; the main dashboard works without it. Heavy animations are separate lazy-loaded chunks.
+Imports of `#lib/utils.js` were rewritten to `$lib/vendor/kcpc/utils`, a small local `clsx`/`tailwind-merge` adapter. EvervaultCard has an optional `contentClass` extension so a wide context section can use the original reveal effect without its fixed circular badge layout. The application uses the original animation implementations, with a consumer-level reduced-motion switch. The globe now resizes its existing canvas with ResizeObserver, preserving rotation across responsive layout changes; About uses a denser, slower PixelBlast field to avoid near-empty phases. PixelBlast is client-loaded only when WebGL2 is available; the main dashboard works without it. Heavy animations are separate lazy-loaded chunks.
 
 These are vendor references, not original GridPulse algorithms. No explicit upstream licence file or package licence declaration was found in these checkouts; this record does not assert an open-source licence. Preserve attribution and confirm redistribution terms with the source owners before public distribution. Do not edit the sibling repos to run GridPulse.
+
+About's final story rows also reuse `animations/shape-blur/shape-blur.svelte` (square), `animations/cubes/cubes.svelte` (GSAP cube grid), and `backgrounds/liquid-ether/liquid-ether.svelte` (fluid shader) from the same Components revision. `StoryAnimation.svelte` lazy-loads these only near the viewport, unmounts offscreen effects, and supplies static decoration for reduced motion or unavailable WebGL. Local lifecycle fixes dispose the square's geometry/material and kill cube tweens on teardown. Story colours follow the application accent.

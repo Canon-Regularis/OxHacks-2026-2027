@@ -1,4 +1,4 @@
-"""Parameter and value checks shared by the adapters."""
+"""Parameter and value checks and rescaling shared by the adapters."""
 
 import math
 from collections.abc import Iterator, Sequence
@@ -7,6 +7,7 @@ from numbers import Real
 
 from gridpulse.analysis.algorithms.errors import (
     CalculationError,
+    DegenerateDataError,
     InvalidInputError,
     MissingDataError,
 )
@@ -88,3 +89,47 @@ def require_levels(levels: Sequence[float]) -> tuple[float, ...]:
     if not checked or len(set(checked)) != len(checked):
         raise InvalidInputError(f"levels must be distinct and non-empty, got {list(levels)}")
     return tuple(checked)
+
+
+def require_variation(name: str, values: Sequence[float]) -> None:
+    low, high = min(values), max(values)
+    if high - low <= 1e-9 * max(abs(low), abs(high)):
+        raise DegenerateDataError(f"{name} is constant to within 1e-9 of its magnitude")
+
+
+def check_season_length(season_length: int | None) -> None:
+    if season_length is not None:
+        require_int("season_length", season_length, minimum=2)
+
+
+def check_seasonal_differencing(seasonal_differencing: int, season_length: int | None) -> None:
+    require_int("seasonal_differencing", seasonal_differencing, minimum=0, maximum=1)
+    check_season_length(season_length)
+    if (season_length is None) == (seasonal_differencing == 1):
+        raise InvalidInputError(
+            "season_length must be given exactly when seasonal_differencing is 1"
+        )
+
+
+def check_difference_tests(seasonal_differencing: int | None, season_length: int | None) -> None:
+    """As ``check_seasonal_differencing``, except that ``None`` leaves the seasonal difference
+    to Orchid's seasonal test, which fires for every series at season length 2."""
+    if seasonal_differencing is not None:
+        check_seasonal_differencing(seasonal_differencing, season_length)
+    elif season_length is not None:
+        require_int("season_length", season_length, minimum=3)
+
+
+def scaled_by_range(
+    values: Sequence[float], modelled: Sequence[float]
+) -> tuple[float, list[float]]:
+    """The range of ``modelled`` and ``values`` divided by it.
+
+    Orchid then models a series of unit range (the differenced history, for ARIMA), so its
+    absolute 1e-12 floors on variances depend on neither the units nor a trend that
+    differencing removes. The range must be non-zero.
+    """
+    scale = max(modelled) - min(modelled)
+    if not math.isfinite(scale * scale):
+        raise CalculationError("the range's square overflows a float")
+    return scale, [value / scale for value in values]

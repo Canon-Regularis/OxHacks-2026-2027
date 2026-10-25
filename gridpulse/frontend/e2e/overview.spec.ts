@@ -221,7 +221,7 @@ test('About contains the animations without fetching market data and preserves t
   });
   await page.getByRole('link', { name: 'About', exact: true }).click();
   await expect(
-    page.getByRole('heading', { name: 'What is imbalance?' }),
+    page.getByRole('heading', { name: 'Put every model to the test.' }),
   ).toBeVisible();
   await expect(page.locator('.hero-globe canvas')).toBeVisible();
   expect(requests).toBe(0);

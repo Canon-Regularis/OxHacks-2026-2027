@@ -19,6 +19,7 @@ from gridpulse.analysis.algorithms.signals import (
     rolling_std,
     rolling_variance,
     trailing_mean,
+    trailing_savitzky_golay,
     trailing_weighted_mean,
 )
 
@@ -37,6 +38,11 @@ CASES: dict[str, tuple[Feature, Oracle]] = {
     "trailing_weighted_mean": (
         lambda s: trailing_weighted_mean(s, WEIGHTS),
         lambda y: sm.weighted_moving_average(y, WEIGHTS)[2:],
+    ),
+    # Degree 0 has taps of exactly 1/4; higher degrees are checked against least squares below.
+    "trailing_savitzky_golay": (
+        lambda s: trailing_savitzky_golay(s, 4, 0),
+        lambda y: sp.lfilter([0.25] * 4, [1.0], y)[3:],
     ),
     "exponential_moving_average": (
         lambda s: exponential_moving_average(s, span=4),
@@ -154,6 +160,32 @@ def test_rolling_std_of_negative_and_zero_prices_ignores_the_level(
     assert result[25] == 0.0
 
 
+@pytest.mark.parametrize(("window", "degree"), [(3, 1), (5, 2), (8, 3), (49, 3)])
+def test_trailing_savitzky_golay_is_the_newest_point_of_a_least_squares_fit(
+    synthetic_values: Callable[..., list[float]], window: int, degree: int
+) -> None:
+    values = synthetic_values(120, level=0.0)
+    design = fb.trend_features(window, degree, 1 - window)  # the newest period is at time 0
+    expected = [fb.lstsq(design, w)[0] for w in sm.rolling_windows(values, window)]
+    result = trailing_savitzky_golay(HalfHourlySeries(START, values), window, degree).values
+    assert result[: window - 1] == (None,) * (window - 1)
+    assert result[window - 1 :] == pytest.approx(expected, abs=1e-11)
+
+
+def test_trailing_savitzky_golay_weights_are_the_textbook_endpoint_weights() -> None:
+    # A five-point quadratic's newest point weights the window (3, -5, -3, 9, 31) / 35.
+    for j, weight in enumerate((3, -5, -3, 9, 31)):
+        impulse = HalfHourlySeries(START, [float(i == j) for i in range(5)])
+        newest = trailing_savitzky_golay(impulse, 5, 2).values[-1]
+        assert newest == pytest.approx(weight / 35, abs=1e-14)
+
+
+def test_trailing_savitzky_golay_follows_a_ramp_without_lag_between_gaps() -> None:
+    ramp = HalfHourlySeries(START, [0.0, 1.0, 2.0, 3.0, None, 5.0, 6.0, 7.0, 8.0])
+    expected = [None, None, 2.0, 3.0, None, None, None, 7.0, 8.0]
+    assert trailing_savitzky_golay(ramp, 3, 1).values == pytest.approx(expected)
+
+
 @pytest.mark.parametrize(
     "call",
     [
@@ -187,6 +219,14 @@ def test_rolling_std_of_negative_and_zero_prices_ignores_the_level(
         pytest.param(lambda s: rolling_rms(s, 0), id="rms_window_0"),
         pytest.param(lambda s: difference(s, lag=0), id="lag_0"),
         pytest.param(lambda s: difference(s, order=0), id="order_0"),
+        pytest.param(lambda s: trailing_savitzky_golay(s, 3, -1), id="sg_degree_-1"),
+        pytest.param(lambda s: trailing_savitzky_golay(s, 6, 4), id="sg_degree_4"),
+        pytest.param(lambda s: trailing_savitzky_golay(s, 3, 2), id="sg_window_degree_plus_1"),
+        pytest.param(lambda s: trailing_savitzky_golay(s, 3, True), id="sg_bool_degree"),
+        pytest.param(
+            lambda s: trailing_savitzky_golay(s, 3.0, 1),  # type: ignore[arg-type]
+            id="sg_float_window",
+        ),
     ],
 )
 def test_rejects_invalid_parameters(call: Callable[[HalfHourlySeries], object]) -> None:

@@ -4,9 +4,11 @@
   import type { Catalog } from '$lib/types';
   import type { Widget, Binding, LinkContext } from '../model/types';
   import { loadWidget, TerminalError, type WidgetData } from '../data/client';
+  import { seriesCsv, tableCsv, downloadCsv } from '../data/export';
   import { isWidgetType } from '../model/document';
   import Chart from './Chart.svelte';
   import ResultTable from './ResultTable.svelte';
+  import { sourceTable } from './sourceTable';
   import Comparison from './Comparison.svelte';
   let {
     widget,
@@ -20,6 +22,7 @@
     onzoom,
     onrun,
     onnotes,
+    onexport,
     refresh = 0,
   }: {
     widget: Widget;
@@ -33,6 +36,7 @@
     onzoom: (z: [number, number] | null) => void;
     onrun: (id: number) => void;
     onnotes: (notes: string) => void;
+    onexport: (exportCsv: (() => void) | null) => void;
     refresh?: number;
   } = $props();
   let data = $state<WidgetData | null>(null),
@@ -108,7 +112,38 @@
       ? widget.settings.table
       : Object.keys(data?.tables ?? {})[0],
   );
-  let table = $derived(data?.tables[tableName]);
+  let tableZoom = $derived(ctx.zoom);
+  let table = $derived(
+    widget.type === 'table' && binding?.kind === 'source' && data
+      ? sourceTable(data.t, data.columns, tableZoom, widget.settings.outputs)
+      : data?.tables[tableName],
+  );
+  let csvExport = $derived.by(() => {
+    const loaded = data;
+    if (loading || error || !loaded) return null;
+    const runSuffix = loaded.run ? `-run-${loaded.run.run_id}` : '';
+    if (
+      widget.type === 'chart' &&
+      loaded.t.length &&
+      Object.keys(loaded.columns).length
+    )
+      return () =>
+        downloadCsv(seriesCsv(loaded), `eisengrau-series${runSuffix}.csv`);
+    const selectedTable = table;
+    if (
+      (widget.type === 'table' || widget.type === 'comparison') &&
+      selectedTable
+    ) {
+      const filename = `eisengrau-${(tableName ?? 'source-data').replace(/[^a-zA-Z0-9_-]/g, '_')}${runSuffix}.csv`;
+      return () => downloadCsv(tableCsv(selectedTable), filename);
+    }
+    return null;
+  });
+  $effect(() => {
+    const exportCsv = csvExport;
+    untrack(() => onexport(exportCsv));
+    return () => untrack(() => onexport(null));
+  });
 </script>
 
 {#if !isWidgetType(widget.type)}<p class="terminal-empty">
@@ -146,6 +181,7 @@
   {:else if widget.type === 'table'}{#if table}<ResultTable
         {table}
         onselect={onpin}
+        scope={binding?.kind === 'source' ? 'selected time range' : 'whole run'}
       />{:else}<p class="terminal-empty">
         {binding?.kind === 'algorithm'
           ? 'This run has no result tables.'

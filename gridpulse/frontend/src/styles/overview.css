@@ -1,6 +1,7 @@
 /* Compact monitoring surface. Long-form and decorative content belongs on About. */
 :root {
-  --orange: #e6b080;
+  --site-accent: #e6b080;
+  --orange: var(--site-accent);
   --price: #e6b080;
   --wind: #a2c7b8;
   --demand: #b8afd0;
@@ -52,7 +53,7 @@ select:focus-visible,
 }
 .brand-beta {
   color: var(--orange);
-  border-color: #e6b08033;
+  border-color: color-mix(in srgb, var(--orange) 20%, transparent);
 }
 .heading-dot {
   color: var(--orange);
@@ -108,8 +109,8 @@ select:focus-visible,
 }
 .latest-button.chosen {
   color: var(--orange);
-  border-color: #e6b08066;
-  background: #e6b0800a;
+  border-color: color-mix(in srgb, var(--orange) 40%, transparent);
+  background: color-mix(in srgb, var(--orange) 3.92%, transparent);
 }
 .overview-page .data-status {
   margin: 9px 0 12px;
@@ -197,7 +198,7 @@ select:focus-visible,
   color: var(--orange);
   font-size: 10px;
   padding: 5px 8px;
-  background: #e6b0800b;
+  background: color-mix(in srgb, var(--orange) 4.31%, transparent);
 }
 .overview-page .chart-control {
   min-height: 145px;
@@ -283,7 +284,7 @@ select:focus-visible,
   height: 41px;
   box-shadow:
     0 0 0 1.5px var(--orange),
-    0 0 16px #e6b0801a;
+    0 0 16px color-mix(in srgb, var(--orange) 10.2%, transparent);
 }
 .scan-bottom {
   display: flex;
@@ -462,7 +463,7 @@ select:focus-visible,
   width: 272px;
   max-width: calc(100vw - 24px);
   padding: 12px 14px;
-  border: 1px solid #e6b08055;
+  border: 1px solid color-mix(in srgb, var(--orange) 33.33%, transparent);
   border-radius: 7px;
   background: #25211e;
   color: #eee7e0;
@@ -480,6 +481,10 @@ select:focus-visible,
 }
 /* Long-form About uses the original KCPC section hierarchy and effects. */
 .about-page {
+  --orange-wash: color-mix(in srgb, var(--orange) 7%, transparent);
+  --about-gutter: 48px;
+  max-width: none;
+  margin: 0;
   width: 100%;
   flex: 1;
 }
@@ -518,6 +523,7 @@ select:focus-visible,
   max-width: 500px;
 }
 .about-cards {
+  padding-top: 36px;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
@@ -538,7 +544,17 @@ select:focus-visible,
   color: var(--muted-foreground);
 }
 .about-spacer {
+  position: relative;
   margin: 0 -48px;
+}
+@media (min-width: 768px) {
+  .about-spacer::after {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    left: 50%;
+    border-left: 1px solid var(--border);
+  }
 }
 .about-pixel-section {
   width: auto;
@@ -577,29 +593,25 @@ select:focus-visible,
   border-radius: 4px;
   font-size: 13px;
 }
-.about-definition {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  align-items: center;
-  gap: 70px;
+.about-story {
+  position: relative;
+  isolation: isolate;
   padding: 64px 0;
+  border-bottom: 1px solid var(--border);
 }
-.about-definition h2 {
+.about-story:last-child {
+  border-bottom: 0;
+}
+.about-story h2 {
   font-size: 32px;
   margin: 12px 0 24px;
 }
-.about-definition p:not(.eyebrow) {
+.about-story p:not(.eyebrow) {
   font-size: 14px;
   color: var(--muted-foreground);
   line-height: 1.8;
   margin-bottom: 14px;
   max-width: 680px;
-}
-.about-decoration {
-  height: 250px;
-  width: 100%;
-  max-width: 300px;
-  justify-self: center;
 }
 .about-limitations {
   font-size: 11px;
@@ -608,6 +620,87 @@ select:focus-visible,
   padding: 22px 0 30px;
   text-align: center;
 }
+/* Warm accents keep the About narrative connected to the market palette. */
+.about-page .eyebrow,
+.about-page .hero h1 span,
+.about-intro h2 span,
+.about-data h2 span {
+  color: var(--orange);
+}
+.about-page .hero {
+  border-bottom-color: color-mix(in srgb, var(--orange) 35%, var(--border));
+  background: radial-gradient(
+    ellipse at 80% 50%,
+    var(--orange-wash),
+    transparent 65%
+  );
+}
+.about-card {
+  border-top: 2px solid color-mix(in srgb, var(--orange) 60%, var(--border)) !important;
+  background: linear-gradient(
+    145deg,
+    var(--orange-wash),
+    var(--card) 65%
+  ) !important;
+}
+.about-data {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px 70px;
+  padding: 64px 0;
+  border-bottom: 1px solid var(--border);
+}
+.about-data h2,
+.about-roadmap h2 {
+  margin-top: 12px;
+  line-height: 1.3;
+}
+.about-data-copy {
+  grid-column: 2;
+}
+.about-data-copy p:not(.eyebrow),
+.about-roadmap > p:last-child {
+  color: var(--muted-foreground);
+  font-size: 14px;
+  line-height: 1.8;
+}
+.about-data-copy p + p {
+  margin-top: 16px;
+}
+.about-source-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+}
+.about-source-links .text-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.about-roadmap {
+  border-left: 2px solid var(--orange);
+  background: var(--orange-wash);
+  padding: 28px;
+  margin-bottom: 40px;
+  border-radius: 0 6px 6px 0;
+}
+.about-roadmap > p:last-child {
+  margin-top: 16px;
+  max-width: 850px;
+}
+@media (max-width: 850px) {
+  .about-data-copy {
+    grid-column: 1;
+  }
+  .about-data {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 40px 0;
+  }
+  .about-roadmap {
+    padding: 22px;
+  }
+}
+
 @media (min-width: 851px) and (max-height: 800px) {
   .site-header {
     height: 54px;
@@ -791,8 +884,7 @@ select:focus-visible,
   .about-pixel-copy {
     padding-block: 70px;
   }
-  .about-definition {
-    gap: 30px;
+  .about-story {
     padding: 44px 0;
   }
   .about-pixel-copy h2 {
@@ -965,14 +1057,6 @@ select:focus-visible,
   .about-pixel-copy > p:not(.eyebrow) {
     font-size: 16px;
   }
-  .about-definition {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-  .about-decoration {
-    height: 200px;
-    max-width: 250px;
-  }
   .about-limitations {
     font-size: 10px;
     line-height: 1.7;
@@ -1084,8 +1168,8 @@ select:focus-visible,
     11px 'DM Mono',
     monospace;
   color: var(--orange);
-  background: #e6b0800b;
-  border: 1px solid #e6b08033;
+  background: color-mix(in srgb, var(--orange) 4.31%, transparent);
+  border: 1px solid color-mix(in srgb, var(--orange) 20%, transparent);
   border-radius: 4px;
   padding: 4px 7px;
   white-space: nowrap;
@@ -1735,6 +1819,7 @@ select:focus-visible,
 }
 .pill {
   display: inline-block;
+  white-space: nowrap;
   padding: 1px 8px;
   border: 1px solid var(--lvl);
   border-radius: 99px;
@@ -1746,10 +1831,116 @@ select:focus-visible,
   }
 }
 
-/* Keep the About effect full-bleed when the shared wide-screen gutter grows. */
+/* Full-width About bands track the page padding at every breakpoint. */
+.about-page .about-spacer,
+.about-page .about-pixel-section {
+  width: calc(100% + 2 * var(--about-gutter));
+  margin-inline: calc(-1 * var(--about-gutter));
+}
 @media (min-width: 1500px) {
-  .about-spacer,
-  .about-pixel-section {
-    margin-inline: -58px;
+  .about-page {
+    --about-gutter: 58px;
   }
+}
+@media (max-width: 1100px) {
+  .about-page {
+    --about-gutter: 28px;
+  }
+}
+@media (max-width: 580px) {
+  .about-page {
+    --about-gutter: 18px;
+  }
+}
+
+.about-story {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(32px, 6vw, 110px);
+}
+.about-story-copy {
+  grid-column: 1;
+  grid-row: 1;
+}
+.about-data-copy {
+  grid-column: 2;
+  grid-row: 1;
+}
+.about-story-animation {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  width: 100%;
+  height: clamp(260px, 28vw, 390px);
+  overflow: hidden;
+  border-radius: 20px;
+  isolation: isolate;
+}
+.about-data .about-story-animation {
+  grid-column: 1;
+}
+.story-animation-fallback {
+  position: absolute;
+  inset: 18%;
+  z-index: -1;
+  opacity: 0.35;
+}
+.story-square {
+  border: 2px solid var(--orange);
+  border-radius: 18%;
+  transform: rotate(-12deg);
+}
+.story-cubes {
+  background-image:
+    linear-gradient(var(--orange) 1px, transparent 1px),
+    linear-gradient(90deg, var(--orange) 1px, transparent 1px);
+  background-size: 35px 35px;
+  transform: perspective(450px) rotateX(25deg) rotateZ(-12deg);
+}
+.story-fluid {
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 40%, var(--orange), transparent 60%),
+    radial-gradient(ellipse at 70% 65%, var(--wind), transparent 65%);
+  filter: blur(22px);
+}
+.status-age-warning {
+  margin: 18px 0;
+  padding: 14px 18px;
+  border-left: 2px solid var(--orange);
+  background: var(--orange-wash);
+  color: var(--muted-foreground);
+  font-size: 13px;
+  line-height: 1.6;
+}
+@media (max-width: 850px) {
+  .about-story {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+  .about-story-copy,
+  .about-data-copy {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .about-story .about-story-animation {
+    grid-column: 1;
+    grid-row: 2;
+    height: 240px;
+    max-width: 420px;
+    justify-self: center;
+  }
+}
+.about-story-animation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.about-story-animation .story-cube-grid {
+  width: min(78%, 320px);
+  flex: none;
+}
+.animation-ready .story-animation-fallback {
+  visibility: hidden;
 }

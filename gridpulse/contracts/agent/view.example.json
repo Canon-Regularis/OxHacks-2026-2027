@@ -1,0 +1,30 @@
+{
+  "from_date": "2026-10-23",
+  "to_date": "2026-10-23",
+  "version": 1,
+  "widgets": [
+    {
+      "key": "price-wind-chart",
+      "existing": null,
+      "type": "chart",
+      "title": "Imbalance price and wind forecast: 2026-10-23",
+      "series": [
+        "price",
+        "wind"
+      ],
+      "algorithm": null,
+      "run_id": null,
+      "outputs": [],
+      "table": "",
+      "group": "A",
+      "relative_to": null,
+      "position": "right",
+      "size_step": null,
+      "notes": "Price in GBP/MWh (left axis) and wind forecast in MW (right axis). Inverse visual relationship visible: higher prices during lower wind, lower prices as wind rises."
+    }
+  ],
+  "remove": [],
+  "background_chat": false,
+  "new_workspace": false,
+  "name": "AI investigation"
+}

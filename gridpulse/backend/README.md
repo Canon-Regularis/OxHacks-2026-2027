@@ -3,7 +3,7 @@
 Data/database owner: `ingestion/`, `db/` and `gridpulse/db/migrations/` (relative to the repository root).
 Algorithm/backend owner: `analysis/`, `api/`, application wiring and later `agent/`.
 
-FastAPI + psycopg 3 over Tiger Data. Read the [backend design](../../docs/gridpulse/BACKEND_DESIGN.md) first. Algorithm authors only need [`analysis/contract.py`](src/gridpulse/analysis/contract.py) and the example in [`analysis/algorithms/`](src/gridpulse/analysis/algorithms/). The Orchid P0 adapters in the same package are documented in [algorithms and analysis](../../docs/gridpulse/ALGORITHMS_AND_ANALYSIS.md#p0-algorithms-issue-6).
+FastAPI + psycopg 3 over Tiger Data. Read the [backend design](../../docs/gridpulse/BACKEND_DESIGN.md) first. Algorithm authors only need [`analysis/contract.py`](src/gridpulse/analysis/contract.py) and the example in [`analysis/algorithms/`](src/gridpulse/analysis/algorithms/). The Orchid adapters in the same package are documented in algorithms and analysis: [P0](../../docs/gridpulse/ALGORITHMS_AND_ANALYSIS.md#p0-algorithms-issue-6) and [P1](../../docs/gridpulse/ALGORITHMS_AND_ANALYSIS.md#p1-algorithms-issue-7).
 
 ## Setup
 

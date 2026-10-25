@@ -10,14 +10,14 @@ Use this file as repository-wide guidance when working on GridPulse. It records 
 - **MVP:** existing API-to-CSV exporter → backend ingestion → Tiger Data → backend algorithms → backend API → polished frontend dashboard.
 - **Current constraint:** no ML model training in the MVP. Reuse existing algorithm implementations where suitable, with their actual inputs, outputs and limitations documented.
 - **Hosting:** Vultr for the application.
-- **Main extension:** a backend Gemini API agent that uses data and analysis tools to investigate results and answer higher-level questions.
+- **Main extension:** a backend OpenRouter agent (GPT-5.4 mini by default) that uses data and analysis tools to investigate results and answer higher-level questions.
 - **Optional sponsor exploration:** Snowflake API, with its useful role still to be decided. It is not a core dependency.
 
 ## Intended code and design sources
 
 | Source | Intended use | Location / status |
 |---|---|---|
-| **Orchid** | Backend algorithm implementations, adapted behind GridPulse interfaces | [Orchid](https://github.com/Orthant-Research-Group/orchid) (private), local `../orchid/`, cloned revision `ca8fc92`; P0 modules vendored in `gridpulse/backend/src/gridpulse/analysis/algorithms/orchid/`. No licence file upstream: confirm terms before this repository is made public |
+| **Orchid** | Backend algorithm implementations, adapted behind GridPulse interfaces | [Orchid](https://github.com/Orthant-Research-Group/orchid) (private), local `../orchid/`, cloned revision `ca8fc92`; P0 and P1 modules vendored in `gridpulse/backend/src/gridpulse/analysis/algorithms/orchid/`. No licence file upstream: confirm terms before this repository is made public |
 | **WWW** | Main website template, page structure and layout reference | [WWW](https://github.com/orthant-kcpc/www), local `../www/`, cloned revision `b16a659`; KCPC app: `apps/kcpc/` |
 | **Components** | Reusable styling and UI components for frontend polish | [Components](https://github.com/orthant-kcpc/components), local `../components/`, cloned revision `9626af5` |
 | **Existing exporter** | Fetch Elexon data and write CSVs for ingestion | Being implemented by a teammate; sample files, schema and code location pending |
@@ -27,7 +27,7 @@ The three reference repositories are cloned as siblings of this repository under
 
 ## Orchid modules in use
 
-The Orchid → GridPulse catalogue and architecture are in issue #3. Its P0 methods (issue #6) come from four Orchid modules, vendored verbatim. Their SHA-256 digests are recorded in `orchid/__init__.py`:
+The Orchid → GridPulse catalogue and architecture are in issue #3. Its P0 (issue #6) and P1 (issue #7) methods come from five Orchid modules, vendored verbatim. Their SHA-256 digests are recorded in `orchid/__init__.py`:
 
 | Vendored file | Upstream path (`algorithms/core/…`) |
 |---|---|
@@ -35,10 +35,11 @@ The Orchid → GridPulse catalogue and architecture are in issue #3. Its P0 meth
 | `forecasting_baseline.py` | `forecasting/baseline/forecasting_baseline_template.py` |
 | `smoothing.py` | `forecasting/smoothing/smoothing_template.py` |
 | `spectral.py` | `spectral/spectral_template.py` |
+| `state_space.py` | `forecasting/state_space/state_space_template.py` |
 
-Each module's upstream `_stress_test.py` is ported to `gridpulse/backend/tests/analysis/orchid/`, with only the import lines changed. GridPulse code calls Orchid only through the adapters in `analysis/algorithms/`, which use one canonical implementation per method; see [algorithms and analysis contracts](docs/gridpulse/ALGORITHMS_AND_ANALYSIS.md). `state_space_template.py` is left for the P1 work (#7). Do not edit vendored files: change Orchid upstream and re-vendor.
+Each module's upstream `_stress_test.py` is ported to `gridpulse/backend/tests/analysis/orchid/`, with only the import lines changed. GridPulse code calls Orchid only through the adapters in `analysis/algorithms/`, which use one canonical implementation per method; see [algorithms and analysis contracts](docs/gridpulse/ALGORITHMS_AND_ANALYSIS.md). Do not edit vendored files: change Orchid upstream and re-vendor.
 
-**LightGBM status:** the vendored modules contain no LightGBM or other classifier, and the P0 port adds none. The team's candidate list explicitly includes LightGBM classification and logistic regression, both of which require fitted models for predictive use. Library reuse alone does not eliminate fitting. If the MVP must avoid training, omit these methods unless suitable already-fitted artifacts exist and their applicability is established. No such artifacts have been confirmed.
+**LightGBM status:** the vendored modules contain no LightGBM or other classifier, and the P0 and P1 ports add none. The team's candidate list explicitly includes LightGBM classification and logistic regression, both of which require fitted models for predictive use. Library reuse alone does not eliminate fitting. If the MVP must avoid training, omit these methods unless suitable already-fitted artifacts exist and their applicability is established. No such artifacts have been confirmed.
 
 ## Candidate algorithms and scope checks
 
@@ -61,19 +62,19 @@ Other proposed extensions include a probabilistic scenario engine, an autonomous
 
 ## Confirmed frontend and map direction
 
-**Confirmed frontend scope:** Overview, Terminal (formerly Explore) and Methods are MVP pages. Overview and the docked Terminal are implemented; About holds the globe and animated explanations. Methods remains planned; Investigate/Gemini and the synoptic weather map remain extensions.
+**Confirmed frontend scope:** Overview, Terminal (formerly Explore) and Methods are MVP pages. Overview and the docked Terminal are implemented; About holds the globe and animated explanations. Methods remains planned; the Terminal AI agent is implemented, while the synoptic weather map remains an extension.
 
 
 Follow [FRONTEND_DESIGN.md](docs/gridpulse/FRONTEND_DESIGN.md). Preserve KCPC responsiveness/theme and requested globe/fade effects; use committee-style motion where appropriate and Software-style cards for sectioned content. Reference repos are selective reuse sources, not a requirement to copy the whole site.
 
 Before changing Overview selection, cards, axes or scan behaviour, read the selection rules in [FRONTEND_DESIGN.md](docs/gridpulse/FRONTEND_DESIGN.md#confirmed-implementation-decisions). Keep the shared metric catalogue as the definition of units and colours.
 
-The Gemini extension should support animated view changes during investigations. The synoptic-map extension should represent wind, pressure, fronts and isobars correctly and allow a separate UK electricity-use/forecast overlay. Exact tools, weather providers and regional-data sources are not selected. Do not promote proposed layouts, API recommendations or scenario-engine ideas into confirmed scope.
+The Terminal AI agent should support animated view changes during investigations. The synoptic-map extension should represent wind, pressure, fronts and isobars correctly and allow a separate UK electricity-use/forecast overlay. Exact tools, weather providers and regional-data sources are not selected. Do not promote proposed layouts, API recommendations or scenario-engine ideas into confirmed scope.
 
 ## Integration agreements still needed
 
 1. Obtain real CSV samples and agree identifiers, units, publication/delivery timestamps and revision handling.
-2. Orchid P0 methods are integrated (#6). Select P1–P3 methods (#7, #8, #10) that are compatible with the no-training constraint and the available data.
+2. Orchid P0 and P1 methods are integrated (#6, #7). Select P2–P3 methods (#8, #10) that are compatible with the no-training constraint and the available data.
 3. Agree algorithm adapters and frontend API response examples before parallel implementation.
 4. Identify reusable WWW/Components files and preserve upstream attribution.
 5. Keep credentials out of documentation, source control and frontend code. Use server-side configuration and placeholder examples only.
@@ -82,7 +83,7 @@ Preserve `(settlement_date, settlement_period)` identities, UTC instants and 46/
 
 ## Repository layout
 
-Follow [the repository structure and request flow](docs/gridpulse/REPOSITORY_STRUCTURE.md). Frontend code lives in `gridpulse/frontend/`; Python code in `gridpulse/backend/src/gridpulse/`; SQL migrations in `gridpulse/db/migrations/`; shared API examples in `gridpulse/contracts/`. Algorithms belong in `analysis/algorithms/` and are called through `analysis/service.py`. Keep HTTP, database access and pure calculations separate. Overview, Terminal and About are implemented; Methods and Gemini remain unimplemented.
+Follow [the repository structure and request flow](docs/gridpulse/REPOSITORY_STRUCTURE.md). Frontend code lives in `gridpulse/frontend/`; Python code in `gridpulse/backend/src/gridpulse/`; SQL migrations in `gridpulse/db/migrations/`; shared API examples in `gridpulse/contracts/`. Algorithms belong in `analysis/algorithms/` and are called through `analysis/service.py`. Keep HTTP, database access and pure calculations separate. Overview, Terminal and About are implemented; Methods remains planned; Terminal AI is implemented with live provider verification pending.
 
 ## Frontend presentation convention
 
@@ -94,7 +95,7 @@ Before editing the frontend, read [its README](gridpulse/frontend/README.md) for
 
 ## Terminal implementation guidance
 
-Before changing Terminal widgets, layout, linking, run selection or persistence, read [TERMINAL_WORKSPACE.md](docs/gridpulse/TERMINAL_WORKSPACE.md) and [the implementation plan](docs/gridpulse/TERMINAL_IMPLEMENTATION_PLAN.md). Discover algorithms from the catalogue, display stored runs only, and retain one run ID across companion widgets. Use the pure layout engine and validated actions for placement; keep hover local and preserve the desktop tree in compact mode. Commit tested increments regularly.
+Before changing Terminal widgets, layout, linking, run selection or persistence, read [TERMINAL_WORKSPACE.md](docs/gridpulse/TERMINAL_WORKSPACE.md) and [the implementation plan](docs/gridpulse/TERMINAL_IMPLEMENTATION_PLAN.md). Discover algorithms from the catalogue, display stored runs only, and retain one run ID across companion widgets. Use the pure layout engine and validated actions for placement; keep hover local and preserve the desktop tree in compact mode. Commit tested increments regularly. Before changing AI chat, model tools, computation approvals, context or automatic layouts, read [AI_AGENT.md](docs/gridpulse/AI_AGENT.md) and [the approved plan](docs/gridpulse/AI_AGENT_IMPLEMENTATION_PLAN.md).
 
 ## Related project documents
 

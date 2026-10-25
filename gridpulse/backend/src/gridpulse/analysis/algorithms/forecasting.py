@@ -1,4 +1,4 @@
-"""Univariate forecasters backed by Orchid (P0 #2, #3, #6, #9, #10, #11)."""
+"""Univariate forecasters backed by Orchid (P0 #2, #3, #6, #9, #10, #11; P1 #15, #16)."""
 
 import math
 from collections.abc import Mapping, Sequence
@@ -7,10 +7,16 @@ from datetime import datetime
 from typing import Literal, Protocol
 
 from gridpulse.analysis.algorithms._checks import (
+    check_difference_tests,
+    check_season_length,
+    check_seasonal_differencing,
     orchid_errors,
     require_int,
     require_levels,
+    require_real,
+    require_variation,
     require_weights,
+    scaled_by_range,
 )
 from gridpulse.analysis.algorithms.calendar import (
     DAY_SLOTS,
@@ -18,9 +24,9 @@ from gridpulse.analysis.algorithms.calendar import (
     FeatureMatrix,
     fourier_terms,
 )
+from gridpulse.analysis.algorithms.diagnostics import difference_orders
 from gridpulse.analysis.algorithms.errors import (
     CalculationError,
-    DegenerateDataError,
     InsufficientDataError,
     InvalidInputError,
 )
@@ -313,7 +319,7 @@ class ETS:
             )
         if (self.seasonal is None) != (self.season_length is None):
             raise InvalidInputError("seasonal and season_length must be given together")
-        _check_season_length(self.season_length)
+        check_season_length(self.season_length)
 
     @property
     def min_history(self) -> int:
@@ -357,7 +363,7 @@ class AutoETS:
     season_length: int | None = None
 
     def __post_init__(self) -> None:
-        _check_season_length(self.season_length)
+        check_season_length(self.season_length)
 
     @property
     def min_history(self) -> int:
@@ -390,6 +396,75 @@ class AutoETS:
         )
 
 
+@dataclass(frozen=True, kw_only=True)
+class Theta:
+    """The Theta method, as in R's ``forecast::thetaf``: simple exponential smoothing plus a
+    drift of (theta - 1) / theta times the least-squares slope. With ``season_length``, both
+    act on the history seasonally adjusted by classical decomposition, and the forecasts and
+    their interval bounds are reseasonalised.
+
+    ``theta`` is at least 1, so the drift lies between none (1: plain SES) and the full slope;
+    ``params["drift"]`` is per half-hour. A multiplicative season needs a strictly positive
+    history.
+    """
+
+    season_length: int | None = None
+    theta: float = 2.0
+    seasonal_model: Literal["additive", "multiplicative"] = "additive"
+
+    def __post_init__(self) -> None:
+        check_season_length(self.season_length)
+        theta = require_real("theta", self.theta)
+        if not 1 <= theta < math.inf:
+            raise InvalidInputError(f"theta must be finite and at least 1, got {self.theta!r}")
+        object.__setattr__(self, "theta", theta)
+        if self.seasonal_model not in ("additive", "multiplicative"):
+            raise InvalidInputError(
+                f"seasonal_model must be 'additive' or 'multiplicative', got {self.seasonal_model!r}"
+            )
+        if self.seasonal_model == "multiplicative" and self.season_length is None:
+            raise InvalidInputError("a multiplicative seasonal_model needs a season_length")
+
+    @property
+    def min_history(self) -> int:
+        """Three values, the fewest whose SES variance Orchid divides by n - 2; with a season,
+        two full seasons, so that the decomposition estimates every phase."""
+        return 3 if self.season_length is None else 2 * self.season_length
+
+    def forecast(
+        self, history: HalfHourlySeries, horizon: int, *, levels: Sequence[float] = DEFAULT_LEVELS
+    ) -> Forecast:
+        m = self.season_length
+        horizon, levels, values = _prepare(history, horizon, levels, minimum=self.min_history)
+        if self.seasonal_model == "multiplicative" and min(values) <= 0:
+            raise InvalidInputError("multiplicative seasonality needs a strictly positive history")
+        # An explicit season: Orchid's "auto" seasonality test also fires on random walks.
+        model = fb.Theta(
+            m or 1, self.theta, seasonal=m is not None, seasonal_model=self.seasonal_model
+        )
+        mean, intervals, residuals = _fit(model, values, horizon, levels)
+        if m is not None and not model.is_seasonal_:
+            raise InvalidInputError(
+                "a multiplicative seasonal index is at most 1e-10, so Orchid dropped the season"
+            )
+        return _forecast(
+            history,
+            source="forecasting_baseline.Theta",
+            params={
+                "season_length": m,
+                "theta": self.theta,
+                "seasonal_model": self.seasonal_model,
+                "alpha": model.alpha_,
+                "drift": (self.theta - 1) / self.theta * model.slope_,
+            },
+            mean=mean,
+            intervals=intervals,
+            interval_method="analytic",
+            residuals=residuals,  # SES estimates its initial level, so none is a placeholder
+            seasonal=m is not None,
+        )
+
+
 @dataclass(frozen=True)
 class ARIMA:
     """ARIMA(p, d, q) with optional seasonal differencing, fitted by conditional least squares.
@@ -409,7 +484,7 @@ class ARIMA:
         require_int("p", self.p, minimum=0, maximum=3)
         require_int("d", self.d, minimum=0, maximum=1)
         require_int("q", self.q, minimum=0, maximum=2)
-        _check_seasonal_differencing(self.seasonal_differencing, self.season_length)
+        check_seasonal_differencing(self.seasonal_differencing, self.season_length)
 
     @property
     def min_history(self) -> int:
@@ -423,8 +498,8 @@ class ARIMA:
         horizon, levels, values = _prepare(history, horizon, levels, minimum=self.min_history)
         with orchid_errors("diff"):
             differenced = ar.diff(values, d=self.d, D=seasonal_d, m=self.season_length or 1)
-        _require_variation(differenced, "differenced history" if self.d + seasonal_d else "history")
-        scale, scaled = _scaled_by_range(values, differenced)
+        require_variation("differenced history" if self.d + seasonal_d else "history", differenced)
+        scale, scaled = scaled_by_range(values, differenced)
         order = (self.p, self.d, self.q)
         seasonal_order = (0, seasonal_d, 0, self.season_length or 0)
         trend = "c" if self.d + seasonal_d == 0 else "n"
@@ -456,12 +531,8 @@ class ARIMA:
 
 @dataclass(frozen=True, kw_only=True)
 class AutoARIMA:
-    """Stepwise AICc search over ARIMA(p, d, q) after testing for seasonal and regular differences.
-
-    ``seasonal_differencing=None`` tests for a seasonal difference when ``season_length``
-    is given; the regular difference is then tested on the seasonally differenced history.
-    Orchid's seasonal test (STL seasonal strength of at least 0.64) also fires on integrated
-    series without a seasonal cycle, so give ``seasonal_differencing`` when it is known.
+    """Stepwise AICc search over ARIMA(p, d, q) with the seasonal and regular differences that
+    ``diagnostics.difference_orders`` chooses; give ``seasonal_differencing`` when it is known.
     """
 
     season_length: int | None = None
@@ -470,11 +541,7 @@ class AutoARIMA:
     max_q: int = 2
 
     def __post_init__(self) -> None:
-        if self.seasonal_differencing is not None:
-            _check_seasonal_differencing(self.seasonal_differencing, self.season_length)
-        elif self.season_length is not None:
-            # At season length 2 Orchid's seasonal test fires for every series.
-            require_int("season_length", self.season_length, minimum=3)
+        check_difference_tests(self.seasonal_differencing, self.season_length)
         require_int("max_p", self.max_p, minimum=0, maximum=3)
         require_int("max_q", self.max_q, minimum=0, maximum=2)
 
@@ -495,18 +562,16 @@ class AutoARIMA:
     ) -> Forecast:
         m = self.season_length
         horizon, levels, values = _prepare(history, horizon, levels, minimum=self.min_history)
-        _require_variation(values, "history")
-        _, unit = _scaled_by_range(values, values)  # Orchid's tests also have absolute floors
-        seasonal_d = self.seasonal_differencing
-        with orchid_errors("difference tests"):
-            if seasonal_d is None:
-                seasonal_d = ar.nsdiffs(unit, m=m, max_D=1) if m is not None else 0
-            period = (m or 1) if seasonal_d else 1
-            d = ar.ndiffs(ar.diff(unit, d=0, D=seasonal_d, m=period), max_d=1)
+        orders = difference_orders(
+            history, season_length=m, seasonal_differencing=self.seasonal_differencing
+        )
+        d, seasonal_d = orders.regular, orders.seasonal
+        period = (m or 1) if seasonal_d else 1
+        with orchid_errors("diff"):
             differenced = ar.diff(values, d=d, D=seasonal_d, m=period)
         if d + seasonal_d:
-            _require_variation(differenced, "differenced history")
-        scale, scaled = _scaled_by_range(values, differenced)
+            require_variation("differenced history", differenced)
+        scale, scaled = scaled_by_range(values, differenced)
         trend = "c" if d + seasonal_d == 0 else "n"
         with orchid_errors("auto_arima"):
             selection = ar.auto_arima(
@@ -546,6 +611,49 @@ class AutoARIMA:
             interval_method="analytic",
             residuals=_rescaled(result.resid, scale),
             seasonal=seasonal_d == 1,
+        )
+
+
+@dataclass(frozen=True)
+class AR:
+    """AR(p) about the history's mean, fitted by Yule-Walker: unlike least squares, it always
+    gives a stationary model. ``p`` is at most 48, a day of lags; longer cycles belong in the
+    seasonal models.
+
+    ``params["coefficients"]`` run from lag 1 to lag p.
+    """
+
+    p: int
+
+    def __post_init__(self) -> None:
+        require_int("p", self.p, minimum=1, maximum=DAY_SLOTS)
+
+    @property
+    def min_history(self) -> int:
+        return 2 * self.p + 2  # Orchid's own minimum for a fixed order
+
+    def forecast(
+        self, history: HalfHourlySeries, horizon: int, *, levels: Sequence[float] = DEFAULT_LEVELS
+    ) -> Forecast:
+        p = self.p
+        horizon, levels, values = _prepare(history, horizon, levels, minimum=self.min_history)
+        model = fb.ARForecaster(p, method="yule_walker")
+        mean, intervals, residuals = _fit(model, values, horizon, levels)
+        return _forecast(
+            history,
+            source="forecasting_baseline.ARForecaster",
+            params={
+                "p": p,
+                "coefficients": tuple(model.phi_),
+                "intercept": model.c_,
+                "sigma2": model.sigma2_,
+            },
+            mean=mean,
+            intervals=intervals,
+            interval_method="analytic",
+            # Orchid's first p residuals are zero placeholders. Its sigma2 comes from the
+            # Yule-Walker recursion, not the residuals, so the intervals need no rescaling.
+            residuals=residuals[p:],
         )
 
 
@@ -762,21 +870,6 @@ def _predict(model: fb.BaseForecaster, horizon: int, levels: Sequence[float]) ->
     return _finite(results[0].mean), intervals, _finite(results[0].residuals)
 
 
-def _scaled_by_range(
-    values: Sequence[float], modelled: Sequence[float]
-) -> tuple[float, list[float]]:
-    """The range of ``modelled`` and ``values`` divided by it.
-
-    ARIMA fits run on data scaled so that the series Orchid models (the differenced history)
-    has unit range. Its absolute 1e-12 floors on variances then depend on neither the units
-    nor a trend that differencing removes. The range must be non-zero.
-    """
-    scale = max(modelled) - min(modelled)
-    if not math.isfinite(scale * scale):
-        raise CalculationError("the history's range overflows a float")
-    return scale, [value / scale for value in values]
-
-
 def _arima_forecast(
     result: ar.ARIMAResults, horizon: int, levels: Sequence[float], scale: float
 ) -> tuple[tuple[float, ...], tuple[PredictionInterval, ...]]:
@@ -922,26 +1015,6 @@ def _ets_params(model: fb.ETSForecaster, season_length: int | None) -> dict[str,
     return params
 
 
-def _check_season_length(season_length: int | None) -> None:
-    if season_length is not None:
-        require_int("season_length", season_length, minimum=2)
-
-
-def _check_seasonal_differencing(seasonal_differencing: int, season_length: int | None) -> None:
-    require_int("seasonal_differencing", seasonal_differencing, minimum=0, maximum=1)
-    _check_season_length(season_length)
-    if (season_length is None) == (seasonal_differencing == 1):
-        raise InvalidInputError(
-            "season_length must be given exactly when seasonal_differencing is 1"
-        )
-
-
 def _arima_observations(p: int, q: int) -> int:
     """Observations an ARIMA fit needs after differencing."""
     return max(100, 10 * (p + q + 1))
-
-
-def _require_variation(values: Sequence[float], name: str) -> None:
-    low, high = min(values), max(values)
-    if high - low <= 1e-9 * max(abs(low), abs(high)):
-        raise DegenerateDataError(f"{name} is constant to within 1e-9 of its magnitude")

@@ -27,7 +27,7 @@ class DemoCacheMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next):
         cacheable = request.method == "GET" and request.url.path.startswith("/api/")
-        if not cacheable or request.url.path == "/api/health":
+        if not cacheable or request.url.path == "/api/health" or request.url.path.startswith("/api/agent/"):
             return await call_next(request)
 
         path = self.directory / f"{cache_key(request)}.json"

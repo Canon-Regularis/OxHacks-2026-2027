@@ -1,7 +1,14 @@
 <script lang="ts">
   import type { Table } from '$lib/types';
-  let { table, onselect }: { table: Table; onselect: (time: string) => void } =
-    $props();
+  let {
+    table,
+    onselect,
+    scope = 'whole run',
+  }: {
+    table: Table;
+    onselect: (time: string) => void;
+    scope?: string;
+  } = $props();
   let search = $state(''),
     sort = $state(-1),
     ascending = $state(true),
@@ -58,7 +65,7 @@
     placeholder="Filter rows…"
     bind:value={search}
     oninput={() => (scroll = 0)}
-  /><span>{rows.length} / {table.rows.length} rows · whole run</span>
+  /><span>{rows.length} / {table.rows.length} rows · {scope}</span>
 </div>
 <div
   class="terminal-table-scroll"

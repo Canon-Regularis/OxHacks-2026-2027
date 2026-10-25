@@ -11,7 +11,9 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "serve:local": "node scripts/serve-local.mjs",
+    "test:preview": "node scripts/check-local-preview.mjs"
   },
   "dependencies": {
     "@fontsource-variable/dm-sans": "^5.2.0",
@@ -19,6 +21,7 @@
     "@fontsource/dm-serif-text": "^5.2.0",
     "clsx": "^2.1.1",
     "d3": "^7.9.0",
+    "gsap": "^3.15.0",
     "mode-watcher": "^1.1.0",
     "postprocessing": "^6.39.0",
     "tailwind-merge": "^3.0.0",

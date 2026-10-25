@@ -16,7 +16,9 @@ from gridpulse.analysis.algorithms.errors import (
 )
 from gridpulse.analysis.algorithms.evaluation import (
     BacktestReport,
+    Loss,
     backtest,
+    diebold_mariano,
     empirical_coverage,
     interval_score,
     mae,
@@ -38,6 +40,9 @@ MakeValues = Callable[..., list[float]]
 Metric = Callable[[Sequence[float], Sequence[float]], float]
 
 TRAINING = [0.0, 1.0, 3.0, 2.0, 6.0, 4.0]  # varies at lag 2
+# Errors of two forecasts whose squared and absolute loss differentials both vary.
+ERRORS_A = [math.sin(i) for i in range(40)]
+ERRORS_B = [0.5 * math.cos(i) for i in range(40)]
 
 
 def _above(values: Sequence[float]) -> list[float]:
@@ -486,3 +491,140 @@ def test_backtest_requires_complete_data(make_series: MakeSeries) -> None:
     values[3] = None
     with pytest.raises(MissingDataError):
         backtest(LastValue(), HalfHourlySeries(START, values), initial=100, horizon=12)
+
+
+@pytest.mark.parametrize("loss", ["squared", "absolute"])
+@pytest.mark.parametrize("horizon", [1, 4])
+@pytest.mark.parametrize("scale", [1.0, 1e-7])  # Orchid's absolute 1e-12 floor bites at 1e-7
+def test_diebold_mariano_matches_orchid_at_unit_scale(
+    synthetic_values: MakeValues, scale: float, horizon: int, loss: Loss
+) -> None:
+    errors_a = synthetic_values(200, level=0.0, amplitude=0.0, noise=1.2, seed=1)
+    errors_b = synthetic_values(200, level=0.0, amplitude=0.0, noise=1.0, seed=2)
+    expected = ar.diebold_mariano(errors_a, errors_b, horizon=horizon, loss=loss)
+    result = diebold_mariano(
+        [scale * error for error in errors_a],
+        [scale * error for error in errors_b],
+        horizon=horizon,
+        loss=loss,
+    )
+    assert (result.horizon, result.loss, result.warnings) == (horizon, loss, ())
+    assert result.statistic == pytest.approx(expected.statistic, rel=1e-12)
+    assert result.p_value == pytest.approx(expected.pvalue, rel=1e-12)
+
+
+@pytest.mark.parametrize("loss", ["squared", "absolute"])
+def test_diebold_mariano_uses_horizon_1_when_the_long_run_variance_is_negative(
+    loss: Loss,
+) -> None:
+    # The loss differential alternates, so its lag-1 autocovariance outweighs its variance.
+    errors_a, errors_b = [3.0, 0.0] * 20, [1.0] * 40
+    assert ar.diebold_mariano(errors_a, errors_b, horizon=2, loss=loss).pvalue == 0.0  # floored
+    expected = ar.diebold_mariano(errors_a, errors_b, horizon=1, loss=loss)
+    result = diebold_mariano(errors_a, errors_b, horizon=2, loss=loss)
+    [warning] = result.warnings
+    assert "horizon 2" in warning
+    assert result.horizon == 1
+    assert result.statistic == pytest.approx(expected.statistic, rel=1e-12)
+    assert result.p_value == pytest.approx(expected.pvalue, rel=1e-12)
+
+
+def test_a_large_error_both_forecasts_share_does_not_mask_their_difference() -> None:
+    rng = random.Random(1)
+    errors_a = [rng.gauss(0.0, 1.0) for _ in range(100)]
+    errors_b = [1.1 * error for error in errors_a]
+    errors_a[50] = errors_b[50] = 1e3
+    expected = ar.diebold_mariano(errors_a, errors_b)  # Orchid's floor is harmless at this scale
+    # Divided by the largest error alone, the other squared losses fall below Orchid's floor.
+    divided = ar.diebold_mariano(
+        [error / 1e3 for error in errors_a], [error / 1e3 for error in errors_b]
+    )
+    assert divided.statistic != pytest.approx(expected.statistic)
+    result = diebold_mariano(errors_a, errors_b)
+    assert result.statistic == pytest.approx(expected.statistic, rel=1e-12)
+
+
+@pytest.mark.parametrize("loss", ["squared", "absolute"])
+def test_a_positive_diebold_mariano_statistic_means_errors_b_are_more_accurate(
+    loss: Loss,
+) -> None:
+    rng = random.Random(3)
+    errors_a = [rng.gauss(0.0, 2.0) for _ in range(100)]
+    errors_b = [rng.gauss(0.0, 1.0) for _ in range(100)]
+    result = diebold_mariano(errors_a, errors_b, loss=loss)
+    assert result.statistic > 0
+    assert ar.diebold_mariano(errors_a, errors_b, loss=loss).better == "model2"
+    swapped = diebold_mariano(errors_b, errors_a, loss=loss)
+    assert (swapped.statistic, swapped.p_value) == (-result.statistic, result.p_value)
+
+
+@pytest.mark.parametrize(
+    ("errors_a", "errors_b", "options", "error"),
+    [
+        (ERRORS_A, ERRORS_B[:-1], {}, InvalidInputError),  # Orchid would truncate
+        (ERRORS_A[:29], ERRORS_B[:28], {}, InvalidInputError),
+        ([*ERRORS_A[:-1], None], ERRORS_B, {}, MissingDataError),
+        (ERRORS_A, [*ERRORS_B[:-1], math.nan], {}, MissingDataError),
+        ([*ERRORS_A[:-1], math.inf], ERRORS_B, {}, InvalidInputError),
+        (ERRORS_A, ERRORS_B, {"horizon": 0}, InvalidInputError),
+        (ERRORS_A, ERRORS_B, {"horizon": 21}, InvalidInputError),
+        (ERRORS_A, ERRORS_B, {"horizon": 2.0}, InvalidInputError),
+        (ERRORS_A, ERRORS_B, {"loss": "mse"}, InvalidInputError),  # Orchid: absolute loss
+        ([1.0, -1.0] * 20, [0.5] * 40, {}, DegenerateDataError),  # squared losses 1 and 0.25
+        (ERRORS_A, ERRORS_A, {}, DegenerateDataError),
+        ([0.0] * 40, [0.0] * 40, {}, DegenerateDataError),
+        (  # absolute losses that differ by 0.1, but for rounding
+            [2.0 + error for error in ERRORS_A],
+            [2.1 + error for error in ERRORS_A],
+            {"loss": "absolute"},
+            DegenerateDataError,
+        ),
+    ],
+    ids=[
+        "length mismatch",
+        "length mismatch below 30",
+        "None",
+        "NaN",
+        "inf",
+        "horizon 0",
+        "horizon above n // 2",
+        "float horizon",
+        "unknown loss",
+        "constant differential",
+        "identical errors",
+        "zero errors",
+        "constant differential but for rounding",
+    ],
+)
+def test_diebold_mariano_rejects_unusable_inputs(
+    errors_a: list[float | None],
+    errors_b: list[float],
+    options: dict[str, object],
+    error: type[Exception],
+) -> None:
+    with pytest.raises(error) as excinfo:
+        diebold_mariano(errors_a, errors_b, **options)  # type: ignore[arg-type]
+    assert excinfo.type is error
+
+
+def test_diebold_mariano_needs_30_errors_and_allows_a_horizon_of_half_of_them() -> None:
+    diebold_mariano(ERRORS_A[:30], ERRORS_B[:30])
+    assert diebold_mariano(ERRORS_A, ERRORS_B, horizon=20).horizon == 20
+    for n in (0, 29):
+        with pytest.raises(InsufficientDataError) as excinfo:
+            diebold_mariano(ERRORS_A[:n], ERRORS_B[:n])
+        assert (excinfo.value.required, excinfo.value.available) == (30, n)
+
+
+def test_diebold_mariano_reports_orchid_failures(monkeypatch: pytest.MonkeyPatch) -> None:
+    def broken(*args: object, **kwargs: object) -> None:
+        raise ZeroDivisionError("boom")
+
+    monkeypatch.setattr(ar, "diebold_mariano", broken)
+    with pytest.raises(CalculationError) as excinfo:
+        diebold_mariano(ERRORS_A, ERRORS_B)
+    assert isinstance(excinfo.value.__cause__, ZeroDivisionError)
+    nan = ar.DMResult(math.nan, 1.0, 1, "squared", "tie")
+    monkeypatch.setattr(ar, "diebold_mariano", lambda *args, **kwargs: nan)
+    with pytest.raises(CalculationError):
+        diebold_mariano(ERRORS_A, ERRORS_B)

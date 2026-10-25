@@ -9,6 +9,7 @@ description = "GridPulse data ingestion and analysis backend"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115",
+    "httpx>=0.27",
     "uvicorn[standard]>=0.30",
     "psycopg[binary,pool]>=3.2",
     "pydantic-settings>=2.4",
@@ -34,6 +35,8 @@ gridpulse = "gridpulse.cli:main"
 where = ["src"]
 
 [tool.pytest.ini_options]
+# Spawned test workers must import their targets with either pytest entry point.
+pythonpath = ["."]
 testpaths = ["tests"]
 addopts = ["--import-mode=importlib", "--strict-markers", "--strict-config", "-ra"]
 xfail_strict = true
@@ -50,6 +53,7 @@ extend-exclude = [
     "src/gridpulse/analysis/algorithms/example_*.py",
     "src/gridpulse/analysis/algorithms/wind_analysis.py",
     "tests/analysis/test_algorithms.py",
+    "tests/analysis/test_weather.py",
 ]
 
 [tool.ruff.lint]
@@ -63,7 +67,7 @@ mypy_path = "src"
 files = ["src/gridpulse/analysis/algorithms", "tests/analysis"]
 exclude = [
     "^tests/analysis/orchid/",
-    "^tests/analysis/test_algorithms\\.py$",
+    "^tests/analysis/test_(algorithms|weather)\\.py$",
     "^src/gridpulse/analysis/algorithms/(__init__|example_\\w+|wind_analysis)\\.py$",
 ]
 follow_imports = "silent"  # check the modules above, not the backend code they import
@@ -78,5 +82,6 @@ module = [
     "gridpulse.analysis.algorithms.orchid.forecasting_baseline",
     "gridpulse.analysis.algorithms.orchid.smoothing",
     "gridpulse.analysis.algorithms.orchid.spectral",
+    "gridpulse.analysis.algorithms.orchid.state_space",
 ]
 ignore_errors = true

@@ -1,8 +1,10 @@
 # Using and extending Terminal
 
-Terminal is Eisengrau's docked research workspace at `/terminal`. The old `/explore` route redirects there. It reads existing source data and stored algorithm results through [the shared API](FRONTEND_API.md); it cannot submit computations or run arbitrary parameter settings.
+Terminal is Eisengrau's docked research workspace at `/terminal`. The old `/explore` route redirects there. It reads existing source data and stored algorithm results through [the shared API](FRONTEND_API.md); manual data controls remain read-only. The [AI chat](AI_AGENT.md) can request bounded missing analyses, with explicit confirmation for expensive jobs.
 
 ## User workflow
+
+Open the keyboard icon immediately left of the navbar settings gear for the current key reference; it is also in Quick Start. Ctrl/Cmd+K opens Search/Add, Ctrl/Cmd+Z undoes workspace changes, and Shift adds redo. Focused charts support arrow keys and Home/End; focused dividers resize by snapped arrow-key steps. Global workspace shortcuts do not act behind the app settings modal or take undo away from text fields.
 
 The Terminal uses one compact toolbar: workspace tabs, date range, Search / Add and Workspaces. Its title block and site footer are omitted to leave more space for tiles; other pages retain their footer.
 
@@ -12,7 +14,9 @@ The Terminal uses one compact toolbar: workspace tabs, date range, Search / Add 
 4. Drag dividers to snap-resize; focused dividers support arrow keys. Horizontal splits use 24 steps, vertical splits 16, constrained by both subtrees' minimum readable sizes. Use settings to move without dragging.
 5. Click the letter/arrow badge at the top right of a widget to choose a linked group, create a group or make it Independent. This works in docked, compact and maximised views; Escape or an outside click dismisses the menu. Focus widgets through the widget bar. Settings also expose source selection, stored runs, output visibility/styles, overlay versus separate unit panes, explicit indexing, group membership, duplication and placement.
 6. Linked time charts share range/zoom and selected UTC instant. Hover reads cached values locally; click or arrow-key selection loads full period details. The inspector preloads source values for hover. Clicking a whole-run table's period outside the current range opens that day in its linked group.
-7. Use **Workspaces** to rename, duplicate, reset, export/import or save the current view as a reusable preset. Save and search/load presets in Workspaces; they are not part of the content drawer. Built-ins remain unchanged.
+7. Use **Workspaces** to rename, duplicate, reset, export/import or save the current view as a reusable preset. Save and search/load presets in Workspaces; they are not part of the content drawer. Built-ins remain unchanged. **Reset to market preset** and **Close current workspace** are always exposed at the bottom of Workspaces; both actions can be undone.
+
+Widget settings provide **Export chart CSV** for their loaded range and series, with UTC timestamps and units. Table and comparison settings provide **Export table CSV** for the selected whole-run table. Missing values export as empty cells; numeric zero stays zero. **Export configuration** in Workspaces remains JSON for restoring layouts and preferences.
 
 A chart accepts at most two overlay unit axes; extra units use separate panes. More than 12 selected outputs require choosing visible outputs in settings. Separate panes scroll when the available tile cannot display them readably. Indexing is explicit (first non-zero value = 100); all-zero series cannot be indexed. Raw values remain in the cursor readout.
 
@@ -50,7 +54,7 @@ To extend an algorithm, register it on the backend and preserve the shared schem
 
 To extend a widget, add its type, minimum size, validated configuration, supported link behaviour, renderer/settings and tests. Keep non-time axes independent of shared time zoom. Retain visible warnings/limitations and meaningful error states.
 
-Future agent tools should call `applyActions(document, actions, size)` rather than manipulating DOM or split trees. The function clones and validates a transaction, applies minimum-size/placement rules and returns the next document only when the entire transaction succeeds. No agent endpoint is exposed yet.
+Future agent tools should call `applyActions(document, actions, size)` rather than manipulating DOM or split trees. The function clones and validates a transaction, applies minimum-size/placement rules and returns the next document only when the entire transaction succeeds. The AI view compiler now uses this interface; see [AI_AGENT.md](AI_AGENT.md) for chat, streaming and execution boundaries.
 
 ## Data correctness
 

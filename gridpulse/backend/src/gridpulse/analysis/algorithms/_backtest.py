@@ -445,9 +445,14 @@ def _fold_row(name: str, fold: _Fold) -> list[object]:
 
 def _fitted(params: Mapping[str, object]) -> Iterator[tuple[str, float]]:
     """Fitted numbers from Forecast.params: ETS smoothing weights, ARIMA coefficients, sigma2
-    and AICc. Configuration (orders, method labels, season lengths) is left out."""
+    and AICc; AR coefficients as ``ar.L<lag>``; structural variances as ``variance.<state>``.
+    Configuration (orders, method labels, season lengths) is left out."""
     for name, value in params.items():
         if name == "coefficients" and isinstance(value, Mapping):
             yield from ((str(term), float(coefficient)) for term, coefficient in value.items())
+        elif name == "coefficients" and isinstance(value, Sequence):
+            yield from ((f"ar.L{lag}", float(c)) for lag, c in enumerate(value, start=1))
+        elif name == "variances" and isinstance(value, Mapping):
+            yield from ((f"variance.{state}", float(v)) for state, v in value.items())
         elif isinstance(value, float):
             yield name, value

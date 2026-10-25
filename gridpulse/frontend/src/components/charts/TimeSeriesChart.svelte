@@ -1,10 +1,10 @@
 <script lang="ts">
   import type { MarketSeries } from '$lib/api';
-  import {
-    getMetric,
-    timeLabel,
-    type UnitGroup,
-  } from '../../features/overview/model';
+  import { getMetric, type UnitGroup } from '../../features/overview/model';
+  import { useSettings } from '$lib/state/settings.svelte';
+  import { formatTime } from '$lib/state/settings';
+  const settings = useSettings();
+  const timeLabel = (t: string) => formatTime(t, settings.timeDisplay);
   let {
     data,
     indices,
@@ -155,7 +155,7 @@
   aria-valuemin="1"
   aria-valuemax={indices.length || 1}
   aria-valuenow={Math.max(1, position + 1)}
-  aria-valuetext={data.t[selected] ? `${timeLabel(data.t[selected])} UTC` : ''}
+  aria-valuetext={data.t[selected] ? `${timeLabel(data.t[selected])}` : ''}
   onpointermove={pick}
   onpointerdown={pick}
   onkeydown={keyboard}
@@ -176,13 +176,14 @@
       >{/each}
     {#each [0, 0.5, 1] as ratio}
       {@const gridY = box.bottom - ratio * (box.bottom - box.top)}
-      <line
-        x1={box.left}
-        x2={box.right}
-        y1={gridY}
-        y2={gridY}
-        stroke="var(--border)"
-      />
+      {#if settings.gridlines}<line
+          data-gridline
+          x1={box.left}
+          x2={box.right}
+          y1={gridY}
+          y2={gridY}
+          stroke="var(--border)"
+        />{/if}
       {#each axes as a, i}<text
           x={i === 0 ? box.left - 10 : box.right + 10}
           y={gridY + 4}
@@ -196,7 +197,8 @@
         d={path(id)}
         fill="none"
         stroke={getMetric(id).color}
-        stroke-width={id === 'price' ? 2.5 : 1.8}
+        stroke-width={(id === 'price' ? 2.5 : 1.8) *
+          (settings.lineThickness === 'bold' ? 1.6 : 1)}
         vector-effect="non-scaling-stroke"
         stroke-linecap="round"
         stroke-linejoin="round"
@@ -226,9 +228,8 @@
             stroke-width="1.5"
           />{/if}{/each}
     {/if}
-    {#each [0, 0.25, 0.5, 0.75, 1] as ratio}{@const j = Math.round(
-        (indices.length - 1) * ratio,
-      )}{#if indices[j] != null}<text
+    {#each width < 550 ? [0, 0.5, 1] : [0, 0.25, 0.5, 0.75, 1] as ratio}{@const j =
+        Math.round((indices.length - 1) * ratio)}{#if indices[j] != null}<text
           x={x(j)}
           y={height - 8}
           text-anchor={ratio === 0 ? 'start' : ratio === 1 ? 'end' : 'middle'}

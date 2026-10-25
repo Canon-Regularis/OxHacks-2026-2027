@@ -59,15 +59,18 @@ test('status page shows health, stale data and out-of-date runs', async ({
   await expect(page.getByRole('status')).toContainText(
     'Operational, with warnings',
   );
-  await expect(page.getByRole('cell', { name: /Problem/ })).toContainText(
-    'Problem',
+  await expect(page.getByRole('cell', { name: /Older data/ })).toContainText(
+    'Older data',
   );
   await expect(page.getByText('Inputs reloaded since this run')).toBeVisible();
+  await expect(page.getByRole('note')).toContainText('The data is a bit old.');
+  await expect(page.getByText('Attention', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Inputs updated', { exact: true })).toBeVisible();
   await expect(
     page
       .getByRole('navigation', { name: 'Primary navigation' })
-      .getByRole('link', { name: 'Status', exact: true }),
-  ).toHaveAttribute('aria-current', 'page');
+      .getByRole('link', { name: 'Terminal', exact: true }),
+  ).toBeVisible();
 });
 
 test('status page reports an unreachable API', async ({ page }) => {

@@ -103,4 +103,5 @@ def test_namespace_depends_on_id_version_and_code():
 def test_only_the_backtests_use_memo():
     assert {a.id for a in ALGORITHMS.values() if a.memo} == {
         "price_forecast_backtest", "price_baseline_backtest", "price_regression_backtest",
+        "price_p1_backtest",
     }

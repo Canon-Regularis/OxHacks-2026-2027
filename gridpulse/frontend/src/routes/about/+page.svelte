@@ -3,9 +3,9 @@
 </script>
 
 <svelte:head
-  ><title>About — Eisengrau</title><meta
+  ><title>About - Eisengrau</title><meta
     name="description"
-    content="How Eisengrau brings electricity market data and weather context together for evidence-based investigation."
+    content="Analyse Great Britain’s electricity data with forecasting algorithms, backtests, rolling signals and diagnostics. Explore linked charts, tables and stored results in Eisengrau Terminal."
   /></svelte:head
 >
 <a class="skip-link" href="#about-main">Skip to About content</a><About />
