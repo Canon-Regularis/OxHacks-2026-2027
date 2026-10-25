@@ -1357,3 +1357,160 @@ test('AI source data tables render wind and demand rows instead of an algorithm 
     }),
   ).toHaveCount(0);
 });
+
+function failedTableProposal() {
+  return {
+    version: 1,
+    layout_mode: 'preserve',
+    from_date: date,
+    to_date: date,
+    widgets: [
+      {
+        key: 'numbers',
+        existing: null,
+        type: 'table',
+        title: 'Repaired numerical data',
+        series: ['wind', 'demand'],
+        algorithm: null,
+        run_id: null,
+        outputs: [],
+        table: '',
+        group: 'A',
+        relative_to: null,
+        position: 'tab',
+        size_step: 1,
+        notes: '',
+      },
+    ],
+    remove: [],
+    background_chat: false,
+    new_workspace: false,
+    name: 'Data',
+  };
+}
+test('AI receives a minimum-size error and repairs the layout without publishing false success', async ({
+  page,
+}) => {
+  const submissions: {
+    layout_feedback: { error: string; attempt: number } | null;
+    approval: string | null;
+    history: { content: string }[];
+  }[] = [];
+  await page.route('**/api/agent/turns/stream', async (route) => {
+    const turn = route.request().postDataJSON();
+    submissions.push(turn);
+    const view = failedTableProposal();
+    if (turn.layout_feedback) {
+      view.layout_mode = 'research';
+      view.widgets[0].size_step = 8;
+    }
+    const events = [
+      {
+        type: 'answer',
+        text: turn.layout_feedback
+          ? 'Prepared a corrected numerical table.'
+          : 'I already added the table successfully.',
+        references: [],
+      },
+      {
+        type: 'view',
+        workspace_id: turn.workspace_id,
+        revision: turn.revision,
+        view,
+      },
+      { type: 'completed' },
+    ];
+    await route.fulfill({
+      contentType: 'text/event-stream',
+      body: events
+        .map(
+          (event, i) =>
+            `data: ${JSON.stringify({ version: 1, turn_id: turn.turn_id, sequence: i + 1, ...event })}\n\n`,
+        )
+        .join(''),
+    });
+  });
+  await page.goto('/terminal');
+  await page.getByRole('button', { name: '✦ AI', exact: true }).click();
+  await page
+    .getByRole('textbox', { name: 'Message AI' })
+    .fill('Add a numerical wind and demand table');
+  await page.getByRole('button', { name: 'Send ↗', exact: true }).click();
+  await expect(
+    page.getByRole('tab', { name: 'Repaired numerical data', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText('Prepared a corrected numerical table.', { exact: false }),
+  ).toBeVisible();
+  await expect(
+    page.getByText('I already added the table successfully.', { exact: false }),
+  ).toHaveCount(0);
+  expect(submissions).toHaveLength(2);
+  expect(submissions[1].layout_feedback!.error).toBe(
+    'Minimum widget size reached.',
+  );
+  expect(submissions[1].layout_feedback!.attempt).toBe(1);
+  expect(submissions[1].approval).toBeNull();
+  expect(
+    submissions[1].history.some((message) =>
+      message.content.includes('already added'),
+    ),
+  ).toBe(false);
+  await page.getByRole('button', { name: '↶ Go back', exact: true }).click();
+  await expect(
+    page.getByRole('tab', { name: 'Repaired numerical data', exact: true }),
+  ).toHaveCount(0);
+});
+test('AI stops after two failed layout repairs and keeps the previous workspace', async ({
+  page,
+}) => {
+  let requests = 0;
+  await page.route('**/api/agent/turns/stream', async (route) => {
+    const turn = route.request().postDataJSON();
+    requests++;
+    const events = [
+      {
+        type: 'answer',
+        text: 'I already added the table successfully.',
+        references: [],
+      },
+      {
+        type: 'view',
+        workspace_id: turn.workspace_id,
+        revision: turn.revision,
+        view: failedTableProposal(),
+      },
+      { type: 'completed' },
+    ];
+    await route.fulfill({
+      contentType: 'text/event-stream',
+      body: events
+        .map(
+          (event, i) =>
+            `data: ${JSON.stringify({ version: 1, turn_id: turn.turn_id, sequence: i + 1, ...event })}\n\n`,
+        )
+        .join(''),
+    });
+  });
+  await page.goto('/terminal');
+  await page.getByRole('button', { name: '✦ AI', exact: true }).click();
+  await page
+    .getByRole('textbox', { name: 'Message AI' })
+    .fill('Add a numerical table');
+  await page.getByRole('button', { name: 'Send ↗', exact: true }).click();
+  await expect(
+    page.getByText('Could not apply the view after 2 repair attempts.', {
+      exact: false,
+    }),
+  ).toBeVisible();
+  expect(requests).toBe(3);
+  await expect(
+    page.getByRole('tab', { name: 'Repaired numerical data', exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText('I already added the table successfully.', { exact: false }),
+  ).toHaveCount(0);
+  await expect(
+    page.locator('path[data-terminal-series="price"]'),
+  ).toBeVisible();
+});

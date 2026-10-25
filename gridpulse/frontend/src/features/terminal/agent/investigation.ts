@@ -1,7 +1,13 @@
 /** Conversation lifecycle and evidence streaming; has no authority to mutate the workspace. */
 import type { Workspace, Size } from '../model/types';
 import { uid, MINIMUM, LIMITS } from '../model/types';
-import type { Conversation, Evidence, View } from './types';
+import type {
+  Conversation,
+  Evidence,
+  View,
+  ChatMessage,
+  LayoutFeedback,
+} from './types';
 import { workspaceContext } from './view';
 import { streamTurn } from './client';
 
@@ -15,6 +21,7 @@ export async function investigate({
   retry,
   signal,
   size,
+  feedback,
 }: {
   chat: Conversation;
   id: string;
@@ -25,11 +32,14 @@ export async function investigate({
   retry: boolean;
   signal: AbortSignal;
   size: Size;
-}): Promise<{ view: View | undefined; answerIndex: number }> {
+  feedback?: LayoutFeedback;
+}): Promise<{ view: View | undefined; answer?: ChatMessage }> {
   if (!retry) chat.messages.push({ role: 'user', content: message });
   chat.confirmation = null;
   chat.error = '';
-  chat.status = 'Preparing investigation…';
+  chat.status = feedback
+    ? `Adjusting the layout (${feedback.attempt}/2)…`
+    : 'Preparing investigation…';
   while (chat.messages.length > 40) {
     const old = chat.messages.splice(0, 2);
     chat.summary = (
@@ -41,9 +51,9 @@ export async function investigate({
   const token = uid(),
     turnId = uid();
   let view: View | undefined;
-  let answerIndex = -1;
+  let answer: ChatMessage | undefined;
   const references: Evidence[] = [];
-  const history = retry ? chat.messages : chat.messages.slice(0, -1);
+  const history = chat.messages.slice(0, -1);
   await streamTurn(
     {
       version: 1,
@@ -75,6 +85,7 @@ export async function investigate({
       },
       recent_states: chat.states.slice(-3).map(workspaceContext),
       approval: approval ?? null,
+      layout_feedback: feedback ?? null,
     },
     signal,
     (event) => {
@@ -102,14 +113,14 @@ export async function investigate({
         });
       }
       if (event.type === 'answer') {
-        answerIndex = chat.messages.length;
-        chat.messages.push({
+        // A proposed view is not a successful application. Publish only after validation/commit.
+        answer = {
           role: 'assistant',
           content: event.text ?? '',
           details: event.details,
           evidence: references,
           references: event.references,
-        });
+        };
       }
       if (event.type === 'view') {
         if (event.revision !== token || event.workspace_id !== workspace.id)
@@ -124,5 +135,5 @@ export async function investigate({
         };
     },
   );
-  return { view, answerIndex };
+  return { view, answer };
 }

@@ -1,5 +1,32 @@
 {
   "$defs": {
+    "LayoutFeedback": {
+      "additionalProperties": false,
+      "properties": {
+        "attempt": {
+          "maximum": 2,
+          "minimum": 1,
+          "title": "Attempt",
+          "type": "integer"
+        },
+        "error": {
+          "maxLength": 1000,
+          "minLength": 1,
+          "title": "Error",
+          "type": "string"
+        },
+        "failed_view": {
+          "$ref": "#/$defs/View"
+        }
+      },
+      "required": [
+        "attempt",
+        "error",
+        "failed_view"
+      ],
+      "title": "LayoutFeedback",
+      "type": "object"
+    },
     "Message": {
       "additionalProperties": false,
       "properties": {
@@ -22,6 +49,242 @@
         "content"
       ],
       "title": "Message",
+      "type": "object"
+    },
+    "View": {
+      "additionalProperties": false,
+      "properties": {
+        "from_date": {
+          "format": "date",
+          "title": "From Date",
+          "type": "string"
+        },
+        "to_date": {
+          "format": "date",
+          "title": "To Date",
+          "type": "string"
+        },
+        "layout_mode": {
+          "default": "research",
+          "enum": [
+            "research",
+            "preserve"
+          ],
+          "title": "Layout Mode",
+          "type": "string"
+        },
+        "version": {
+          "const": 1,
+          "default": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "widgets": {
+          "items": {
+            "$ref": "#/$defs/ViewWidget"
+          },
+          "maxItems": 12,
+          "title": "Widgets",
+          "type": "array"
+        },
+        "remove": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12,
+          "title": "Remove",
+          "type": "array"
+        },
+        "background_chat": {
+          "default": false,
+          "title": "Background Chat",
+          "type": "boolean"
+        },
+        "new_workspace": {
+          "default": false,
+          "title": "New Workspace",
+          "type": "boolean"
+        },
+        "name": {
+          "default": "AI investigation",
+          "maxLength": 80,
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "from_date",
+        "to_date",
+        "widgets"
+      ],
+      "title": "View",
+      "type": "object"
+    },
+    "ViewWidget": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Key",
+          "type": "string"
+        },
+        "existing": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Existing"
+        },
+        "type": {
+          "enum": [
+            "chart",
+            "table",
+            "comparison",
+            "inspector",
+            "context"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "series": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 9,
+          "title": "Series",
+          "type": "array"
+        },
+        "algorithm": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Algorithm"
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Run Id"
+        },
+        "outputs": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 30,
+          "title": "Outputs",
+          "type": "array"
+        },
+        "table": {
+          "default": "",
+          "maxLength": 100,
+          "title": "Table",
+          "type": "string"
+        },
+        "group": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Z]$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "A",
+          "title": "Group"
+        },
+        "relative_to": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Relative To"
+        },
+        "position": {
+          "default": "right",
+          "enum": [
+            "left",
+            "right",
+            "top",
+            "bottom",
+            "tab"
+          ],
+          "title": "Position",
+          "type": "string"
+        },
+        "size_step": {
+          "anyOf": [
+            {
+              "maximum": 23,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Optional parent divider step: horizontal 1..23 out of 24, vertical 1..15 out of 16; measures the first child share.",
+          "title": "Size Step"
+        },
+        "metric": {
+          "default": "",
+          "maxLength": 100,
+          "title": "Metric",
+          "type": "string"
+        },
+        "category": {
+          "default": "",
+          "maxLength": 100,
+          "title": "Category",
+          "type": "string"
+        },
+        "notes": {
+          "default": "",
+          "maxLength": 2000,
+          "title": "Notes",
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "type",
+        "title"
+      ],
+      "title": "ViewWidget",
       "type": "object"
     }
   },
@@ -105,6 +368,17 @@
       ],
       "default": null,
       "title": "Approval"
+    },
+    "layout_feedback": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LayoutFeedback"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     }
   },
   "required": [

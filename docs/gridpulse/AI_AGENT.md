@@ -8,6 +8,10 @@ AI immediately before Search / Add reopens the last chat. New chat creates an in
 
 Validated views apply immediately at full colour, in one undo transaction. Go back inside chat uses chronological undo, including intervening manual changes. Current-workspace edits are the default; another workspace requires an explicit request. Invalid layouts leave the workspace unchanged. Compile each placement once into a private working document: replaying earlier split commands regenerates tile IDs and breaks later charts targeting those tiles. Commit the completed document as one undo transaction. If manual edits race an investigation, the client regenerates once against the new state and then stops on another conflict.
 
+If frontend layout validation fails (for example, `Minimum widget size reached.`), the client sends the actual error, rejected view, attempt count, current workspace and viewport back to the agent. It allows **two repair attempts after the initial proposal**, using new turn IDs while retaining the original user request. Failed proposals do not enter history or mutate the document. Proposed answers are buffered until the layout is successfully committed, so chat does not claim an unapplied table was added. The successful corrected view is one undo transaction.
+
+Layout repair is read-only: it can inspect existing source data/runs/tables but cannot execute algorithms or carry a computation approval. Cancellation/navigation stops the entire repair sequence. Transport/provider errors are not automatically replayed. If both corrections fail, chat reports the final constraint and preserves the existing workspace. Each repair request counts toward normal admission/rate limits.
+
 Chats and their placements survive refresh in sessionStorage, independently per browser tab; transcripts are not in localStorage exports or saved presets. Closing a chat stops its active turn. Navigating away cancels active work. One investigation per workspace, at most two per API process, is admitted. Conversations do not share transcripts. Each turn includes bounded recent messages, an extractive older summary, current workspace metadata and up to three recent states. There are at most twelve retained session conversations; inactive closed chats may be evicted at this limit.
 
 ## Tools and algorithms
@@ -48,6 +52,8 @@ Deployment-specific cancellation/proxy streaming remains to be checked after dep
 
 A real headless-browser smoke test also traversed the local SvelteKit POST proxy, authenticated backend, OpenRouter and Tiger Data, then rendered a price/wind chart with no browser or chat errors. Single-day evidence retains 30-minute settlement values to match the plotted data; wider daily aggregates and partial samples must be labelled in answers.
 
-Final local checks: backend agent/API suite **67 passed**; frontend unit suite **47 passed**; browser suite **36 passed**; Svelte check reported zero errors/warnings; production build succeeded. The browser suite includes compact-screen chat docking and manual-edit conflict handling. Deployed-stack checks remain separate from these local results.
+Final local checks: backend agent/API suite **69 passed**; frontend unit suite **50 passed**; browser suite **38 passed**; Svelte check reported zero errors/warnings; production build succeeded. The browser suite includes compact-screen chat docking and manual-edit conflict handling. Deployed-stack checks remain separate from these local results.
 
 Current model selection and February–March chart/table verification: [provider and model note](AI_AGENT_PROVIDER_RESEARCH.md). Earlier Kimi/Fourier smoke tests above record the initial implementation; they do not identify the current default model.
+
+Layout-repair live check: an injected `Minimum widget size reached.` failure was sent to the real OpenRouter agent. One correction request applied successfully, with no premature success claim or browser error. Separate browser coverage verifies the two-repair cutoff and preservation of the existing chart.

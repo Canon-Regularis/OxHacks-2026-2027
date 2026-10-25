@@ -35,7 +35,7 @@ async def investigate(turn, pool, settings, session, provider=None):
         evidence.append(item)
         yield event("evidence", evidence=item)
 
-    context = {"capabilities": tools.capabilities(), "workspace": turn.snapshot,
+    context = {"layout_feedback": turn.layout_feedback.model_dump(mode="json") if turn.layout_feedback else None, "capabilities": tools.capabilities(), "workspace": turn.snapshot,
                "recent_states": turn.recent_states, "older_conversation_summary": turn.summary,
                "schema": Decision.model_json_schema()}
     messages = [{"role": "system", "content": POLICY + "\n" + json.dumps(context)}]
@@ -78,7 +78,9 @@ async def investigate(turn, pool, settings, session, provider=None):
             tools.validate(spec, settings)
             yield event("progress", message=f"Inspecting {spec.algorithm or spec.tool}")
             try:
-                if spec.tool == "execute":
+                if turn.layout_feedback and spec.tool == "execute":
+                    result = {"error": "Layout repair is read-only. Reuse/read existing results; do not execute or request approval for another computation."}
+                elif spec.tool == "execute":
                     # Reuse exact matching results before creating a job.
                     existing = await asyncio.to_thread(tools.read, pool, spec.model_copy(update={"tool": "analysis"}), settings)
                     if "run" in existing:

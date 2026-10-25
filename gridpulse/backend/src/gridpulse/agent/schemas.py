@@ -71,6 +71,12 @@ class Message(Strict):
     content: str = Field(max_length=12000)
 
 
+class LayoutFeedback(Strict):
+    attempt: int = Field(ge=1, le=2)
+    error: str = Field(min_length=1, max_length=1000)
+    failed_view: View
+
+
 class Turn(Strict):
     version: Literal[1] = 1
     turn_id: str = Field(pattern=r"^[a-zA-Z0-9_-]{1,100}$")
@@ -84,3 +90,11 @@ class Turn(Strict):
     snapshot: dict
     recent_states: list[dict] = Field(default_factory=list, max_length=3)
     approval: str | None = Field(default=None, max_length=100)
+
+    layout_feedback: LayoutFeedback | None = None
+
+    @model_validator(mode="after")
+    def repair_is_read_only(self):
+        if self.layout_feedback and self.approval:
+            raise ValueError("Layout repair cannot approve computations")
+        return self

@@ -28,6 +28,11 @@ export interface View {
   new_workspace: boolean;
   name: string;
 }
+export interface LayoutFeedback {
+  attempt: number;
+  error: string;
+  failed_view: View;
+}
 export interface Evidence {
   id: string;
   label: string;

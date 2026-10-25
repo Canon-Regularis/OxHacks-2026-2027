@@ -50,13 +50,9 @@
     type Evidence,
     type View,
   } from './agent/types';
-  import {
-    compileView,
-    persistentDocument,
-    revision,
-    chatCompanion,
-  } from './agent/view';
+  import { compileView, persistentDocument, chatCompanion } from './agent/view';
   import { investigate } from './agent/investigation';
+  import { applyWithRepairs } from './agent/repair';
   import './terminal.css';
   let chats = $state<Record<string, Conversation>>({});
   let lastChat = $state<Record<string, string>>({});
@@ -220,12 +216,7 @@
     }
   }
 
-  async function askAI(
-    id: string,
-    message: string,
-    approval?: string,
-    retry = false,
-  ) {
+  async function askAI(id: string, message: string, approval?: string) {
     if (!doc || !workspace || !catalog) return;
     if (!workspace.widgets[id]) {
       const promoted = openAI();
@@ -239,78 +230,79 @@
       return;
     }
     const chat = chatState(id);
-    const before = plain(workspace);
-    const base = revision(before);
     const controller = new AbortController();
     controllers.set(id, controller);
     running[wsId] = id;
-    let conflictRetry = false;
     try {
-      const { view: proposed, answerIndex } = await investigate({
-        chat,
-        id,
-        workspace: before,
-        browserInstance,
-        message,
-        approval,
-        retry,
+      await applyWithRepairs({
+        workspaceId: wsId,
         signal: controller.signal,
-        size: canvasWidth < 850 ? { width: 1200, height: 700 } : canvasSize(),
-      });
-      if (controller.signal.aborted || !doc || doc.active !== wsId) return;
-      if (proposed) {
-        if (revision(workspace!) !== base) {
-          if (!retry) conflictRetry = true;
-          else
-            chat.error =
-              'Workspace changed again. Your edits were preserved. Send your request again to retry with the current layout.';
-        } else {
-          const next = compileView(
-            plain(doc),
-            proposed,
-            catalog,
-            {
-              width: canvasWidth < 850 ? 1200 : canvasWidth,
-              height: canvasWidth < 850 ? 700 : canvasHeight,
-            },
+        current: () =>
+          doc
+            ? {
+                document: plain(doc),
+                size:
+                  canvasWidth < 850
+                    ? { width: 1200, height: 700 }
+                    : canvasSize(),
+              }
+            : null,
+        request: ({ workspace, size, retry, feedback }) =>
+          investigate({
+            chat,
             id,
-          );
-          history.record(plain(doc), next);
-          historyTick++;
-          doc = next;
-          chat.states = [...chat.states, before].slice(-3);
-          if (answerIndex >= 0)
-            chat.messages[answerIndex].content +=
-              '\n\nView updated. Use Go back to undo.';
-          else
-            chat.messages.push({
-              role: 'assistant',
-              content: 'View updated. Use Go back to undo.',
-            });
-          if (!proposed.background_chat) activate(id);
-          else {
-            compactWidget = chatCompanion(
-              doc.workspaces.find((w) => w.id === doc!.active)!,
-              id,
+            workspace,
+            browserInstance,
+            message,
+            approval: retry ? undefined : approval,
+            retry,
+            feedback,
+            size,
+            signal: controller.signal,
+          }),
+        compile: (document, view, size) =>
+          compileView(document, view, catalog!, size, id),
+        status: (message) => (chat.status = message),
+        complete: ({ document: next, before, view, answer }) => {
+          if (next && view) {
+            history.record(plain(doc!), next);
+            historyTick++;
+            doc = next;
+            chat.states = [...chat.states, before].slice(-3);
+            chat.messages.push(
+              answer
+                ? {
+                    ...answer,
+                    content:
+                      answer.content + '\n\nView updated. Use Go back to undo.',
+                  }
+                : {
+                    role: 'assistant',
+                    content: 'View updated. Use Go back to undo.',
+                  },
             );
-            focused = compactWidget;
-          }
-          lastChat[doc.active] = id;
-        }
-      }
+            if (!view.background_chat) activate(id);
+            else {
+              compactWidget = chatCompanion(
+                doc.workspaces.find((w) => w.id === doc!.active)!,
+                id,
+              );
+              focused = compactWidget;
+            }
+            lastChat[doc.active] = id;
+          } else if (answer) chat.messages.push(answer);
+        },
+      });
     } catch (err) {
       if (!controller.signal.aborted)
         chat.error =
           err instanceof Error ? err.message : 'Investigation failed.';
-      else chat.status = 'Cancelled. Completed results remain available.';
     } finally {
-      if (!controller.signal.aborted) chat.status = '';
+      chat.status = controller.signal.aborted
+        ? 'Cancelled. Completed results remain available.'
+        : '';
       controllers.delete(id);
       delete running[wsId];
-    }
-    if (conflictRetry) {
-      chat.status = 'Workspace changed; adapting to your edits…';
-      await askAI(id, message, undefined, true);
     }
   }
 

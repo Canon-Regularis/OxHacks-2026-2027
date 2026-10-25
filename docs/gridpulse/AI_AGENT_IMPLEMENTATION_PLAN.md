@@ -163,3 +163,5 @@ First usable milestone: “show price and wind with an available relevant algori
 - [x] Integration tests, provider compatibility evidence and documentation.
 
 Implementation details, limits, tests and remaining live verification are tracked in [AI_AGENT.md](AI_AGENT.md). Live price/wind retrieval and a real Fourier computation (stored run 49) succeeded. Deployed-stack streaming/cancellation verification remains a deployment check.
+
+Confirmed follow-up: frontend layout failures now feed the actual error/rejected view/current context into up to two read-only correction turns. Failed proposals and premature success text stay out of the committed workspace/chat. See [repair semantics](AI_AGENT.md) and the [request schema](../../gridpulse/contracts/agent/turn.schema.json).

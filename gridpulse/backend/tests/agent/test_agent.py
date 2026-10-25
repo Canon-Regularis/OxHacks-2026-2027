@@ -156,3 +156,30 @@ def test_chart_unit_limit_is_checked_before_the_view_reaches_the_browser():
     view=Decision.model_validate({'view':{'from_date':'2026-02-01','to_date':'2026-03-31','widgets':[{'key':'mixed','type':'chart','title':'Too many axes','series':['price','wind','niv']}]}}).view
     with pytest.raises(ValueError,match='two distinct units'):
         tools.validate_view(view,[])
+
+
+def test_layout_repair_is_read_only_and_receives_frontend_error(monkeypatch):
+    from gridpulse.agent.schemas import LayoutFeedback, View
+    class Fake:
+        calls=0
+        async def decide(self,messages):
+            self.calls+=1
+            if self.calls==1:
+                assert 'Minimum widget size reached.' in messages[0]['content']
+                return Decision.model_validate({'reads':[{'tool':'execute','algorithm':'calendar_fourier_terms','from_date':'2026-02-01','to_date':'2026-02-01'}]})
+            assert 'read-only' in messages[-1]['content']
+            return Decision(answer='I can rearrange the existing results without running another computation.')
+    async def forbidden(*args): raise AssertionError('Layout repair launched a computation')
+    monkeypatch.setattr(service.jobs,'execute',forbidden)
+    feedback=LayoutFeedback(attempt=1,error='Minimum widget size reached.',failed_view=View(from_date='2026-02-01',to_date='2026-03-31',widgets=[]))
+    turn=Turn(turn_id='layout-repair',conversation='chat',workspace_id='ws',revision='v',message='Add a data table',snapshot={},layout_feedback=feedback)
+    async def run(): return [e async for e in service.investigate(turn,None,SimpleNamespace(max_range_days=3660),'session',Fake())]
+    events=asyncio.run(run())
+    assert not any(e['type']=='confirmation' for e in events)
+    assert events[-1]['type']=='completed'
+
+
+def test_layout_feedback_cannot_approve_jobs_or_exceed_two_repairs():
+    body={'turn_id':'layout-repair','conversation':'chat','workspace_id':'ws','revision':'v','message':'Add a table','snapshot':{},'layout_feedback':{'attempt':1,'error':'Minimum widget size reached.','failed_view':{'from_date':'2026-02-01','to_date':'2026-03-31','widgets':[]}}}
+    with pytest.raises(ValidationError): Turn.model_validate({**body,'approval':'token'})
+    with pytest.raises(ValidationError): Turn.model_validate({**body,'layout_feedback':{**body['layout_feedback'],'attempt':3}})
