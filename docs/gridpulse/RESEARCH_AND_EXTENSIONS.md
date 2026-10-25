@@ -1,3 +1,5 @@
+> **Current agent direction (25 October 2026):** Kimi K2.6 supersedes the earlier Gemini choice for Terminal chat and automatic workspace layouts. See [the proposed implementation plan](AI_AGENT_IMPLEMENTATION_PLAN.md) and [provider research](AI_AGENT_PROVIDER_RESEARCH.md). The Gemini descriptions below record the earlier proposal; they are not the selected implementation.
+
 # Extensions, sponsor integrations and limitations
 
 ## Main extension: Gemini-powered analysis agent
