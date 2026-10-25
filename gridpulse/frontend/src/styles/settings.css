@@ -15,6 +15,7 @@
   border-radius: 6px;
 }
 .settings-trigger {
+  border: 0;
   margin-left: auto;
 }
 .settings-trigger:hover,
