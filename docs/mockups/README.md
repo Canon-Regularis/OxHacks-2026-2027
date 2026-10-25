@@ -1,6 +1,6 @@
 # GridPulse frontend mockups
 
-Confirmed MVP pages: **Overview, Explore and Methods**; implementation currently focuses on **Overview only**. Investigate and the weather map are extension concepts. The Overview mockup includes an optional Gemini panel; it is not required for the initial build.
+Confirmed MVP pages: **Overview, Terminal (formerly Explore) and Methods**. Overview and Terminal are implemented; Methods is planned. These mockups predate the Terminal rename and remain visual references only. Investigate and the weather map are extension concepts. The Overview mockup includes an optional Gemini panel; it is not required for the initial build.
 
 Open `gridpulse-overview.png` for the preview. Import `gridpulse-overview.svg` into Figma or Penpot for an editable vector mockup; this was created locally, not inside either service. No account connection was available.
 
@@ -8,7 +8,7 @@ Recommendation: compact editorial hero, KCPC-style rotating globe placement, fou
 
 The mockup references the neutral light/dark design tokens and DM Sans / DM Serif typography found in Components. SVG text specifies those fonts with fallbacks; the PNG uses installed DejaVu substitutes. Chart accents are proposed semantic colours, not verified existing brand colours. Globe is a drawn placement illustration, not copied KCPC animation code. For implementation reuse the actual globe and motion components after attribution checks.
 
-For narrow screens: collapse navigation, use two columns then one for summary cards, stack the chart and investigation panel, preserve the time-series inspection area and move investigation below the selected-period detail. Motion must respect reduced-motion preferences. A weather map belongs in Explore as an extension, not in the initial Overview.
+For narrow screens: collapse navigation, use two columns then one for summary cards, stack the chart and investigation panel, preserve the time-series inspection area and move investigation below the selected-period detail. Motion must respect reduced-motion preferences. A weather map belongs in Terminal as an extension, not in the initial Overview.
 
 
 ## Additional page mockups

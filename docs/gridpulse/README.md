@@ -28,7 +28,7 @@ CSV is the current upstream handoff; reuse the exporter already being built. Tig
 
 ## MVP acceptance criteria
 
-**Confirmed frontend scope:** Overview, Explore and Methods are MVP pages. The immediate implementation focus is Overview only. Investigate/Gemini and the synoptic weather map remain extensions.
+**Confirmed frontend scope:** Overview, Terminal (formerly Explore) and Methods are MVP pages. Overview and Terminal are implemented; About holds the globe and animated explanations. Methods remains planned. Investigate/Gemini and the synoptic weather map remain extensions.
 
 
 1. Real exported CSV data can be imported repeatedly into Tiger Data without duplicate logical records.
