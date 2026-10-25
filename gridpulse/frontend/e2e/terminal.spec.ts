@@ -809,3 +809,62 @@ test('Search Add has only content categories and Workspaces owns preset loading'
     }),
   ).toBeVisible();
 });
+
+test('widget group badges switch groups without opening settings', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/terminal');
+  await expect(
+    page.locator('path[data-terminal-series="price"]'),
+  ).toBeVisible();
+  const badge = page.getByRole('button', {
+    name: 'Change group for Period inspector',
+    exact: true,
+  });
+  await badge.click();
+  const menu = page.getByRole('menu', {
+    name: 'Link group for Period inspector',
+  });
+  await expect(menu).toBeVisible();
+  await expect(
+    menu.getByRole('menuitemradio', { name: 'Group A', exact: true }),
+  ).toHaveAttribute('aria-checked', 'true');
+  await menu.getByRole('menuitem', { name: 'Create linked group…' }).click();
+  await expect(badge).toContainText('B');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await badge.click();
+  await page
+    .getByRole('menuitemradio', { name: 'Independent', exact: true })
+    .click();
+  await expect(badge).toContainText('—');
+  await badge.click();
+  await page
+    .getByRole('menuitemradio', { name: 'Group A', exact: true })
+    .click();
+  await expect(badge).toContainText('A');
+  await badge.focus();
+  await page.keyboard.press('ArrowDown');
+  await expect(menu).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(menu).toHaveCount(0);
+  await expect(badge).toBeFocused();
+  await badge.click();
+  await page.getByRole('button', { name: 'Workspaces', exact: true }).click();
+  await expect(menu).toHaveCount(0);
+  await page.getByRole('button', { name: 'Close drawer' }).click();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page
+    .locator('.terminal-widget-bar > button')
+    .filter({ hasText: 'Period inspector' })
+    .click();
+  const compactBadge = page.getByRole('button', {
+    name: 'Change group for Period inspector',
+    exact: true,
+  });
+  await compactBadge.click();
+  await page
+    .getByRole('menuitemradio', { name: 'Group B', exact: true })
+    .click();
+  await expect(compactBadge).toContainText('B');
+});

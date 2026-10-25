@@ -41,6 +41,7 @@
   import Drawer from './controls/Drawer.svelte';
   import Catalogue from './controls/Catalogue.svelte';
   import Settings from './controls/Settings.svelte';
+  import GroupPicker from './controls/GroupPicker.svelte';
   import { applyActions, type WorkspaceAction } from './model/actions';
   import './terminal.css';
   let doc = $state<TerminalDocument | null>(null),
@@ -823,7 +824,13 @@
               >{compact
                 ? 'Compact view · desktop layout preserved'
                 : 'Maximised'}</span
-            ><button onclick={() => settings(w.id)}>Settings</button
+            ><GroupPicker
+              groups={workspace.groups}
+              group={w.group}
+              title={w.title}
+              onchange={(group) => link(w, group)}
+              onfocus={() => focus(w.id)}
+            /><button onclick={() => settings(w.id)}>Settings</button
             >{#if maximised}<button onclick={() => (maximised = null)}
                 >Restore layout</button
               >{/if}
@@ -852,6 +859,10 @@
             }
           }}
           onsettings={settings}
+          onlink={(id, group) => {
+            const widget = workspace?.widgets[id];
+            if (widget) link(widget, group);
+          }}
           onmaximise={(id) => (maximised = id)}
           onclose={close}
           {canPlace}

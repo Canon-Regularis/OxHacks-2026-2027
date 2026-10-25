@@ -2,6 +2,7 @@
   import type { Snippet } from 'svelte';
   import type { Layout, Workspace, Position } from '../model/types';
   import DockNode from './DockNode.svelte';
+  import GroupPicker from '../controls/GroupPicker.svelte';
   let {
     node,
     workspace,
@@ -14,6 +15,7 @@
     onmove,
     onresize,
     onsettings,
+    onlink,
     onmaximise,
     onclose,
     canPlace,
@@ -35,6 +37,7 @@
     ) => void;
     onresize: (id: string, step: number) => void;
     onsettings: (id: string) => void;
+    onlink: (id: string, group: string | null) => void;
     onmaximise: (id: string) => void;
     onclose: (id: string) => void;
     canPlace: (id: string, target: string, position: Position) => boolean;
@@ -115,6 +118,7 @@
       {onmove}
       {onresize}
       {onsettings}
+      {onlink}
       {onmaximise}
       {onclose}
       {canPlace}
@@ -169,6 +173,7 @@
       {onmove}
       {onresize}
       {onsettings}
+      {onlink}
       {onmaximise}
       {onclose}
       {canPlace}
@@ -241,11 +246,13 @@
           >
         {/each}
       </div>
-      <span
-        class="terminal-group-badge"
-        style={`--group:${workspace.groups[widget.group ?? '']?.color ?? '#888888'}`}
-        >{widget.group ?? '—'}</span
-      >
+      <GroupPicker
+        groups={workspace.groups}
+        group={widget.group}
+        title={widget.title}
+        onchange={(group) => onlink(widget.id, group)}
+        onfocus={() => onfocus(widget.id)}
+      />
       <button
         aria-label={`Settings for ${widget.title}`}
         onclick={() => onsettings(widget.id)}>⚙</button

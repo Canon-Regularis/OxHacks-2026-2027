@@ -940,3 +940,78 @@
     margin-right: auto;
   }
 }
+.terminal-tile-header > .terminal-group-badge {
+  color: var(--group);
+  border: 1px solid var(--group);
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 5px;
+  font:
+    10px 'DM Mono',
+    monospace;
+}
+.terminal-group-badge > span {
+  font-size: 9px;
+  opacity: 0.75;
+}
+.terminal-group-menu {
+  position: fixed;
+  z-index: 100;
+  width: 220px;
+  max-height: min(360px, calc(100svh - 16px));
+  overflow: auto;
+  background: #181817;
+  border: 1px solid #66513e;
+  border-radius: 6px;
+  padding: 7px;
+  box-shadow: 0 12px 35px #0009;
+}
+.terminal-group-menu > p {
+  font-size: 10px;
+  color: var(--muted-foreground);
+  padding: 5px 7px 8px;
+}
+.terminal-group-menu > button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--foreground);
+  font-size: 12px;
+  padding: 8px;
+}
+.terminal-group-menu > button:hover,
+.terminal-group-menu > button:focus-visible {
+  background: #e6b08018;
+}
+.terminal-group-menu > button[aria-checked='true'] {
+  color: var(--orange);
+}
+.terminal-group-menu button > i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+}
+.terminal-group-menu button > span {
+  margin-left: auto;
+}
+.terminal-group-menu .terminal-new-group {
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  margin-top: 5px;
+  padding-top: 10px;
+}
+.terminal-group-menu small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted-foreground);
+  padding: 6px 7px;
+  line-height: 1.5;
+}
