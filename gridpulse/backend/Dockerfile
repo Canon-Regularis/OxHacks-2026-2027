@@ -30,8 +30,9 @@ RUN pip install --no-deps -e .
 USER gridpulse
 EXPOSE 8000
 
-# Uvicorn reads WEB_CONCURRENCY as its worker count; each worker holds its own database pool.
-ENV WEB_CONCURRENCY=2
+# Agent admission, deduplication and short-lived approvals are process-local.
+# Keep one async API worker until those records move to a shared coordinator.
+ENV WEB_CONCURRENCY=1
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --start-interval=2s --retries=3 \
     CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=4)"]
 

@@ -93,8 +93,10 @@ def make_series() -> Callable[..., HalfHourlySeries]:
 
 @pytest.fixture
 def input_frame() -> pd.DataFrame:
-    """Two synthetic weeks shaped exactly like build_input_frame output, with some gaps."""
-    index = pd.date_range("2026-10-10", periods=48 * 14, freq="30min", tz="UTC")
+    """Five synthetic weeks shaped exactly like build_input_frame output, with some gaps.
+
+    Long enough for the 28-day training window of price_forecast_backtest plus a week."""
+    index = pd.date_range("2026-09-19", periods=48 * 35, freq="30min", tz="UTC")
     rng = np.random.default_rng(0)
     n = len(index)
     price = rng.normal(80, 40, n)

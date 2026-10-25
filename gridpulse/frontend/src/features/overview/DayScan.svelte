@@ -1,12 +1,11 @@
 <script lang="ts">
   import type { MarketSeries } from '$lib/api';
-  import {
-    seriesColor,
-    timeLabel,
-    formatValue,
-    type MetricDefinition,
-  } from './model';
+  import { seriesColor, formatValue, type MetricDefinition } from './model';
   import InfoTooltip from '../../components/ui/InfoTooltip.svelte';
+  import { useSettings } from '$lib/state/settings.svelte';
+  import { formatTime } from '$lib/state/settings';
+  const settings = useSettings();
+  const timeLabel = (t: string) => formatTime(t, settings.timeDisplay);
   let {
     data,
     indices,
@@ -59,7 +58,7 @@
       class="scan-period"
       class:active={index === selected}
       style={`--heat:${seriesColor(values[j], min, max, metric)};--distance:${Math.min(8, Math.abs(j - position))}`}
-      aria-label={`${timeLabel(data.t[index])} UTC, ${metric.label}, ${formatValue(values[j], metric)} ${values[j] === null ? '' : metric.displayUnit}`}
+      aria-label={`${timeLabel(data.t[index])}, ${metric.label}, ${formatValue(values[j], metric)} ${values[j] === null ? '' : metric.displayUnit}`}
       aria-pressed={index === selected}
       onpointerenter={() => onselect(index)}
       onfocus={() => onselect(index)}
@@ -72,9 +71,9 @@
       -1,
     ) != null
       ? timeLabel(data.t[indices.at(-1)!])
-      : '—'} UTC</span
+      : '—'}</span
   ><strong
-    >{data.t[selected] ? timeLabel(data.t[selected]) : '—'} UTC · selected</strong
+    >{data.t[selected] ? timeLabel(data.t[selected]) : '—'} · selected</strong
   >
   <div class="price-legend">
     <span>{valid.length ? formatValue(min, metric) : 'No data'}</span>

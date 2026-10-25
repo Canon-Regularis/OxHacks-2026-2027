@@ -9,6 +9,7 @@ description = "GridPulse data ingestion and analysis backend"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115",
+    "httpx>=0.27",
     "uvicorn[standard]>=0.30",
     "psycopg[binary,pool]>=3.2",
     "pydantic-settings>=2.4",
@@ -22,6 +23,7 @@ dev = [
     "httpx>=0.27",
     "mypy>=2.4",
     "pytest>=9.1",
+    "pytest-xdist>=3.6",
     "ruff>=0.17",
     "scipy>=1.16",  # only for the differential oracles in the ported Orchid suites
 ]
@@ -33,6 +35,8 @@ gridpulse = "gridpulse.cli:main"
 where = ["src"]
 
 [tool.pytest.ini_options]
+# Spawned test workers must import their targets with either pytest entry point.
+pythonpath = ["."]
 testpaths = ["tests"]
 addopts = ["--import-mode=importlib", "--strict-markers", "--strict-config", "-ra"]
 xfail_strict = true

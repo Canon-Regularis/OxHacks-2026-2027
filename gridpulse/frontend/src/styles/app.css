@@ -134,8 +134,9 @@ select {
 }
 .site-header {
   height: 84px;
-  max-width: 1500px;
-  margin: auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 60px;
@@ -206,7 +207,7 @@ select {
   background: var(--wind);
 }
 .page-shell {
-  max-width: 1440px;
+  width: 100%;
   padding: 0 48px;
   margin: auto;
 }
@@ -727,8 +728,9 @@ select {
   line-height: 1.7;
 }
 .site-footer {
-  max-width: 1440px;
-  margin: auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
   padding: 28px 48px;
   display: flex;
   justify-content: space-between;

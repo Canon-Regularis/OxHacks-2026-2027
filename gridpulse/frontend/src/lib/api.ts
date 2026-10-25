@@ -18,11 +18,7 @@ export interface Snapshot {
   settlement_period: number;
   data_updated_at_utc: string | null;
 }
-export interface Health {
-  status: string;
-  mode: 'live' | 'record' | 'replay';
-  database: string;
-}
+import type { Catalog, Health } from './types';
 export interface WeatherLocation {
   id: string;
   label: string;
@@ -70,6 +66,7 @@ async function get<T>(path: string, signal?: AbortSignal): Promise<T> {
 export const api = {
   snapshot: (signal?: AbortSignal) => get<Snapshot>('snapshot', signal),
   health: (signal?: AbortSignal) => get<Health>('health', signal),
+  catalog: (signal?: AbortSignal) => get<Catalog>('catalog', signal),
   series: (from: string, to: string, ids: string[], signal?: AbortSignal) =>
     get<MarketSeries>(
       `series?${new URLSearchParams({ from, to, ids: ids.join(','), resolution: '30m' })}`,

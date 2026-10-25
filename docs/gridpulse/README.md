@@ -28,7 +28,7 @@ CSV is the current upstream handoff; reuse the exporter already being built. Tig
 
 ## MVP acceptance criteria
 
-**Confirmed frontend scope:** Overview, Explore and Methods are MVP pages. The immediate implementation focus is Overview only. Investigate/Gemini and the synoptic weather map remain extensions.
+**Confirmed frontend scope:** Overview, Terminal (formerly Explore) and Methods are MVP pages. Overview and Terminal are implemented; About holds the globe and animated explanations. Methods remains planned. Investigate/Gemini and the synoptic weather map remain extensions.
 
 
 1. Real exported CSV data can be imported repeatedly into Tiger Data without duplicate logical records.
@@ -57,6 +57,7 @@ Keep retrospective observations distinguishable from forecasts. If presenting an
 - [FRONTEND_DESIGN.md](FRONTEND_DESIGN.md): confirmed reuse patterns, agent-driven view changes and synoptic-map requirements.
 - [FRONTEND_API.md](FRONTEND_API.md): every endpoint, field, parameter and error the frontend uses.
 - [ALGORITHM_DISPLAY.md](ALGORITHM_DISPLAY.md): how to present each algorithm's outputs and tables.
+- [MODELLING_NOTES.md](MODELLING_NOTES.md): first backtest results, adapter modelling choices and open questions.
 
 - [REPOSITORY_STRUCTURE.md](REPOSITORY_STRUCTURE.md): agreed folders, ownership and frontend-to-backend request flow.
 
@@ -65,3 +66,7 @@ Keep retrospective observations distinguishable from forecasts. If presenting an
 - [ALGORITHMS_AND_ANALYSIS.md](ALGORITHMS_AND_ANALYSIS.md): integration contracts, backend API and validation.
 - [BUILD_AND_DEMO.md](BUILD_AND_DEMO.md): ownership, 25-hour checkpoints, dashboard and hosting.
 - [RESEARCH_AND_EXTENSIONS.md](RESEARCH_AND_EXTENSIONS.md): Gemini agent, optional Snowflake role and limitations.
+
+- [AI_AGENT_IMPLEMENTATION_PLAN.md](AI_AGENT_IMPLEMENTATION_PLAN.md): approved OpenRouter-powered Terminal chat, evidence tools and validated automatic layouts.
+
+- [AI_AGENT.md](AI_AGENT.md): implemented Terminal agent, configuration, execution limits and live-check status.

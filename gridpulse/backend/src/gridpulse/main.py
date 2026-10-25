@@ -15,6 +15,7 @@ from psycopg.errors import QueryCanceled
 from psycopg_pool import PoolTimeout
 
 from gridpulse import __version__
+from gridpulse.agent import routes as agent
 from gridpulse.api import analysis, market, system, weather
 from gridpulse.api.demo_cache import DemoCacheMiddleware
 from gridpulse.config import get_settings
@@ -35,6 +36,15 @@ def _error(status: int, code: str, message: str) -> JSONResponse:
     return JSONResponse({"detail": {"code": code, "message": message}}, status_code=status)
 
 
+class AgentSafeGZipMiddleware(GZipMiddleware):
+    """Do not depend on a particular Starlette version to exempt SSE from compression."""
+    async def __call__(self, scope, receive, send):
+        if scope.get("path", "").startswith("/api/agent/"):
+            await self.app(scope, receive, send)
+        else:
+            await super().__call__(scope, receive, send)
+
+
 def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(title="GridPulse API", version=__version__, lifespan=lifespan)
@@ -49,9 +59,9 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
         expose_headers=["X-GridPulse-Mode"],
     )
-    app.add_middleware(GZipMiddleware, minimum_size=1000)
+    app.add_middleware(AgentSafeGZipMiddleware, minimum_size=1000)
 
-    for module in (system, market, analysis, weather):
+    for module in (system, market, analysis, weather, agent):
         app.include_router(module.router, prefix="/api")
 
     @app.exception_handler(PoolTimeout)

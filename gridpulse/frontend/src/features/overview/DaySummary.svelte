@@ -5,9 +5,12 @@
     dailySummary,
     formatValue,
     getMetric,
-    timeLabel,
     type MetricDefinition,
   } from './model';
+  import { useSettings } from '$lib/state/settings.svelte';
+  import { formatTime } from '$lib/state/settings';
+  const settings = useSettings();
+  const timeLabel = (t: string) => formatTime(t, settings.timeDisplay);
   let {
     data,
     indices,
@@ -49,7 +52,7 @@
   function reading(point: { value: number; i: number } | null, id: string) {
     if (loading) return '—';
     if (!point || !data) return 'No data';
-    return `${formatValue(point.value, getMetric(id))} ${getMetric(id).displayUnit} · ${timeLabel(data.t[point.i])} UTC`;
+    return `${formatValue(point.value, getMetric(id))} ${getMetric(id).displayUnit} · ${timeLabel(data.t[point.i])}`;
   }
 </script>
 
@@ -57,7 +60,7 @@
   <h2>
     Day at a glance <InfoTooltip
       label="About daily statistics"
-      text="Statistics cover available records for the selected settlement day, independently of hover. Averages exclude missing values. Price extremes show the first matching UTC time. Each negative-price settlement period lasts 30 minutes, including clock-change days. Peak demand uses forecast demand, not actual consumption. Incomplete days describe available data only."
+      text="Statistics cover available records for the selected settlement day, independently of hover. Averages exclude missing values. Price extremes show the first matching time in your selected timezone. Each negative-price settlement period lasts 30 minutes, including clock-change days. Peak demand uses forecast demand, not actual consumption. Incomplete days describe available data only."
     />
   </h2>
   <div class="day-summary-body">

@@ -1,6 +1,6 @@
 # Repository structure and ownership
 
-This is the agreed layout. The backend, P0 and P1 algorithm layers, weather API, SvelteKit Overview and Vultr deployment configuration are implemented. Explore, Methods and agent features remain to be implemented. Avoid introducing parallel locations for the same responsibility.
+This is the agreed layout. The backend, P0 algorithm layer, weather API, SvelteKit Overview, Terminal and About pages and Vultr deployment configuration are implemented. Methods and agent features remain to be implemented. Avoid introducing parallel locations for the same responsibility.
 
 
 ## Layout
@@ -125,7 +125,7 @@ Synthetic API examples belong in `gridpulse/contracts/examples/` and must be vis
 
 ## Implementation status
 
-The backend infrastructure runs end to end against Tiger Data. That covers the API, the `gridpulse` views over the loader's `raw` schema, the algorithm runner, result storage and the demo cache, with example algorithms. GitHub Actions tests each change and deploys `main` to development and `production` to production on Vultr ([deployment](../../gridpulse/deploy/README.md)). The Orchid P0 and P1 methods (issues #6 and #7) are implemented and tested as pure adapters in `analysis/algorithms/`, but no registered algorithm uses them yet. Data modelling and Gemini remain unimplemented; see [BACKEND_DESIGN.md](BACKEND_DESIGN.md#open-items). Do not present stubs or fixtures as implemented functionality. Add meaningful tests as each real implementation lands.
+The backend infrastructure runs end to end against Tiger Data. That covers the API, the `gridpulse` views over the loader's `raw` schema, the algorithm runner, result storage and the demo cache, with example algorithms. GitHub Actions tests each change and deploys `main` to development and `production` to production on Vultr ([deployment](../../gridpulse/deploy/README.md)). The Orchid P0 methods (issue #6) are implemented as pure adapters in `analysis/algorithms/` and drive eight registered algorithms (backtests, day-ahead forecast, rolling signals, correlograms, residual diagnostics, Fourier terms). The latest-forecast views are continuous aggregates; wider data modelling and Gemini remain unimplemented; see [BACKEND_DESIGN.md](BACKEND_DESIGN.md#open-items). Do not present stubs or fixtures as implemented functionality. Add meaningful tests as each real implementation lands.
 
 ## Current frontend entry points
 

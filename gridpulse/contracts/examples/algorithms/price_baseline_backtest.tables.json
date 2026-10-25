@@ -5,16 +5,10 @@
     "algorithm_id": "price_baseline_backtest",
     "algorithm_version": "0.1.0",
     "params": {
-      "initial": 1344,
-      "window": 1344,
       "horizon": 48,
-      "step": 48,
+      "window": 1344,
       "max_folds": 60,
       "season_length": 48,
-      "levels": [
-        0.8,
-        0.95
-      ],
       "models": {
         "naive": {},
         "seasonal_naive_day": {

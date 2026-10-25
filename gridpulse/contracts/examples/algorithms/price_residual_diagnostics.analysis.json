@@ -8,37 +8,45 @@
     ],
     "outputs": {},
     "tables": {
+      "sample": "The gap-free stretch the models were fitted to: its first and last period, its length and how many periods of the range were left out",
       "ljung_box": "Ljung-Box Q statistic, degrees of freedom and p-value per model at lags 1..K",
-      "tests": "Durbin-Watson, Jarque-Bera and ARCH-LM statistics with p-values per model"
+      "tests": "Durbin-Watson, Jarque-Bera and ARCH-LM statistics with p-values per model; a not_computed row explains a model that could not be tested"
     },
-    "limitations": "Retrospective: parameters are estimated on the whole range, so residuals are never features. Statistics and p-values only, with no pass/fail threshold. P-values below about 1e-16 show as 0.",
-    "datasets": [
-      "elexon_system_prices"
-    ],
-    "version": "0.1.0",
+    "limitations": "Retrospective: parameters are estimated on the whole stretch, so residuals are never features. Statistics and p-values only, with no pass/fail threshold. P-values below about 1e-16 show as 0.",
     "params": {
       "models": {
         "ets": {
+          "trend": null,
+          "damped": false,
           "seasonal": "additive",
-          "season_length": 48,
-          "model_df": 0
+          "season_length": 48
         },
         "arima": {
           "p": 2,
           "d": 0,
           "q": 1,
           "seasonal_differencing": 1,
-          "season_length": 48,
-          "model_df": 3
+          "season_length": 48
         }
       },
+      "model_df": {
+        "ets": 0,
+        "arima": 3
+      },
       "ljung_box_lags": 48,
-      "arch_lags": 12
+      "arch_lags": 12,
+      "max_periods": 2688
     },
+    "datasets": [
+      "elexon_system_prices"
+    ],
+    "version": "0.1.0",
     "param_descriptions": {
-      "models": "Model name -> its settings and model_df (parameters subtracted from the Ljung-Box df)",
-      "ljung_box_lags": "Largest Ljung-Box lag in periods",
-      "arch_lags": "Lags of squared residuals in the ARCH-LM regression"
+      "models": "Settings of each fitted model, as in price_forecast_backtest",
+      "model_df": "Fitted AR + MA terms per model, subtracted from the Ljung-Box degrees of freedom",
+      "ljung_box_lags": "Largest Ljung-Box lag in periods (48 = one day)",
+      "arch_lags": "Lags of squared residuals in the ARCH-LM regression",
+      "max_periods": "Most recent gap-free periods each model is fitted to (2688 = 56 days)"
     },
     "latest_run": {
       "run_id": 24,
@@ -47,21 +55,26 @@
       "params": {
         "models": {
           "ets": {
+            "trend": null,
+            "damped": false,
             "seasonal": "additive",
-            "season_length": 48,
-            "model_df": 0
+            "season_length": 48
           },
           "arima": {
             "p": 2,
             "d": 0,
             "q": 1,
             "seasonal_differencing": 1,
-            "season_length": 48,
-            "model_df": 3
+            "season_length": 48
           }
         },
+        "model_df": {
+          "ets": 0,
+          "arima": 3
+        },
         "ljung_box_lags": 48,
-        "arch_lags": 12
+        "arch_lags": 12,
+        "max_periods": 2688
       },
       "overrides": {},
       "datasets": {
@@ -80,21 +93,26 @@
     "params": {
       "models": {
         "ets": {
+          "trend": null,
+          "damped": false,
           "seasonal": "additive",
-          "season_length": 48,
-          "model_df": 0
+          "season_length": 48
         },
         "arima": {
           "p": 2,
           "d": 0,
           "q": 1,
           "seasonal_differencing": 1,
-          "season_length": 48,
-          "model_df": 3
+          "season_length": 48
         }
       },
+      "model_df": {
+        "ets": 0,
+        "arima": 3
+      },
       "ljung_box_lags": 48,
-      "arch_lags": 12
+      "arch_lags": 12,
+      "max_periods": 2688
     },
     "overrides": {},
     "datasets": {
@@ -119,6 +137,7 @@
   "indicators": {},
   "warnings": [],
   "tables": [
+    "sample",
     "ljung_box",
     "tests"
   ]

@@ -251,14 +251,23 @@ onMount(() => {
     }
   };
 
-  // Sync scale if scale prop changes
-  const updateScaleEffect = () => {
-    if (scale !== undefined) {
-      baseRadius = scale;
-      projection.scale(scale);
-      render();
-    }
+  // Resize the existing canvas without resetting the rotation or recreating it.
+  const resize = () => {
+    containerWidth = Math.min(width, canvas.parentElement?.clientWidth || width);
+    containerHeight = height;
+    baseRadius = scale ?? Math.min(containerWidth, containerHeight) / 2.2;
+    const ratio = window.devicePixelRatio || 1;
+    canvas.width = Math.round(containerWidth * ratio);
+    canvas.height = Math.round(containerHeight * ratio);
+    canvas.style.width = `${containerWidth}px`;
+    canvas.style.height = `${containerHeight}px`;
+    context.setTransform(ratio, 0, 0, ratio, 0, 0);
+    projection.scale(baseRadius).translate([containerWidth / 2, containerHeight / 2]);
+    render();
   };
+  const observer = new ResizeObserver(resize);
+  if (canvas.parentElement) observer.observe(canvas.parentElement);
+  resize();
 
   const rotation: [number, number, number] = [0, 0, 0];
   let isDragging = false;
@@ -324,6 +333,7 @@ onMount(() => {
   render();
 
   return () => {
+    observer.disconnect();
     rotationTimer.stop();
     canvas.removeEventListener("mousedown", handleMouseDown);
     canvas.removeEventListener("wheel", handleWheel);

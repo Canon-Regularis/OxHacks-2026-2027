@@ -480,6 +480,10 @@ select:focus-visible,
 }
 /* Long-form About uses the original KCPC section hierarchy and effects. */
 .about-page {
+  --orange-wash: color-mix(in srgb, var(--orange) 7%, transparent);
+  --about-gutter: 48px;
+  max-width: none;
+  margin: 0;
   width: 100%;
   flex: 1;
 }
@@ -518,6 +522,7 @@ select:focus-visible,
   max-width: 500px;
 }
 .about-cards {
+  padding-top: 36px;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
@@ -541,6 +546,7 @@ select:focus-visible,
   margin: 0 -48px;
 }
 .about-pixel-section {
+  width: auto;
   min-height: 420px;
   border-bottom: 1px solid var(--border);
   margin: 0 -48px;
@@ -576,29 +582,19 @@ select:focus-visible,
   border-radius: 4px;
   font-size: 13px;
 }
-.about-definition {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  align-items: center;
-  gap: 70px;
+.about-story {
   padding: 64px 0;
 }
-.about-definition h2 {
+.about-story h2 {
   font-size: 32px;
   margin: 12px 0 24px;
 }
-.about-definition p:not(.eyebrow) {
+.about-story p:not(.eyebrow) {
   font-size: 14px;
   color: var(--muted-foreground);
   line-height: 1.8;
   margin-bottom: 14px;
   max-width: 680px;
-}
-.about-decoration {
-  height: 250px;
-  width: 100%;
-  max-width: 300px;
-  justify-self: center;
 }
 .about-limitations {
   font-size: 11px;
@@ -607,6 +603,81 @@ select:focus-visible,
   padding: 22px 0 30px;
   text-align: center;
 }
+/* Warm accents keep the About narrative connected to the market palette. */
+.about-page .eyebrow,
+.about-page .hero h1 span,
+.about-intro h2 span,
+.about-data h2 span {
+  color: var(--orange);
+}
+.about-page .hero {
+  border-bottom-color: color-mix(in srgb, var(--orange) 35%, var(--border));
+  background: radial-gradient(
+    ellipse at 80% 50%,
+    var(--orange-wash),
+    transparent 65%
+  );
+}
+.about-card {
+  border-top: 2px solid color-mix(in srgb, var(--orange) 60%, var(--border)) !important;
+  background: linear-gradient(
+    145deg,
+    var(--orange-wash),
+    var(--card) 65%
+  ) !important;
+}
+.about-data {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px 70px;
+  padding: 64px 0;
+  border-bottom: 1px solid var(--border);
+}
+.about-data h2,
+.about-roadmap h2 {
+  margin-top: 12px;
+  line-height: 1.3;
+}
+.about-data-copy p,
+.about-roadmap > p:last-child {
+  color: var(--muted-foreground);
+  font-size: 14px;
+  line-height: 1.8;
+}
+.about-data-copy p + p {
+  margin-top: 16px;
+}
+.about-source-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+}
+.about-source-links .text-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.about-roadmap {
+  border-left: 2px solid var(--orange);
+  background: var(--orange-wash);
+  padding: 28px;
+  margin-bottom: 40px;
+  border-radius: 0 6px 6px 0;
+}
+.about-roadmap > p:last-child {
+  margin-top: 16px;
+  max-width: 850px;
+}
+@media (max-width: 850px) {
+  .about-data {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 40px 0;
+  }
+  .about-roadmap {
+    padding: 22px;
+  }
+}
+
 @media (min-width: 851px) and (max-height: 800px) {
   .site-header {
     height: 54px;
@@ -790,8 +861,7 @@ select:focus-visible,
   .about-pixel-copy {
     padding-block: 70px;
   }
-  .about-definition {
-    gap: 30px;
+  .about-story {
     padding: 44px 0;
   }
   .about-pixel-copy h2 {
@@ -963,14 +1033,6 @@ select:focus-visible,
   }
   .about-pixel-copy > p:not(.eyebrow) {
     font-size: 16px;
-  }
-  .about-definition {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-  .about-decoration {
-    height: 200px;
-    max-width: 250px;
   }
   .about-limitations {
     font-size: 10px;
@@ -1598,5 +1660,171 @@ select:focus-visible,
   }
   .day-coverage {
     font-size: 9px;
+  }
+}
+
+/* Health & status page */
+.status-page {
+  padding-bottom: 40px;
+}
+.status-checked {
+  font:
+    10px 'DM Mono',
+    monospace;
+  color: var(--muted-foreground);
+}
+.status-page {
+  --lvl-ok: var(--wind);
+  --lvl-warn: var(--orange);
+  --lvl-bad: #e08a80;
+  --lvl-unknown: var(--muted-foreground);
+}
+[data-level='ok'] {
+  --lvl: var(--lvl-ok);
+}
+[data-level='warn'] {
+  --lvl: var(--lvl-warn);
+}
+[data-level='bad'] {
+  --lvl: var(--lvl-bad);
+}
+[data-level='unknown'] {
+  --lvl: var(--lvl-unknown);
+}
+.status-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  border: 1px solid var(--lvl);
+  border-radius: 6px;
+}
+.status-banner h2 {
+  font-size: 20px;
+  font-weight: 500;
+}
+.status-banner p {
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+.status-lamp {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--lvl);
+  box-shadow: 0 0 10px var(--lvl);
+}
+.status-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.status-card {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--lvl);
+  border-radius: 6px;
+}
+.status-card h3 {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font:
+    10px 'DM Mono',
+    monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+.status-value {
+  margin: 8px 0 2px;
+  font-size: 22px;
+  text-transform: capitalize;
+}
+.status-meta {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.status-section {
+  margin-bottom: 24px;
+}
+.status-section h2 {
+  font-size: 15px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.status-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.status-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.status-table th,
+.status-table td {
+  padding: 9px 12px;
+  text-align: left;
+  font-weight: 400;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.status-table thead th {
+  font:
+    10px 'DM Mono',
+    monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+.status-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+.status-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.status-table small {
+  display: block;
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+.pill {
+  display: inline-block;
+  padding: 1px 8px;
+  border: 1px solid var(--lvl);
+  border-radius: 99px;
+  font-size: 11px;
+}
+@media (max-width: 760px) {
+  .status-page {
+    padding: 0 16px 32px;
+  }
+}
+
+/* Full-width About bands track the page padding at every breakpoint. */
+.about-page .about-spacer,
+.about-page .about-pixel-section {
+  width: calc(100% + 2 * var(--about-gutter));
+  margin-inline: calc(-1 * var(--about-gutter));
+}
+@media (min-width: 1500px) {
+  .about-page {
+    --about-gutter: 58px;
+  }
+}
+@media (max-width: 1100px) {
+  .about-page {
+    --about-gutter: 28px;
+  }
+}
+@media (max-width: 580px) {
+  .about-page {
+    --about-gutter: 18px;
   }
 }

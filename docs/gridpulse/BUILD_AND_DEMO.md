@@ -25,7 +25,7 @@ If blocked on the database, develop against the agreed CSV fixture while fixing 
 
 ## Dashboard priorities
 
-**Confirmed frontend scope:** Overview, Explore and Methods are MVP pages. The immediate implementation focus is Overview only. Investigate/Gemini and the synoptic weather map remain extensions.
+**Confirmed frontend scope:** Overview, Terminal (formerly Explore) and Methods are MVP pages. Overview and Terminal are implemented; About holds the globe and animated explanations. Methods remains planned. Investigate/Gemini and the synoptic weather map remain extensions.
 
 
 Follow the [confirmed frontend brief](FRONTEND_DESIGN.md) for KCPC responsiveness, theme, globe, fade animation, section/card patterns and repository exploration. Reuse selected components rather than reproducing the entire reference website. Gemini-driven animated view changes and the synoptic/electricity map are extension requirements, not core delivery gates.
@@ -47,7 +47,7 @@ Keep `DATABASE_URL`, `GEMINI_API_KEY` and any optional Snowflake credentials on 
 
 ## Repository layout
 
-Follow the [repository structure and request flow](REPOSITORY_STRUCTURE.md). The skeleton now exists, with frontend, backend, database migrations, shared contracts, data, scripts and deployment areas. The backend, the P0 and P1 algorithm layers and the Vultr deployment are implemented; the frontend framework is not yet set up.
+Follow the [repository structure and request flow](REPOSITORY_STRUCTURE.md). The skeleton now exists, with frontend, backend, database migrations, shared contracts, data, scripts and deployment areas. The backend, the P0 algorithm layer and the Vultr deployment are implemented; the SvelteKit frontend (Overview, Terminal, About, Status) is implemented; Methods and Gemini are not.
 
 The algorithm integration location is `gridpulse/backend/src/gridpulse/analysis/algorithms/`. The shared frontend HTTP boundary is `gridpulse/frontend/src/lib/api.ts`; backend routes live in `gridpulse/backend/src/gridpulse/api/`. Keep one repository and avoid extra services beyond the frontend, backend and database.
 

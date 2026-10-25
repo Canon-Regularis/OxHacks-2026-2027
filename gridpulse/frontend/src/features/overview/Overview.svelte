@@ -6,11 +6,9 @@
     type WeatherLocation,
     type WeatherResponse,
   } from '$lib/api';
-  import {
-    readPreference,
-    writePreference,
-    type ViewPreference,
-  } from '$lib/state/view.svelte';
+  import type { ViewPreference } from '$lib/state/view.svelte';
+  import { useSettings } from '$lib/state/settings.svelte';
+  import { formatTime, formatDateTime } from '$lib/state/settings';
   import Card from '$lib/vendor/kcpc/primitives/card/card.svelte';
   import TimeSeriesChart from '../../components/charts/TimeSeriesChart.svelte';
   import InfoTooltip from '../../components/ui/InfoTooltip.svelte';
@@ -26,9 +24,11 @@
     formatValue,
     dayIndices,
     previousDay,
-    timeLabel,
   } from './model';
   const view = getContext<ViewPreference>('gridpulse:view');
+  const settings = useSettings();
+  const timeLabel = (t: string) => formatTime(t, settings.timeDisplay);
+  let mounted = $state(false);
   let data = $state<MarketSeries | null>(null);
   let latest = $state('');
   let day = $state('');
@@ -52,9 +52,6 @@
     ),
   );
   let timestamp = $derived(data?.t[selected] ?? null);
-  function persist() {
-    writePreference(localStorage, view);
-  }
   async function loadWeather() {
     weatherController?.abort();
     const current = new AbortController();
@@ -108,17 +105,14 @@
   function chooseDay(date: string) {
     if (!date) return;
     view.date = date;
-    persist();
     void loadDay(date);
   }
   function chooseLocation(id: string) {
     view.location = id;
-    persist();
     void loadWeather();
   }
   async function latestDay() {
     view.date = null;
-    persist();
     await initialize();
   }
   async function initialize() {
@@ -141,16 +135,14 @@
       : [...view.metrics, id];
     if (!view.metrics.includes(view.scanMetric))
       view.scanMetric = view.metrics[0];
-    persist();
   }
   function chooseScan(id: string) {
     if (view.metrics.includes(id)) {
       view.scanMetric = id;
-      persist();
     }
   }
   onMount(() => {
-    Object.assign(view, readPreference(localStorage));
+    mounted = true;
     void initialize();
     void api
       .health()
@@ -162,7 +154,6 @@
         locations = response.locations;
         if (!locations.some((l) => l.id === view.location))
           view.location = locations[0]?.id ?? null;
-        persist();
         if (!locations.length)
           weatherError =
             response.warnings.join(' ') || 'No weather data is loaded.';
@@ -173,19 +164,14 @@
           (weatherError =
             e instanceof Error ? e.message : 'Weather locations unavailable.'),
       );
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === 'gridpulse:view:v1') {
-        const p = readPreference(localStorage);
-        Object.assign(view, p);
-        if (latest) void loadDay(view.date ?? latest);
-      }
-    };
-    window.addEventListener('storage', onStorage);
     return () => {
       controller?.abort();
       weatherController?.abort();
-      window.removeEventListener('storage', onStorage);
     };
+  });
+  $effect(() => {
+    const desired = view.date ?? latest;
+    if (mounted && desired && desired !== day) void loadDay(desired);
   });
 </script>
 
@@ -235,11 +221,14 @@
             : mode === 'live'
               ? 'LIVE DATABASE'
               : 'CONNECTING'}</span
-      ><span>Settlement day: Europe/London · chart times: UTC</span><span
+      ><span
+        >Settlement day: Europe/London · chart times: {settings.timeDisplay ===
+        'utc'
+          ? 'UTC'
+          : 'UK local (BST/GMT)'}</span
+      ><span
         >{updated
-          ? 'Data loaded ' +
-            new Date(updated).toLocaleString('en-GB', { timeZone: 'UTC' }) +
-            ' UTC'
+          ? 'Data loaded ' + formatDateTime(updated, settings.timeDisplay)
           : 'Freshness unavailable'}</span
       >
     </div>
@@ -299,7 +288,7 @@
                           Math.floor(Date.parse(timestamp) / 3600000) * 3600000,
                         ).toISOString()
                       : timestamp,
-                  ) + ' UTC'
+                  )
                 : 'No selection'}</span
             >
           </div>
@@ -319,7 +308,7 @@
               </h2>
             </div>
             <span class="time-badge"
-              >{timestamp ? timeLabel(timestamp) + ' UTC' : '—'}</span
+              >{timestamp ? timeLabel(timestamp) : '—'}</span
             >
           </div>
           {#if loading}<div class="chart-placeholder" role="status">

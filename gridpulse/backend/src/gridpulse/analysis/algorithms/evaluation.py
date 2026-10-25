@@ -240,6 +240,33 @@ def backtest(
     season_length: int = 48,
     levels: Sequence[float] = DEFAULT_LEVELS,
 ) -> BacktestReport:
+    """``backtest_folds`` with the folds scored together; see ``BacktestReport``."""
+    folds = backtest_folds(
+        forecaster,
+        series,
+        initial=initial,
+        horizon=horizon,
+        step=step,
+        window=window,
+        max_folds=max_folds,
+        season_length=season_length,
+        levels=levels,
+    )
+    return _report(list(folds), horizon, require_levels(levels))
+
+
+def backtest_folds(
+    forecaster: Forecaster,
+    series: HalfHourlySeries,
+    *,
+    initial: int,
+    horizon: int,
+    step: int | None = None,
+    window: int | None = None,
+    max_folds: int = 50,
+    season_length: int = 48,
+    levels: Sequence[float] = DEFAULT_LEVELS,
+) -> tuple[FoldResult, ...]:
     """Refit ``forecaster`` at successive origins and score each forecast.
 
     Origins start at index ``initial`` and advance by ``step`` (default ``horizon``). Each
@@ -249,7 +276,7 @@ def backtest(
     ``CalculationError``, or the forecast is malformed; other exceptions propagate. ``step``
     and ``season_length`` count half-hours. The last ``(n - initial - horizon) % step``
     values are never tested: to end at the latest data with ``k`` folds, use
-    ``initial = n - horizon - (k - 1) * step``.
+    ``initial = n - horizon - (k - 1) * step``. ``backtest`` scores them.
     """
     require_int("initial", initial, minimum=1)
     require_int("horizon", horizon, minimum=1)
@@ -308,7 +335,7 @@ def backtest(
                 history.end, history.start, len(history), "ok", None, forecast, actual, scores
             )
         folds.append(fold)
-    return _report(folds, horizon, levels)
+    return tuple(folds)
 
 
 def _call(metric: Callable[..., float], *args: object, **kwargs: object) -> float:

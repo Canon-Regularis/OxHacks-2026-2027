@@ -4,8 +4,8 @@ Everything the frontend needs to call the backend, without reading backend code.
 
 ## What is live and what is planned
 
-- **Live now:** every endpoint below, and two reference algorithms, `wind_price_correlation` and `price_naive_backtest`.
-- **Planned:** eight algorithms built on the Orchid methods (forecast backtests, a day-ahead forecast, rolling signals, correlograms, diagnostics). Their exact responses are in [`contracts/examples/algorithms/`](../../gridpulse/contracts/examples/algorithms/). Build against those files now; the real responses will have the same shape.
+- **Live:** every endpoint below, the two reference algorithms (`wind_price_correlation`, `price_naive_backtest`) and eight algorithms built on the Orchid methods: three backtests, a day-ahead forecast, rolling signals, correlograms, residual diagnostics and Fourier terms. Example responses are in [`contracts/examples/algorithms/`](../../gridpulse/contracts/examples/algorithms/); tests keep their metadata and table columns identical to the real algorithms.
+- **Computed per environment:** each algorithm shows results only after someone runs it against that environment's database (`latest_run` is `null` until then).
 
 Build every algorithm panel from `/api/catalog` rather than hard-coding ids. New algorithms then appear without frontend changes.
 
@@ -72,7 +72,7 @@ Example: [`catalog.json`](../../gridpulse/contracts/examples/catalog.json).
 | Field | Meaning |
 |---|---|
 | `series[]` | `{id, label, unit, kind, datasets}` for every series `/api/series` serves; see [datasets and lineage](#datasets-and-lineage) |
-| `datasets[]` | Raw datasets loaded: `dataset` (its name), `source`, `notes`, `first_utc`, `last_utc`, `loaded_at_utc`, `approx_rows`. Use for a "data coverage" panel on Explore or Methods, and to look up the names in `series[].datasets`, `algorithms[].datasets` and `RunInfo.datasets` |
+| `datasets[]` | Raw datasets loaded: `dataset` (its name), `source`, `notes`, `first_utc`, `last_utc`, `loaded_at_utc`, `approx_rows`. Use for a "data coverage" panel on Terminal or Methods, and to look up the names in `series[].datasets`, `algorithms[].datasets` and `RunInfo.datasets` |
 | `algorithms[]` | One `AlgorithmInfo` per algorithm, described [below](#algorithminfo) |
 | `limits` | `max_points` (5,000) and `max_range_days` (3,660) |
 | `data_updated_at_utc` | When data was last loaded; show it as "data as of …" |
@@ -167,7 +167,7 @@ A period number that does not exist on that day (e.g. 49 on a 48-period day) ret
 
 ### `GET /api/analysis`
 
-The time-series outputs of one algorithm run. Example: [`analysis.json`](../../gridpulse/contracts/examples/analysis.json), and one per planned algorithm in [`contracts/examples/algorithms/`](../../gridpulse/contracts/examples/algorithms/).
+The time-series outputs of one algorithm run. Example: [`analysis.json`](../../gridpulse/contracts/examples/analysis.json), and one per Orchid algorithm, live or planned, in [`contracts/examples/algorithms/`](../../gridpulse/contracts/examples/algorithms/).
 
 | Query | Meaning |
 |---|---|
@@ -240,7 +240,7 @@ Algorithms are computed in batch jobs on the server, never when a page loads. Ea
 
     Build the object with keys in the same order every time: the offline demo cache matches requests by their exact text.
   - by run: list the runs with `/api/analysis/runs?algorithm=…` and pass `run_id`.
-- **Not computed yet.** A setting nobody has run returns 404 `no_run`. Its message contains the command a backend developer runs to compute it. Show "not computed yet", not an error. The frontend cannot start a computation.
+- **Not computed yet.** A setting nobody has run returns 404 `no_run`. Its message contains the command a backend developer runs to compute it. Show "not computed yet", not an error. Manual chart controls cannot start a computation. The separate [AI endpoint](AI_AGENT.md) can request bounded execution after reuse/confirmation checks.
 - **Versions.** A changed algorithm gets a new `version`; runs of older versions are no longer served by default.
 - **Cutoff runs** (`cutoff_utc` set) use only data available at that instant. They are reachable only by `run_id` and come with a warning.
 
@@ -329,3 +329,15 @@ export async function get<T>(path: string, query: Record<string, string | number
 ```
 
 `URLSearchParams` encodes a `params` JSON string correctly, so pass `params: JSON.stringify(overrides)`.
+
+## Terminal AI streaming endpoint
+
+`POST /api/agent/turns/stream` is a same-origin, session-scoped SSE POST through the SvelteKit server. See [AI_AGENT.md](AI_AGENT.md) for UX, authentication, bounds and cancellation. Canonical request and decision schemas: [turn](../../gridpulse/contracts/agent/turn.schema.json), [decision](../../gridpulse/contracts/agent/decision.schema.json). Backend schemas live in `agent/schemas.py`; frontend types/compiler in `features/terminal/agent/`. Update both with contract changes.
+
+The request identifies turn, browser instance, conversation, workspace and opaque revision token, and includes bounded history/workspace metadata. Responses carry progress/evidence/answer/view/confirmation/completed/error events. Complete views are validated and committed locally, never applied from partial streamed JSON. A confirmation token must be explicitly accepted via Run analysis and is returned in the next turn's `approval` field. Provider errors preserve existing workspace content. HTTP 409 indicates duplicate/busy, 413 excessive context, 429 usage cap, and 503 disabled/misconfigured proxy or offline mode; errors after streaming starts arrive as error events.
+
+Agent decisions now include `layout_mode` (`research` default, or `preserve` for explicit placement). Widget specs may select comparison `metric`/`category`; both refer to inspected table columns. Source `outputs` can be empty or a subset of the selected source IDs. Source tables use the existing aligned `/series` frame, preserve null values/units and label their selected range rather than whole-run metrics. Algorithm table names require an actual algorithm/run. `started` includes model identity for the chat label.
+
+### Frontend layout repair feedback
+
+A subsequent agent POST may include `layout_feedback: {attempt: 1|2, error: string, failed_view: View}`. The error is bounded to 1,000 characters; the view uses the existing decision schema. Send a fresh workspace snapshot, viewport and turn ID with the original question. `layout_feedback` cannot be combined with `approval`, and repair turns cannot execute algorithms. They may read existing results to verify pinned bindings. The client retries only local view-validation failures, at most twice, and holds proposed answers until successful application. Cancellation and ordinary admission/rate limits still apply.

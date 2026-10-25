@@ -1,6 +1,6 @@
 # GridPulse frontend
 
-The Overview is implemented in SvelteKit 2 / Svelte 5 with Tailwind 4 and selected KCPC source components. Explore and Methods are visibly disabled; About is a read-only explanation page. Gemini and weather mapping remain extensions.
+The Overview is implemented in SvelteKit 2 / Svelte 5 with Tailwind 4 and selected KCPC source components. Terminal is implemented at `/terminal`; Methods is omitted from navigation; About is a read-only explanation page. Gemini and weather mapping remain extensions.
 
 ## Local development
 
@@ -26,6 +26,12 @@ node build
 
 The production Node server defaults to port 3000; configure `HOST`, `PORT`, and `ORIGIN` for deployment. The backend must remain separately running. Browser tests use intercepted, clearly synthetic API responses and check 50-period days, hover without refetching, keyboard selection, date persistence, mobile layout and connection errors.
 
+## Stable local presentation
+
+For a local presentation, run `npm run build` followed by `npm run serve:local`, then open <http://localhost:5174>. This serves a temporary snapshot of the production build with the existing backend on port 8000. It has no Vite hot reload, and subsequent checks/builds do not alter the files being served. Stop and restart it after rebuilding to show new changes. `HOST`, `PORT`, `ORIGIN` and `API_PROXY_TARGET` can be set when starting it.
+
+Running `npm run check` or `npm run build` alongside `npm run dev` regenerates SvelteKit files watched by Vite. This can reload the entire page, briefly removing and recreating both About animation canvases. Use the stable server when inspecting continuous animation or presenting; development hot reload remains available through `npm run dev`. With the stable server running, `npm run test:preview` opens About in a test browser, runs checks and a fresh build, and verifies that neither the document nor its animation canvases are replaced.
+
 ## Working areas
 
 - `src/routes/`: SvelteKit entry points, per-request view context and server-only API proxy.
@@ -33,6 +39,7 @@ The production Node server defaults to port 3000; configure `HOST`, `PORT`, and 
 - `src/components/charts/`: unit-aware SVG chart with up to two axes with keyboard/pointer selection.
 - `src/components/ui/InfoTooltip.svelte`: shared progressive-disclosure behaviour.
 - `src/components/layout/`: shared header/footer.
+- `src/features/status/`: Status page (`/status`); `model.ts` holds the pure health/freshness rules (thresholds are heuristics: 6 h ageing, 24 h stale since the loader last wrote).
 - `src/features/about/`: globe, PixelBlast/TextShimmer explainer and read-only context.
 - `src/lib/api.ts`: typed API boundary; no direct SQL or credentials.
 - `src/lib/state/view.svelte.ts`: versioned browser preferences, shared through root layout context; never shared between server requests.
@@ -63,4 +70,22 @@ The catalogue offers seven electricity series: price, forecast/actual wind, fore
 
 `DaySummary.svelte` sits below the content-sized selector. It uses the selected day’s preloaded records for averages of selected properties, price extremes and their first UTC timestamps, negative-price periods/duration, and peak forecast demand. It remains fixed during hover. Missing records are excluded, and price coverage is shown so incomplete days remain identifiable. Each settlement period contributes 30 minutes, including 46/50-period clock-change days.
 
-Start with the [API reference](../../docs/gridpulse/FRONTEND_API.md) and [algorithm display guide](../../docs/gridpulse/ALGORITHM_DISPLAY.md) for future Explore integration; additional response types are in `src/lib/types.ts`. Deployment uses the SvelteKit Node server; see [deployment setup](../deploy/README.md).
+Start with the [API reference](../../docs/gridpulse/FRONTEND_API.md) and [algorithm display guide](../../docs/gridpulse/ALGORITHM_DISPLAY.md) for Terminal and future page integration; additional response types are in `src/lib/types.ts`. Deployment uses the SvelteKit Node server; see [deployment setup](../deploy/README.md).
+
+## Terminal workspace
+
+See [Terminal usage and extension seams](../../docs/gridpulse/TERMINAL_WORKSPACE.md) and the [implementation plan](../../docs/gridpulse/TERMINAL_IMPLEMENTATION_PLAN.md). `/explore` redirects to `/terminal`. The page discovers stored algorithms through the shared catalogue and uses the canonical types in `src/lib/types.ts`. It supports docked snapping tiles, linked groups, source/algorithm overlays, tables/comparisons, notes, local workspaces/presets, import/export, recovery and compact navigation. Computation submission and agent execution remain deferred.
+
+## Workspace settings
+
+The app uses a dark theme. The navbar gear opens a keyboard-accessible modal drawer on every page. Preferences apply immediately and persist in `gridpulse:settings:v1`: UTC or UK local time, device/reduced motion, Overview chart gridlines, standard/bold Overview chart lines, and whether to remember the current view. UK time labels include BST/GMT, including the repeated clock-change hour; settlement dates and API requests retain their original meaning.
+
+The root layout owns settings and saved-view persistence for all routes, with storage events synchronising tabs. Turning off **Remember my view** removes the saved view while keeping the current session's selection; reloading starts with the latest day and default properties. **Reset settings** restores all settings and view defaults. Browser storage failures leave the current session usable. Market values are never saved as preferences.
+
+`src/lib/state/settings.ts` holds validated defaults and timestamp formatting; `settings.svelte.ts` provides per-layout reactive state. `SettingsDrawer.svelte` uses a native modal dialog with focus wrapping, Escape/backdrop dismissal and focus restoration. Presentation styles live in `src/styles/settings.css`. Navigation shows Overview, Terminal and About alongside the settings gear. Automated checks cover storage corruption/denial, reloads, cross-tab updates, clock changes, chart behavior, keyboard focus, and mobile layouts.
+
+Terminal retains its own workspace and per-widget chart preferences. The navbar time display applies to Overview and Status; Terminal time labels follow its existing workspace settings.
+
+## About page narrative
+
+About introduces Eisengrau as a workspace for algorithmic analysis of GB electricity data. Terminal is the primary destination for forecasts, backtests, rolling signals, correlations and diagnostics; Overview is the daily starting point. About is presentation copy for the finished project, including the AI agent in the present tense at the user’s request. It describes algorithm comparison, linked views, saved investigations and CSV/JSON exports. This copy does not establish the implementation status of the agent; refer to the agent code and technical docs for that.
