@@ -35,8 +35,14 @@ concurrency:
 
 jobs:
   backend-tests:
-    name: Backend tests
+    name: Backend tests ${{ matrix.shard }}/3
     runs-on: ubuntu-latest
+    # Private repositories get two-core runners, which pytest-xdist can only half use. Three
+    # runners each take a third of the tests (tests/conftest.py); all of them must pass.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     defaults:
       run:
         working-directory: gridpulse/backend
@@ -52,6 +58,8 @@ jobs:
       # Parametrized test ids must not contain addresses or set orderings, or xdist workers
       # disagree about which tests exist.
       - run: pytest -n auto
+        env:
+          PYTEST_SHARD: ${{ matrix.shard }}/3
 
   frontend-checks:
     name: Frontend checks

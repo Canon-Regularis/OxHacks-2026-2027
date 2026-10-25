@@ -12,7 +12,7 @@ Work merges into `main` and appears on development. Promote to production with a
 ```text
 push to main or production touching gridpulse/{backend,frontend,db,data/demo,deploy}
   → GitHub Actions (.github/workflows/deploy.yml)
-      in parallel: backend tests (pytest -n auto), frontend checks (once a package.json exists),
+      in parallel: backend tests (three shards, each pytest -n auto), frontend checks (once a package.json exists),
         and the gridpulse-backend and gridpulse-frontend image builds → ghcr.io (private)
       → once all of those pass, SSH to the VPS: start/reload the proxy, pull images,
         `gridpulse migrate`, restart that environment, wait for the health check
