@@ -13,6 +13,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from gridpulse.analysis.algorithms import _parallel
 from gridpulse.analysis.algorithms._backtest import LEVELS, WINDOW, build, outputs
 from gridpulse.analysis.algorithms._checks import require_int
 from gridpulse.analysis.algorithms._frames import half_hourly
@@ -71,11 +72,10 @@ def run(
     out = pd.DataFrame(np.nan, index=targets, columns=list(OUTPUTS))
     selected: list[list[object]] = []
     warnings: list[list[object]] = []
-    for name, forecaster in forecasters.items():
-        try:
-            forecast = forecaster.forecast(history, periods, levels=LEVELS)
-        except AlgorithmError as exc:
-            warnings.append([name, f"not forecast: {exc}"])
+    fits = _parallel.forecast_all(list(forecasters.values()), history, periods, levels=LEVELS)
+    for name, forecast in zip(forecasters, fits, strict=True):
+        if isinstance(forecast, AlgorithmError):
+            warnings.append([name, f"not forecast: {forecast}"])
             continue
         out[f"{name}_forecast"] = forecast.mean
         if name in BANDED:

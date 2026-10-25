@@ -18,6 +18,13 @@ A table is any DataFrame of at most MAX_TABLE_ROWS rows. A non-default index is 
 datetimes must be tz-aware (stored as UTC ISO strings) and NaN is stored as null. Tables are
 returned as computed, so restrict them to the requested range yourself (rows from
 frame.index[0] + warmup onwards).
+
+An algorithm that declares `memo=True` also takes `run(frame, memo=..., **params)`: a dict of
+str -> str in which it may look up and record intermediate results (a backtest's folds) under
+keys that capture every input they depend on. The service keeps it between runs of the same
+algorithm, version, code and params, so a rerun after one new day refits one fold, not all of
+them. The result must not depend on what memo holds: a run with an empty memo and a run with
+a full one return identical output. memo is not a param and is not stored with the run.
 """
 
 from collections.abc import Callable
@@ -66,3 +73,4 @@ class Algorithm:
     warmup: timedelta = timedelta(0)  # history needed before the requested range
     horizon: timedelta = timedelta(0)  # how far past the range outputs may extend (predictions)
     limitations: str = ""  # shown next to results; say what the numbers do NOT mean
+    memo: bool = False  # run also takes memo=dict[str, str] of reusable results; see above

@@ -74,6 +74,7 @@ All paths are under `gridpulse/backend/src/gridpulse/`.
 | `residual_30m` | Latest demand forecast − latest wind forecast, joining `demand_30m` and `wind_30m` |
 | `analysis_runs`, `analysis_results` (hypertable) | Algorithm runs, and per-period results in long format |
 | `analysis_tables` | Non-time-series results per run (scorecards, ACF by lag, parameters, diagnostics) as `{columns, rows}` JSON |
+| `analysis_memo` | Intermediate results an algorithm may reuse in its next run (backtest folds as JSON), by algorithm/version/code namespace; a cache, pruned after 7 days unused |
 
 Every `*_30m` view has one row per settlement period, a `bucket` column and named value columns. The API buckets them to 1h/1d on the fly with each series' aggregate (avg/sum/min/max from `catalog.py`). Daily buckets use `time_bucket('1 day', ts, 'Europe/London')`, so a "day" is a settlement day of 23, 24 or 25 hours. Finer buckets stay in UTC so that the repeated local hour in October is not merged.
 

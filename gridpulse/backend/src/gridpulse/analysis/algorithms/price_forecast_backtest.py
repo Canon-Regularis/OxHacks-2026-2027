@@ -3,7 +3,7 @@
 The fold machinery is in ``_backtest`` (P0 #1, #9, #10, #12, #13); this module picks the models.
 """
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, MutableMapping
 from typing import Any
 
 import pandas as pd
@@ -33,6 +33,7 @@ def run(
     max_folds: int,
     season_length: int,
     models: Mapping[str, Mapping[str, Any]],
+    memo: MutableMapping[str, str] | None = None,
 ) -> AlgorithmResult:
     return _backtest.run_backtest(
         frame,
@@ -42,6 +43,7 @@ def run(
         window=window,
         max_folds=max_folds,
         season_length=season_length,
+        memo=memo,
         fold_params=True,
     )
 
@@ -65,6 +67,7 @@ ALGORITHM = Algorithm(
     },
     param_descriptions=_backtest.SETTING_DESCRIPTIONS,
     warmup=WINDOW * HALF_HOUR,
+    memo=True,
     limitations=_backtest.LIMITATIONS
     + " The seasonal naive's intervals are scored but not stored as series.",
 )

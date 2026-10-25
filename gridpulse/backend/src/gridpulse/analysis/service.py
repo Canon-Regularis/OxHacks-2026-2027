@@ -4,15 +4,19 @@ Batch (CLI `gridpulse analyse`): build input frame -> algorithm.run -> check out
 The API only reads stored results, so rendering a chart never triggers a recomputation.
 """
 
+import hashlib
 import json
 from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import datetime
+from functools import cache
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from psycopg import Connection
 
+from gridpulse.analysis import algorithms as algorithms_package
 from gridpulse.analysis.contract import MAX_TABLE_ROWS, Algorithm, AlgorithmResult
 from gridpulse.analysis.features import build_input_frame
 from gridpulse.catalog import datasets_for
@@ -49,26 +53,69 @@ def run_algorithm(
     end: datetime,
     params: dict | None = None,
     cutoff: datetime | None = None,
+    reuse: bool = True,
 ) -> int:
-    """Run one algorithm over [start, end) and store its results. Returns the run id."""
+    """Run one algorithm over [start, end) and store its results. Returns the run id.
+
+    An algorithm with `memo` gets the entries its earlier runs stored, unless `reuse` is False,
+    and its new entries are stored with the results."""
     params = with_params(algorithm, params)
     range_end = end + algorithm.horizon
     loads = queries.dataset_loads(conn, datasets_for(algorithm.inputs))
     run_id = queries.create_run(conn, algorithm.id, algorithm.version, params, start, range_end, cutoff, loads)
     try:
         frame = build_input_frame(conn, start - algorithm.warmup, end, cutoff)
-        series, tables = split_result(algorithm, algorithm.run(frame[list(algorithm.inputs)].copy(), **params))
+        memo = Memo(queries.load_memo(conn, memo_namespace(algorithm)) if algorithm.memo and reuse else {})
+        extra = {"memo": memo} if algorithm.memo else {}
+        series, tables = split_result(algorithm, algorithm.run(frame[list(algorithm.inputs)].copy(), **params, **extra))
         series = check_output(algorithm, series, start, range_end)
         tables = check_tables(algorithm, tables)
         with conn.transaction():  # results become visible together with the 'succeeded' status
             count = queries.insert_results(conn, result_rows(run_id, series))
             for name, data in tables.items():
                 queries.insert_table(conn, run_id, name, data)
+            if algorithm.memo:
+                queries.save_memo(conn, algorithm.id, memo_namespace(algorithm), memo.new(), memo.read)
             queries.finish_run(conn, run_id, "succeeded", result_rows=count)
     except Exception as exc:
         queries.finish_run(conn, run_id, "failed", error=f"{type(exc).__name__}: {exc}")
         raise
     return run_id
+
+
+class Memo(dict):
+    """The memo an algorithm runs with: stored entries, recording which it read and wrote."""
+
+    def __init__(self, stored: dict[str, str]) -> None:
+        super().__init__(stored)
+        self.read: set[str] = set()
+        self.written: set[str] = set()
+
+    def __getitem__(self, key: str) -> str:
+        self.read.add(key)
+        return super().__getitem__(key)
+
+    def __setitem__(self, key: str, value: str) -> None:
+        self.written.add(key)
+        super().__setitem__(key, value)
+
+    def new(self) -> dict[str, str]:
+        return {key: dict.__getitem__(self, key) for key in self.written}
+
+
+def memo_namespace(algorithm: Algorithm) -> str:
+    """Memo entries are shared by runs of the same algorithm, version and adapter code."""
+    return hashlib.sha256(json.dumps([algorithm.id, algorithm.version, _algorithms_code()]).encode()).hexdigest()
+
+
+@cache
+def _algorithms_code() -> str:
+    """A hash of every source file of the algorithms package, Orchid included."""
+    root = Path(algorithms_package.__file__).parent
+    digest = hashlib.sha256()
+    for path in sorted(root.rglob("*.py")):
+        digest.update(path.relative_to(root).as_posix().encode() + b"\0" + path.read_bytes() + b"\0")
+    return digest.hexdigest()
 
 
 def split_result(algorithm: Algorithm, result: object) -> tuple[object, dict]:
