@@ -332,14 +332,28 @@
             height={Math.max(1, panes.length * paneHeight - 40)}
             fill="#e6b08022"
           />{/if}
-        <text x="58" y={Math.max(140, plotHeight) - 5} class="terminal-axis"
-          >{time(t[indices[0]])}</text
-        ><text
-          x={plotRight}
-          y={Math.max(140, plotHeight) - 5}
-          text-anchor="end"
-          class="terminal-axis">{time(t[indices[indices.length - 1]])}</text
-        >
+        {#each [0, indices.length - 1] as endpoint}
+          {@const labelX = endpoint === 0 ? 58 : plotRight}
+          {@const instant = t[indices[endpoint]]}
+          <text
+            text-anchor={endpoint === 0 ? 'start' : 'end'}
+            class="terminal-axis"
+            ><tspan x={labelX} y={Math.max(140, plotHeight) - 17}
+              >{new Date(instant).toLocaleDateString('en-GB', {
+                timeZone: 'Europe/London',
+                day: '2-digit',
+                month: 'short',
+              })}</tspan
+            ><tspan x={labelX} y={Math.max(140, plotHeight) - 4}
+              >{new Date(instant).toLocaleTimeString('en-GB', {
+                timeZone: 'Europe/London',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZoneName: 'short',
+              })}</tspan
+            ></text
+          >
+        {/each}
       </svg>
     </div>
   {:else}<div class="terminal-empty">

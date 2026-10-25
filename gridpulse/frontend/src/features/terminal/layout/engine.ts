@@ -138,7 +138,14 @@ export function place(
     if (target === originalStack && position === 'tab') return ws;
     throw new Error('The destination is no longer available.');
   }
-  const result = { ...ws, layout };
+  let result = { ...ws, layout };
+  if (size && !fits(layout, result, size)) {
+    const adjusted = reflow(layout, result, size);
+    if (adjusted) {
+      layout = adjusted;
+      result = { ...ws, layout };
+    }
+  }
   if (size && !fits(layout, result, size))
     throw new Error(
       'Workspace has no room at readable minimum sizes. Choose a tab or a new workspace.',
@@ -166,4 +173,98 @@ export function resize(
   if (!fits(layout, result, size))
     throw new Error('Minimum widget size reached.');
   return result;
+}
+
+/** Preserve tile order, changing snapped divider ratios only when needed to fit. */
+export function reflow(node: Layout, ws: Workspace, size: Size): Layout | null {
+  const m = minimum(node, ws);
+  if (m.width > size.width || m.height > size.height) return null;
+  if (node.kind === 'stack') return node;
+  const steps = node.axis === 'horizontal' ? 24 : 16;
+  const total =
+    (node.axis === 'horizontal' ? size.width : size.height) - DIVIDER;
+  const a = minimum(node.children[0], ws),
+    b = minimum(node.children[1], ws);
+  const low = Math.max(
+    1,
+    Math.ceil(
+      ((node.axis === 'horizontal' ? a.width : a.height) / total) * steps,
+    ),
+  );
+  const high = Math.min(
+    steps - 1,
+    Math.floor(
+      (1 - (node.axis === 'horizontal' ? b.width : b.height) / total) * steps,
+    ),
+  );
+  const candidates = Array.from(
+    { length: Math.max(0, high - low + 1) },
+    (_, i) => i + low,
+  ).sort((x, y) => Math.abs(x - node.step) - Math.abs(y - node.step));
+  for (const step of candidates) {
+    const first = (total * step) / steps;
+    const left = reflow(
+      node.children[0],
+      ws,
+      node.axis === 'horizontal'
+        ? { width: first, height: size.height }
+        : { width: size.width, height: first },
+    );
+    if (!left) continue;
+    const right = reflow(
+      node.children[1],
+      ws,
+      node.axis === 'horizontal'
+        ? { width: total - first, height: size.height }
+        : { width: size.width, height: total - first },
+    );
+    if (right) return { ...node, step, children: [left, right] };
+  }
+  return null;
+}
+export function suggestPlacement(
+  ws: Workspace,
+  id: string,
+  size: Size,
+  preferred: string | null = null,
+): { widget: string; position: Position } | null {
+  if (ws.locked || !ws.layout) return null;
+  const leaves: { node: Extract<Layout, { kind: 'stack' }>; area: number }[] =
+    [];
+  function visit(n: Layout, s: Size) {
+    if (n.kind === 'stack') {
+      leaves.push({ node: n, area: s.width * s.height });
+      return;
+    }
+    const length = (n.axis === 'horizontal' ? s.width : s.height) - DIVIDER,
+      first = (length * n.step) / (n.axis === 'horizontal' ? 24 : 16);
+    visit(
+      n.children[0],
+      n.axis === 'horizontal'
+        ? { width: first, height: s.height }
+        : { width: s.width, height: first },
+    );
+    visit(
+      n.children[1],
+      n.axis === 'horizontal'
+        ? { width: length - first, height: s.height }
+        : { width: s.width, height: length - first },
+    );
+  }
+  visit(ws.layout, size);
+  leaves.sort(
+    (a, b) =>
+      Number(b.node.widgets.includes(preferred ?? '')) -
+        Number(a.node.widgets.includes(preferred ?? '')) || b.area - a.area,
+  );
+  for (const { node } of leaves)
+    for (const position of ['right', 'bottom'] as Position[]) {
+      try {
+        place(ws, id, node.id, position, size);
+        return { widget: node.active, position };
+      } catch {
+        /* Try the next legal split without changing the workspace. */
+      }
+    }
+  return null;
 }

@@ -31,7 +31,7 @@ it('uses the same placement rules for command-driven and manual additions', () =
     applyActions(
       d,
       [{ type: 'widget.add', widget, target, position: 'left' }],
-      size,
+      { width: 800, height: 650 },
     ),
   ).toThrow('no room');
   const added = applyActions(

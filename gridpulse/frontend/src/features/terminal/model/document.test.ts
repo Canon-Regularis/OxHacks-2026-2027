@@ -32,12 +32,10 @@ describe('terminal workspace invariants', () => {
     const w = createWidget('chart', range);
     ws.widgets[w.id] = w;
     expect(() =>
-      place(ws, w.id, target, 'left', { width: 1000, height: 620 }),
+      place(ws, w.id, target, 'left', { width: 900, height: 620 }),
     ).toThrow('no room');
-    const tabbed = place(ws, w.id, target, 'tab', { width: 1000, height: 620 });
-    expect(fits(tabbed.layout, tabbed, { width: 1000, height: 620 })).toBe(
-      true,
-    );
+    const tabbed = place(ws, w.id, target, 'tab', { width: 900, height: 620 });
+    expect(fits(tabbed.layout, tabbed, { width: 900, height: 620 })).toBe(true);
   });
   it('rejects duplicate placements, broken references, unknown versions and oversized imports', () => {
     const d = createDocument(range);
@@ -77,8 +75,28 @@ describe('terminal workspace invariants', () => {
     const ws = createDocument(range).workspaces[0];
     expect(ws.layout?.kind).toBe('split');
     expect(() =>
-      resize(ws, ws.layout!.id, 23, { width: 1000, height: 620 }),
+      resize(ws, ws.layout!.id, 23, { width: 900, height: 620 }),
     ).toThrow('Minimum');
+    expect(ws.layout && 'step' in ws.layout && ws.layout.step).toBe(16);
+  });
+});
+
+describe('space-efficient placement', () => {
+  it('fits two charts beside one another and adjusts existing dividers only as needed', () => {
+    const ws = createDocument(range).workspaces[0],
+      widget = createWidget('chart', range);
+    ws.widgets[widget.id] = widget;
+    const result = place(
+      ws,
+      widget.id,
+      findStack(ws.layout, Object.keys(ws.widgets)[1]),
+      'left',
+      { width: 1400, height: 720 },
+    );
+    expect(fits(result.layout, result, { width: 1400, height: 720 })).toBe(
+      true,
+    );
+    expect(Object.keys(result.widgets)).toHaveLength(4);
     expect(ws.layout && 'step' in ws.layout && ws.layout.step).toBe(16);
   });
 });

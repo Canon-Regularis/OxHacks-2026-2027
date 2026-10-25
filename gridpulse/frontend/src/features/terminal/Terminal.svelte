@@ -27,7 +27,14 @@
     type LinkContext,
     type Position,
   } from './model/types';
-  import { fits, place, resize, findStack, stack } from './layout/engine';
+  import {
+    fits,
+    place,
+    resize,
+    findStack,
+    stack,
+    suggestPlacement,
+  } from './layout/engine';
   import { bootstrap, pool, dateOf } from './data/client';
   import DockNode from './layout/DockNode.svelte';
   import WidgetBody from './widgets/WidgetBody.svelte';
@@ -58,6 +65,7 @@
     historyTick = $state(0),
     cursor = $state<Record<string, string>>({});
   let widgetStatus = $state<Record<string, string>>({});
+  let placementNote = $state('');
   let pending = $state<{ widget: Widget; binding?: Binding } | null>(null),
     target = $state(''),
     placement = $state<Position>('tab'),
@@ -289,7 +297,12 @@
     maximised = null;
     focused = null;
   }
-  function add(type: WidgetType, source?: string, algorithm?: string) {
+  function add(
+    type: WidgetType,
+    source?: string,
+    algorithm?: string,
+    automatic = false,
+  ) {
     if (!workspace) return;
     if (widgets.length >= LIMITS.widgets) {
       notice =
@@ -314,6 +327,27 @@
     pending = { widget, binding: b };
     target = focused ?? widgets[0]?.id ?? '';
     placement = 'tab';
+    const candidate = plain(workspace);
+    candidate.widgets[widget.id] = widget;
+    const suggestion = suggestPlacement(
+      candidate,
+      widget.id,
+      canvasSize(),
+      focused,
+    );
+    placementNote = workspace.locked
+      ? 'Unlock the layout or create a new workspace.'
+      : suggestion
+        ? 'Suggested placement uses available space. Dividers adjust in snapped steps while keeping every tile readable.'
+        : 'No room for another visible tile. Stack it as a tab or create a new workspace.';
+    if (suggestion) {
+      target = suggestion.widget;
+      placement = suggestion.position;
+    }
+    if (automatic && suggestion) {
+      finishAdd();
+      return;
+    }
     if (!workspace.layout) {
       finishAdd();
       return;
@@ -418,6 +452,8 @@
     const binding = old ? { ...plain(old), id: uid() } : undefined;
     copy.binding = binding?.id ?? null;
     pending = { widget: copy, binding };
+    placementNote =
+      'Choose a tab, a legal split or a new workspace for the copy.';
     target = w.id;
     placement = 'tab';
     drawer = 'place';
@@ -613,21 +649,6 @@
 </script>
 
 <main class="terminal-page" aria-label="Eisengrau Terminal">
-  <div class="terminal-topline">
-    <div>
-      <span class="eyebrow">RESEARCH WORKSPACE</span>
-      <h1>Terminal<span>.</span></h1>
-    </div>
-    <div class="terminal-top-actions">
-      <button
-        class="terminal-primary"
-        onclick={() => (drawer = 'add')}
-        disabled={!catalog}>＋ Search / Add <kbd>⌘ K</kbd></button
-      ><button onclick={() => (drawer = 'manage')} disabled={!doc}
-        >Workspaces</button
-      >
-    </div>
-  </div>
   {#if error}<div class="terminal-alert" role="alert">
       {error}<button onclick={initialize}>Retry connection</button>
     </div>{/if}
@@ -706,19 +727,30 @@
           onclick={() => newWorkspace('blank')}>＋</button
         >
       </div>
-      <div class="terminal-range">
-        <span>{workspace.groups[activeGroup]?.name ?? 'Independent'}</span
-        ><input
-          type="date"
-          aria-label="Terminal start date"
-          value={range.from}
-          onchange={(e) => setRange('from', e.currentTarget.value)}
-        /><span>→</span><input
-          type="date"
-          aria-label="Terminal end date"
-          value={range.to}
-          onchange={(e) => setRange('to', e.currentTarget.value)}
-        />
+      <div class="terminal-toolbar-controls">
+        <div class="terminal-range">
+          <span>{workspace.groups[activeGroup]?.name ?? 'Independent'}</span
+          ><input
+            type="date"
+            aria-label="Terminal start date"
+            value={range.from}
+            onchange={(e) => setRange('from', e.currentTarget.value)}
+          /><span>→</span><input
+            type="date"
+            aria-label="Terminal end date"
+            value={range.to}
+            onchange={(e) => setRange('to', e.currentTarget.value)}
+          />
+        </div>
+        <button class="terminal-primary" onclick={() => (drawer = 'add')}
+          >＋ Search / Add <kbd>⌘ K</kbd></button
+        >
+        <button
+          title="Add a chart in available space beside the focused tile or the next suitable tile"
+          onclick={() => add('chart', undefined, undefined, true)}
+          disabled={workspace.locked}>＋ Chart</button
+        >
+        <button onclick={() => (drawer = 'manage')}>Workspaces</button>
       </div>
     </div>
     <div class="terminal-widget-bar" aria-label="Workspace widgets">
@@ -939,6 +971,7 @@
       {pending.widget.title}. Tile sizes snap to discrete steps; existing
       widgets keep readable minimums.
     </p>
+    <p class="terminal-hint">{placementNote}</p>
     <label
       >Destination<select aria-label="Placement destination" bind:value={target}
         >{#each widgets as w}<option value={w.id}>{w.title}</option

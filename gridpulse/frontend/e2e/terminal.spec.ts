@@ -191,7 +191,7 @@ test('catalogue opens an algorithm workspace with a consistent pinned chart/tabl
 test('placement rejects unreadable splits, supports tabbing and undo', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1366, height: 768 });
+  await page.setViewportSize({ width: 900, height: 768 });
   await page.goto('/terminal');
   await expect(
     page.locator('path[data-terminal-series="price"]'),
@@ -220,7 +220,7 @@ test('placement rejects unreadable splits, supports tabbing and undo', async ({
   );
   await page.setViewportSize({ width: 390, height: 844 });
   await page.locator('.terminal-widget-bar > button').first().click();
-  await page.setViewportSize({ width: 1366, height: 768 });
+  await page.setViewportSize({ width: 900, height: 768 });
   expect(
     await page.evaluate(
       () =>
@@ -279,7 +279,7 @@ test('compact navigation leaves the desktop layout intact and old Explore redire
 test('native drag previews reject small splits and keyboard dividers snap discretely', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.setViewportSize({ width: 1440, height: 650 });
   await page.goto('/terminal');
   await expect(
     page.locator('path[data-terminal-series="price"]'),
@@ -292,7 +292,7 @@ test('native drag previews reject small splits and keyboard dividers snap discre
   await page.getByRole('button', { name: 'Undo workspace change' }).click();
   await expect(divider).toHaveAttribute('aria-valuenow', String(step));
   const source = page.getByRole('tab', {
-    name: 'Context & notes',
+    name: 'Time series',
     exact: true,
   });
   const dest = page.getByRole('group', {
@@ -304,8 +304,8 @@ test('native drag previews reject small splits and keyboard dividers snap discre
   await source.dispatchEvent('dragstart', { dataTransfer: dt });
   await dest.dispatchEvent('dragover', {
     dataTransfer: dt,
-    clientX: box.x + 4,
-    clientY: box.y + box.height / 2,
+    clientX: box.x + box.width / 2,
+    clientY: box.y + box.height - 3,
   });
   await expect(page.locator('.terminal-drop-preview.invalid')).toContainText(
     'No room',
@@ -313,7 +313,11 @@ test('native drag previews reject small splits and keyboard dividers snap discre
   await page.keyboard.press('Escape');
   await expect(page.locator('.terminal-drop-preview')).toHaveCount(0);
   const targetTab = page.getByRole('tab', { name: 'Time series', exact: true });
-  await source.dispatchEvent('dragstart', { dataTransfer: dt });
+  const contextTab = page.getByRole('tab', {
+    name: 'Context & notes',
+    exact: true,
+  });
+  await contextTab.dispatchEvent('dragstart', { dataTransfer: dt });
   await targetTab.dispatchEvent('dragover', { dataTransfer: dt });
   await targetTab.dispatchEvent('drop', { dataTransfer: dt });
   await expect(
@@ -708,4 +712,53 @@ test('disabled browser storage and external changes do not destroy a working ses
   await expect(
     page.locator('path[data-terminal-series="price"]'),
   ).toBeVisible();
+});
+
+test('compact Terminal chrome frees canvas space and quick-add tiles multiple charts', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/terminal');
+  await expect(
+    page.locator('path[data-terminal-series="price"]'),
+  ).toBeVisible();
+  await expect(page.getByRole('contentinfo')).toHaveCount(0);
+  await expect(page.locator('.terminal-topline')).toHaveCount(0);
+  const dateBox = (await page.getByLabel('Terminal start date').boundingBox())!,
+    searchBox = (await page
+      .getByRole('button', { name: /Search \/ Add/ })
+      .boundingBox())!;
+  expect(
+    Math.abs(
+      dateBox.y + dateBox.height / 2 - searchBox.y - searchBox.height / 2,
+    ),
+  ).toBeLessThan(2);
+  expect(dateBox.x).toBeLessThan(searchBox.x);
+  const height = await page
+    .locator('.terminal-canvas')
+    .evaluate((el) => el.clientHeight);
+  expect(height).toBeGreaterThan(700);
+  await page.getByRole('button', { name: '＋ Chart', exact: true }).click();
+  await expect(
+    page.getByRole('slider', { name: 'Chart selected period' }),
+  ).toHaveCount(2);
+  const plots = page.getByRole('slider', { name: 'Chart selected period' });
+  const a = (await plots.nth(0).boundingBox())!,
+    b = (await plots.nth(1).boundingBox())!;
+  expect(Math.abs(a.y - b.y)).toBeLessThan(2);
+  expect(b.x).toBeGreaterThan(a.x + a.width);
+  await page.getByRole('button', { name: '＋ Chart', exact: true }).click();
+  await page.getByRole('button', { name: '＋ Chart', exact: true }).click();
+  await expect(
+    page.getByRole('slider', { name: 'Chart selected period' }),
+  ).toHaveCount(4);
+  await expect(page.locator('.terminal-tile')).toHaveCount(6);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollHeight <= innerHeight + 1,
+    ),
+  ).toBe(true);
+  await page.screenshot({ path: test.info().outputPath('terminal-dense.png') });
+  await page.getByRole('link', { name: 'About', exact: true }).click();
+  await expect(page.getByRole('contentinfo')).toHaveCount(1);
 });

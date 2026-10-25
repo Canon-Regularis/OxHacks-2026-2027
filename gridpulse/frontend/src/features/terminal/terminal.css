@@ -1,10 +1,10 @@
 .terminal-page {
-  height: calc(100svh - 102px);
+  height: calc(100svh - 60px);
   min-height: 490px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 16px 28px 8px;
+  gap: 7px;
+  padding: 10px 14px 6px;
   overflow: hidden;
 }
 .terminal-page button,
@@ -40,28 +40,6 @@
   background: var(--orange) !important;
   border-color: var(--orange) !important;
   font-weight: 600;
-}
-.terminal-topline {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex: none;
-}
-.terminal-topline .eyebrow {
-  font-size: 8px;
-}
-.terminal-topline h1 {
-  font-size: 25px;
-  font-weight: 550;
-  letter-spacing: -0.7px;
-  line-height: 1.2;
-}
-.terminal-topline h1 span {
-  color: var(--orange);
-}
-.terminal-top-actions {
-  display: flex;
-  gap: 7px;
 }
 .terminal-page kbd {
   font-size: 9px;
@@ -109,11 +87,11 @@
 }
 .terminal-widget-bar {
   display: flex;
-  min-height: 43px;
+  min-height: 36px;
   gap: 5px;
   overflow: auto;
   align-items: center;
-  padding: 4px 0;
+  padding: 2px 0;
   flex: none;
 }
 .terminal-widget-bar > button {
@@ -123,7 +101,7 @@
   text-align: left;
   min-width: 125px;
   max-width: 230px;
-  padding: 5px 9px;
+  padding: 4px 8px;
   flex: none;
 }
 .terminal-widget-bar strong {
@@ -214,7 +192,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  min-height: 34px;
+  min-height: 30px;
   flex: none;
   background: #1b1b1a;
   border-bottom: 1px solid var(--border);
@@ -272,7 +250,7 @@
   display: flex;
   flex-direction: column;
   overflow: auto;
-  padding: 10px 12px;
+  padding: 8px 10px;
   gap: 7px;
 }
 .terminal-drop-preview {
@@ -538,7 +516,7 @@
   max-width: 400px;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding: 5px 9px;
+  padding: 4px 8px;
   border-bottom: 1px solid #282827;
   font-family: 'DM Mono', monospace;
 }
@@ -840,12 +818,9 @@
 }
 @media (max-width: 850px) {
   .terminal-page {
-    height: calc(100svh - 102px);
+    height: calc(100svh - 60px);
     min-height: 600px;
     padding: 12px;
-  }
-  .terminal-topline h1 {
-    font-size: 23px;
   }
   .terminal-toolbar {
     flex-direction: column;
@@ -854,9 +829,6 @@
   }
   .terminal-range {
     justify-content: flex-end;
-  }
-  .terminal-top-actions kbd {
-    display: none;
   }
   .terminal-history {
     margin-left: 0;
@@ -920,7 +892,7 @@
   display: flex;
   justify-content: space-between;
   gap: 9px;
-  padding: 4px 0;
+  padding: 2px 0;
   border-bottom: 1px solid var(--border);
 }
 .terminal-inspector-preview dt {
@@ -930,4 +902,41 @@
   margin: 0;
   font-family: 'DM Mono', monospace;
   text-align: right;
+}
+
+/* Single toolbar; wrap only where a small screen needs it. */
+.terminal-toolbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+}
+.terminal-toolbar-controls > button {
+  white-space: nowrap;
+}
+@media (max-width: 1100px) {
+  .terminal-toolbar-controls {
+    gap: 5px;
+  }
+  .terminal-range input {
+    max-width: 117px;
+  }
+  .terminal-toolbar-controls kbd {
+    display: none;
+  }
+}
+@media (max-width: 850px) {
+  .terminal-page {
+    padding: 8px;
+  }
+  .terminal-toolbar-controls {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .terminal-toolbar .terminal-workspace-tabs {
+    width: 100%;
+  }
+  .terminal-range {
+    margin-right: auto;
+  }
 }

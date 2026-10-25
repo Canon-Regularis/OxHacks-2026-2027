@@ -4,9 +4,11 @@ Terminal is Eisengrau's docked research workspace at `/terminal`. The old `/expl
 
 ## User workflow
 
+The Terminal uses one compact toolbar: workspace tabs, date range, Search / Add, a one-click **＋ Chart** button and Workspaces. Its title block and site footer are omitted to leave more space for tiles; other pages retain their footer.
+
 1. Open **Search / Add** (Ctrl/Cmd+K). Search source data, registered algorithms, widget types or saved presets.
 2. For an algorithm, choose outputs in an existing chart, a new chart, its tables or a complete analysis workspace. Only `/api/catalog` entries are offered. Not computed yet is a normal empty state.
-3. Choose a destination and dock position, stack as a tab, or create another workspace tab. Invalid splits explain that there is no room. Drag tile tabs to edge/centre targets for the equivalent actions; invalid previews are red and carry text.
+3. **＋ Chart** automatically chooses a legal visible split, prioritising the focused tile and then available space. Search / Add suggests a legal placement for manual confirmation. When no visible split fits, choose a tab or a new workspace. Choose a destination and dock position, stack as a tab, or create another workspace tab. Invalid splits explain that there is no room. Drag tile tabs to edge/centre targets for the equivalent actions; invalid previews are red and carry text.
 4. Drag dividers to snap-resize; focused dividers support arrow keys. Horizontal splits use 24 steps, vertical splits 16, constrained by both subtrees' minimum readable sizes. Use settings to move without dragging.
 5. Focus widgets through the widget bar. Settings expose source selection, stored runs, output visibility/styles, overlay versus separate unit panes, explicit indexing, group membership, duplication and placement.
 6. Linked time charts share range/zoom and selected UTC instant. Hover reads cached values locally; click or arrow-key selection loads full period details. The inspector preloads source values for hover. Clicking a whole-run table's period outside the current range opens that day in its linked group.
@@ -20,7 +22,7 @@ Market preset: source chart, period inspector and notes/context. Algorithm prese
 
 `eisengrau:terminal:v1` stores a validated version-1 document containing named workspaces, reusable presets, split/tab layouts, widgets, bindings and groups. This is separate from Overview's `gridpulse:view:v1`; its selected date is only inherited on first creation. Save preferences and notes, never market responses or credentials.
 
-The registry defines readable minimum sizes. When the physical viewport cannot fit the desktop layout, compact mode displays one widget at a time and keeps the desktop tree unchanged. Workspace lock stops placement/drag/resize while charts and settings remain usable.
+The registry defines readable minimum sizes: chart 320×200 px, table/comparison 280×180, inspector 240×180 and context 220×140. Placement adjusts existing divider ratios only when required, in snapped steps nearest their previous ratios; tile order and minimums are preserved. This avoids rejecting a viable split solely because a divider started at 50/50. When the physical viewport cannot fit the desktop layout, compact mode displays one widget at a time and keeps the desktop tree unchanged. Workspace lock stops placement/drag/resize while charts and settings remain usable.
 
 Undo/redo records committed changes (Ctrl/Cmd+Z; Shift for redo), not hover. Bulk imports/presets are one transaction. Imports are previewed and confirmed before replacement. Validation checks version, byte limit, tree depth, duplicate IDs, references, settings and resource limits. Missing algorithms and unknown widget types retain recoverable placeholders. Old algorithm versions require a compatible versioned result schema; currently unverified versions are rejected rather than interpreted using current units.
 

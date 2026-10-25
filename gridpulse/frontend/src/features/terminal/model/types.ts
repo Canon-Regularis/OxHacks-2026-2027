@@ -75,11 +75,11 @@ export const LIMITS = {
   history: 40,
 };
 export const MINIMUM: Record<WidgetType, Size> = {
-  chart: { width: 360, height: 220 },
-  table: { width: 300, height: 200 },
-  comparison: { width: 300, height: 200 },
-  inspector: { width: 280, height: 220 },
-  context: { width: 240, height: 160 },
+  chart: { width: 320, height: 200 },
+  table: { width: 280, height: 180 },
+  comparison: { width: 280, height: 180 },
+  inspector: { width: 240, height: 180 },
+  context: { width: 220, height: 140 },
 };
 export const uid = () => crypto.randomUUID();
 export function context(range: Range): LinkContext {

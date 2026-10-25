@@ -46,7 +46,7 @@ Verified from current code:
 
 ```text
 Shared Eisengrau navigation: Overview | Terminal | Methods | About
-Terminal toolbar: workspace tabs | Search/Add | date range | undo/redo | layout menu
+Terminal toolbar: workspace tabs | date range | Search/Add | quick Chart | Workspaces (undo/redo in widget bar)
 Widget bar: [Price + wind · A] [Backtest metrics · A] [Period inspector · A]
 Dock canvas: split tiles and tab stacks
 Status strip: mode, freshness, active group and request state
@@ -67,7 +67,7 @@ Transient drawer: catalogue OR focused-widget settings OR workspace manager
 Use a split-tree layout: split nodes have horizontal/vertical orientation and a discrete ratio; leaf nodes hold one or more widget tabs and the active tab ID. Keep pixel measurements out of persisted documents.
 
 - Quantise divider targets to a logical 24-column by 16-row canvas. Compute physical minimum-size feasibility from current canvas dimensions; quantisation does not override minimums.
-- Minimums are declared by widget type and include headers, labels and warnings. Initial targets: chart 360×220 px, table 300×200, comparison 300×200, inspector 280×220, context 240×160. Validate these visually and adjust in one registry before release.
+- Minimums are declared by widget type and include headers, labels and warnings. Updated compact targets: chart 320×200 px, table 280×180, comparison 280×180, inspector 240×180, context 220×140. Validate these visually and adjust in one registry before release.
 - Resize previews snap to legal steps. Clamp to the nearest feasible step; if none exists, disable that divider and explain why. Reflow chart labels and plot size after committed resize.
 - Edge drops create splits; centre drops create tab stacks. Clear previews distinguish these destinations. Neither changes persistent state until drop succeeds.
 - A split is legal only if both child subtrees fit their minimums, including dividers. Reject illegal drops without moving the source widget. Red feedback includes text/icon, not colour alone.
@@ -237,3 +237,5 @@ Deferred: submitting computations, job progress/cancellation, arbitrary paramete
 The environment template was committed separately with empty server-side credential placeholders. Implementation followed working commits for the validated document/layout engine, catalogue-driven docked UI, overlays/presets/request management, and recovery/atomic actions/large-result performance. All stages 1–6 have an initial implementation; the verification suite and live smoke evidence are documented in [TERMINAL_WORKSPACE.md](TERMINAL_WORKSPACE.md).
 
 The shared action interface is in `model/actions.ts`; UI placement uses the same pure layout engine. Source and algorithm series can coexist in one chart. The inspector uses preloaded values for hover and fetches full publication history on committed selection. This preserves the no-per-hover-request rule without prefetching hundreds of period-detail responses. Tab headers accept insertion before the target tab; keyboard-accessible move settings offer the same placement.
+
+Compact-layout refinement: remove the Terminal title block and its site footer, combine dates and actions into one toolbar, suggest legal menu placements, and offer one-click Chart placement. New splits may minimally rebalance existing snapped dividers while preserving tile order and minimum readable sizes. The revised tests demonstrate four visible charts plus the two supporting widgets on one desktop screen.
