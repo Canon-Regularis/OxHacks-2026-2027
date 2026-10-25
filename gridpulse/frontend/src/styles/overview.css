@@ -1,6 +1,7 @@
 /* Compact monitoring surface. Long-form and decorative content belongs on About. */
 :root {
-  --orange: #e6b080;
+  --site-accent: #e6b080;
+  --orange: var(--site-accent);
   --price: #e6b080;
   --wind: #a2c7b8;
   --demand: #b8afd0;
@@ -52,7 +53,7 @@ select:focus-visible,
 }
 .brand-beta {
   color: var(--orange);
-  border-color: #e6b08033;
+  border-color: color-mix(in srgb, var(--orange) 20%, transparent);
 }
 .heading-dot {
   color: var(--orange);
@@ -108,8 +109,8 @@ select:focus-visible,
 }
 .latest-button.chosen {
   color: var(--orange);
-  border-color: #e6b08066;
-  background: #e6b0800a;
+  border-color: color-mix(in srgb, var(--orange) 40%, transparent);
+  background: color-mix(in srgb, var(--orange) 3.92%, transparent);
 }
 .overview-page .data-status {
   margin: 9px 0 12px;
@@ -197,7 +198,7 @@ select:focus-visible,
   color: var(--orange);
   font-size: 10px;
   padding: 5px 8px;
-  background: #e6b0800b;
+  background: color-mix(in srgb, var(--orange) 4.31%, transparent);
 }
 .overview-page .chart-control {
   min-height: 145px;
@@ -283,7 +284,7 @@ select:focus-visible,
   height: 41px;
   box-shadow:
     0 0 0 1.5px var(--orange),
-    0 0 16px #e6b0801a;
+    0 0 16px color-mix(in srgb, var(--orange) 10.2%, transparent);
 }
 .scan-bottom {
   display: flex;
@@ -462,7 +463,7 @@ select:focus-visible,
   width: 272px;
   max-width: calc(100vw - 24px);
   padding: 12px 14px;
-  border: 1px solid #e6b08055;
+  border: 1px solid color-mix(in srgb, var(--orange) 33.33%, transparent);
   border-radius: 7px;
   background: #25211e;
   color: #eee7e0;
@@ -543,7 +544,17 @@ select:focus-visible,
   color: var(--muted-foreground);
 }
 .about-spacer {
+  position: relative;
   margin: 0 -48px;
+}
+@media (min-width: 768px) {
+  .about-spacer::after {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    left: 50%;
+    border-left: 1px solid var(--border);
+  }
 }
 .about-pixel-section {
   width: auto;
@@ -583,7 +594,13 @@ select:focus-visible,
   font-size: 13px;
 }
 .about-story {
+  position: relative;
+  isolation: isolate;
   padding: 64px 0;
+  border-bottom: 1px solid var(--border);
+}
+.about-story:last-child {
+  border-bottom: 0;
 }
 .about-story h2 {
   font-size: 32px;
@@ -638,7 +655,10 @@ select:focus-visible,
   margin-top: 12px;
   line-height: 1.3;
 }
-.about-data-copy p,
+.about-data-copy {
+  grid-column: 2;
+}
+.about-data-copy p:not(.eyebrow),
 .about-roadmap > p:last-child {
   color: var(--muted-foreground);
   font-size: 14px;
@@ -668,6 +688,9 @@ select:focus-visible,
   max-width: 850px;
 }
 @media (max-width: 850px) {
+  .about-data-copy {
+    grid-column: 1;
+  }
   .about-data {
     grid-template-columns: 1fr;
     gap: 24px;
@@ -1145,8 +1168,8 @@ select:focus-visible,
     11px 'DM Mono',
     monospace;
   color: var(--orange);
-  background: #e6b0800b;
-  border: 1px solid #e6b08033;
+  background: color-mix(in srgb, var(--orange) 4.31%, transparent);
+  border: 1px solid color-mix(in srgb, var(--orange) 20%, transparent);
   border-radius: 4px;
   padding: 4px 7px;
   white-space: nowrap;

@@ -329,6 +329,7 @@
     historyTick = $state(0),
     cursor = $state<Record<string, string>>({});
   let widgetStatus = $state<Record<string, string>>({});
+  let widgetExports = $state<Record<string, () => void>>({});
   let placementNote = $state('');
   let presetSearch = $state('');
   let pending = $state<{ widget: Widget; binding?: Binding } | null>(null),
@@ -956,6 +957,12 @@
         external = true;
     };
     const key = (e: KeyboardEvent) => {
+      if (
+        e.defaultPrevented ||
+        e.isComposing ||
+        document.querySelector('dialog[open]')
+      )
+        return;
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         drawer = 'add';
@@ -968,7 +975,9 @@
         e.key.toLowerCase() === 'z' &&
         !(
           e.target instanceof HTMLInputElement ||
-          e.target instanceof HTMLTextAreaElement
+          e.target instanceof HTMLTextAreaElement ||
+          e.target instanceof HTMLSelectElement ||
+          (e.target instanceof HTMLElement && e.target.isContentEditable)
         )
       ) {
         e.preventDefault();
@@ -1265,6 +1274,10 @@
               settings: { ...plain(w.settings), notes },
             })}
           {refresh}
+          onexport={(exportCsv) => {
+            if (exportCsv) widgetExports[id] = exportCsv;
+            else delete widgetExports[id];
+          }}
           onstatus={(status) => (widgetStatus[id] = status)}
         />{/if}{#snippet failed(_error, reset)}<div
           class="terminal-widget-error"
@@ -1306,6 +1319,7 @@
     onclose={() => (drawer = null)}
     ><Settings
       widget={selectedWidget}
+      exportCsv={widgetExports[selectedWidget.id]}
       {workspace}
       {catalog}
       onchange={updateWidget}

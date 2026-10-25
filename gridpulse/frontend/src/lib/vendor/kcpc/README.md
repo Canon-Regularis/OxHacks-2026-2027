@@ -5,6 +5,7 @@ Selected source was adapted from `orthant-kcpc/components` revision `9626af5` (s
 Reused source paths (relative to Components `src/lib/`):
 
 - `components/animations/rotating-earth/`: globe, world geometry and themed variant.
+- `components/backgrounds/dot-background/`: CSS dot grid and radial fade from KCPC’s About and homepage sections, used behind About’s final three story rows. The children snippet is optional for decorative use; background layers are hidden from assistive technology.
 - `components/backgrounds/pixel-blast/`: homepage “work with us” effect, now on About.
 - `components/text/text-shimmer/text-shimmer.svelte`: the accompanying animated About heading.
 - `components/cards/evervault-card/`: committee mouse-following alphanumeric reveal used for decorative context.

@@ -1,6 +1,13 @@
 export const SETTINGS_KEY = 'gridpulse:settings:v1';
+export const ACCENTS = {
+  orange: { label: 'Pastel orange', color: '#e6b080' },
+  red: { label: 'Pastel red', color: '#e6a0a0' },
+  green: { label: 'Pastel green', color: '#a8c9ad' },
+} as const;
+export type Accent = keyof typeof ACCENTS;
 export interface SettingsPreference {
   version: 1;
+  accent: Accent;
   timeDisplay: 'utc' | 'local';
   motion: 'system' | 'reduce';
   gridlines: boolean;
@@ -10,6 +17,7 @@ export interface SettingsPreference {
 export function defaultSettings(): SettingsPreference {
   return {
     version: 1,
+    accent: 'orange',
     timeDisplay: 'utc',
     motion: 'system',
     gridlines: true,
@@ -25,6 +33,7 @@ export function normalizeSettings(value: unknown): SettingsPreference {
   if (p.version !== 1) return defaults;
   return {
     ...defaults,
+    accent: p.accent === 'red' || p.accent === 'green' ? p.accent : 'orange',
     timeDisplay: p.timeDisplay === 'local' ? 'local' : 'utc',
     motion: p.motion === 'reduce' ? 'reduce' : 'system',
     gridlines:

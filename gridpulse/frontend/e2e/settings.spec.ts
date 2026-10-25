@@ -400,10 +400,72 @@ test('navbar and drawer remain usable on narrow and short screens', async ({
       page.getByRole('button', { name: 'Reset settings', exact: true }),
     ).toBeInViewport();
     await close(page);
+    await page
+      .getByRole('button', { name: 'Open keyboard shortcuts', exact: true })
+      .click();
+    const shortcuts = page.getByRole('dialog', {
+      name: 'Keyboard shortcuts',
+      exact: true,
+    });
+    const shortcutBox = await shortcuts.boundingBox();
+    expect(shortcutBox!.x).toBeGreaterThanOrEqual(0);
+    expect(shortcutBox!.x + shortcutBox!.width).toBeLessThanOrEqual(width + 1);
+    expect(
+      await shortcuts.evaluate(
+        (element) => element.scrollWidth <= element.clientWidth,
+      ),
+    ).toBe(true);
+    await page.keyboard.press('Escape');
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
   }
+});
+
+test('pastel accents apply immediately, persist, sync between tabs and preserve chart colours', async ({
+  page,
+  context,
+}) => {
+  await page.goto('/');
+  const price = page.locator('path[data-series="price"]');
+  await expect(price).toBeVisible();
+  const original = await price.getAttribute('stroke');
+  await open(page);
+  await page.getByRole('radio', { name: 'Pastel red', exact: true }).check();
+  await expect(page.locator('html')).toHaveAttribute('data-accent', 'red');
+  await expect(page.locator('.site-header .brand svg')).toHaveCSS(
+    'color',
+    'rgb(230, 160, 160)',
+  );
+  await expect(price).toHaveAttribute('stroke', original!);
+  await close(page);
+  await page.getByRole('link', { name: 'Data sources', exact: true }).click();
+  await expect(page.locator('.learn-heading h1 span')).toHaveCSS(
+    'color',
+    'rgb(230, 160, 160)',
+  );
+  await page.reload();
+  await open(page);
+  await expect(
+    page.getByRole('radio', { name: 'Pastel red', exact: true }),
+  ).toBeChecked();
+  const other = await context.newPage();
+  await other.goto('/quick-start');
+  await expect(other.locator('html')).toHaveAttribute('data-accent', 'red');
+  await page.getByRole('radio', { name: 'Pastel green', exact: true }).check();
+  await expect(other.locator('html')).toHaveAttribute('data-accent', 'green');
+  await expect(other.locator('.learn-heading h1 span')).toHaveCSS(
+    'color',
+    'rgb(168, 201, 173)',
+  );
+  await page
+    .getByRole('button', { name: 'Reset settings', exact: true })
+    .click();
+  await expect(
+    page.getByRole('radio', { name: 'Pastel orange', exact: true }),
+  ).toBeChecked();
+  await expect(other.locator('html')).toHaveAttribute('data-accent', 'orange');
+  await other.close();
 });

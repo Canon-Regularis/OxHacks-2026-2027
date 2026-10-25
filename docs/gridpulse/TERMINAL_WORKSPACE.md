@@ -4,6 +4,8 @@ Terminal is Eisengrau's docked research workspace at `/terminal`. The old `/expl
 
 ## User workflow
 
+Open the keyboard icon immediately left of the navbar settings gear for the current key reference; it is also in Quick Start. Ctrl/Cmd+K opens Search/Add, Ctrl/Cmd+Z undoes workspace changes, and Shift adds redo. Focused charts support arrow keys and Home/End; focused dividers resize by snapped arrow-key steps. Global workspace shortcuts do not act behind the app settings modal or take undo away from text fields.
+
 The Terminal uses one compact toolbar: workspace tabs, date range, Search / Add and Workspaces. Its title block and site footer are omitted to leave more space for tiles; other pages retain their footer.
 
 1. Open **Search / Add** (Ctrl/Cmd+K). Choose **Data**, **Algorithms** or **Widgets**, then search that category. Data opens by default; there is no All tab.
@@ -14,7 +16,7 @@ The Terminal uses one compact toolbar: workspace tabs, date range, Search / Add 
 6. Linked time charts share range/zoom and selected UTC instant. Hover reads cached values locally; click or arrow-key selection loads full period details. The inspector preloads source values for hover. Clicking a whole-run table's period outside the current range opens that day in its linked group.
 7. Use **Workspaces** to rename, duplicate, reset, export/import or save the current view as a reusable preset. Save and search/load presets in Workspaces; they are not part of the content drawer. Built-ins remain unchanged. **Reset to market preset** and **Close current workspace** are always exposed at the bottom of Workspaces; both actions can be undone.
 
-Charts provide **Export chart CSV** for their loaded range and series, with UTC timestamps and units. Tables and comparisons provide **Export table CSV** for the selected whole-run table. Missing values export as empty cells; numeric zero stays zero. **Export configuration** in Workspaces remains JSON for restoring layouts and preferences.
+Widget settings provide **Export chart CSV** for their loaded range and series, with UTC timestamps and units. Table and comparison settings provide **Export table CSV** for the selected whole-run table. Missing values export as empty cells; numeric zero stays zero. **Export configuration** in Workspaces remains JSON for restoring layouts and preferences.
 
 A chart accepts at most two overlay unit axes; extra units use separate panes. More than 12 selected outputs require choosing visible outputs in settings. Separate panes scroll when the available tile cannot display them readably. Indexing is explicit (first non-zero value = 100); all-zero series cannot be indexed. Raw values remain in the cursor readout.
 

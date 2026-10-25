@@ -24,6 +24,38 @@ describe('saved preferences', () => {
   ])('uses defaults for unsupported data %j', (value) => {
     expect(normalizeSettings(value)).toEqual(defaultSettings());
   });
+  it.each(['orange', 'red', 'green'])(
+    'persists the supported %s accent',
+    (accent) => {
+      expect(
+        readSettings({
+          getItem: () => JSON.stringify({ ...defaultSettings(), accent }),
+        }),
+      ).toEqual({ ...defaultSettings(), accent });
+    },
+  );
+  it('uses orange for old or invalid accent values without losing preferences', () => {
+    for (const accent of [
+      undefined,
+      null,
+      'purple',
+      '#ffffff',
+      { color: 'red' },
+    ]) {
+      expect(
+        normalizeSettings({
+          version: 1,
+          accent,
+          timeDisplay: 'local',
+          rememberView: false,
+        }),
+      ).toMatchObject({
+        accent: 'orange',
+        timeDisplay: 'local',
+        rememberView: false,
+      });
+    }
+  });
   it('validates fields independently and discards unknown fields', () => {
     expect(
       normalizeSettings({

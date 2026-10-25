@@ -2,6 +2,7 @@
   import '../styles/app.css';
   import '../styles/overview.css';
   import '../styles/settings.css';
+  import '../styles/learn.css';
   import { onMount, setContext } from 'svelte';
   import { page } from '$app/state';
   import SiteHeader from '../components/layout/SiteHeader.svelte';
@@ -18,6 +19,7 @@
   } from '$lib/state/settings.svelte';
   import {
     defaultSettings,
+    ACCENTS,
     normalizeSettings,
     readSettings,
     SETTINGS_KEY,
@@ -81,6 +83,11 @@
     if (!ready) return;
     document.documentElement.classList.add('dark');
     document.documentElement.dataset.theme = 'dark';
+    document.documentElement.dataset.accent = settings.accent;
+    document.documentElement.style.setProperty(
+      '--site-accent',
+      ACCENTS[settings.accent].color,
+    );
     document.documentElement.dataset.motion = reducedMotion(settings)
       ? 'reduce'
       : 'full';
@@ -108,6 +115,6 @@
 
 <div class="app-frame">
   <SiteHeader
-  />{@render children()}{#if page.url.pathname !== '/terminal' && !page.url.pathname.startsWith('/terminal/')}<SiteFooter
+  />{@render children()}{#if !['/terminal', '/sources'].some((path) => page.url.pathname === path || page.url.pathname.startsWith(`${path}/`))}<SiteFooter
     />{/if}
 </div>

@@ -22,6 +22,7 @@
     onzoom,
     onrun,
     onnotes,
+    onexport,
     refresh = 0,
   }: {
     widget: Widget;
@@ -35,6 +36,7 @@
     onzoom: (z: [number, number] | null) => void;
     onrun: (id: number) => void;
     onnotes: (notes: string) => void;
+    onexport: (exportCsv: (() => void) | null) => void;
     refresh?: number;
   } = $props();
   let data = $state<WidgetData | null>(null),
@@ -116,6 +118,32 @@
       ? sourceTable(data.t, data.columns, tableZoom, widget.settings.outputs)
       : data?.tables[tableName],
   );
+  let csvExport = $derived.by(() => {
+    const loaded = data;
+    if (loading || error || !loaded) return null;
+    const runSuffix = loaded.run ? `-run-${loaded.run.run_id}` : '';
+    if (
+      widget.type === 'chart' &&
+      loaded.t.length &&
+      Object.keys(loaded.columns).length
+    )
+      return () =>
+        downloadCsv(seriesCsv(loaded), `eisengrau-series${runSuffix}.csv`);
+    const selectedTable = table;
+    if (
+      (widget.type === 'table' || widget.type === 'comparison') &&
+      selectedTable
+    ) {
+      const filename = `eisengrau-${(tableName ?? 'source-data').replace(/[^a-zA-Z0-9_-]/g, '_')}${runSuffix}.csv`;
+      return () => downloadCsv(tableCsv(selectedTable), filename);
+    }
+    return null;
+  });
+  $effect(() => {
+    const exportCsv = csvExport;
+    untrack(() => onexport(exportCsv));
+    return () => untrack(() => onexport(null));
+  });
 </script>
 
 {#if !isWidgetType(widget.type)}<p class="terminal-empty">
@@ -133,23 +161,6 @@
     <button onclick={() => retry++}>Retry widget</button>
   </div>
 {:else if data}
-  {#if widget.type === 'chart' && data.t.length && Object.keys(data.columns).length}
-    <button
-      onclick={() =>
-        downloadCsv(
-          seriesCsv(data!),
-          `eisengrau-series${data?.run ? `-run-${data.run.run_id}` : ''}.csv`,
-        )}>Export chart CSV</button
-    >
-  {:else if (widget.type === 'table' || widget.type === 'comparison') && table}
-    <button
-      onclick={() =>
-        downloadCsv(
-          tableCsv(table!),
-          `eisengrau-${tableName.replace(/[^a-zA-Z0-9_-]/g, '_')}${data?.run ? `-run-${data.run.run_id}` : ''}.csv`,
-        )}>Export table CSV</button
-    >
-  {/if}
   {#if data.warnings.length}<details class="terminal-warnings" open>
       <summary
         >{data.warnings.length} data warning{data.warnings.length === 1

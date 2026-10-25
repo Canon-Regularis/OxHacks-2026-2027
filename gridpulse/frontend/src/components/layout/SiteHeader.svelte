@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import SettingsDrawer from './SettingsDrawer.svelte';
+  import ShortcutsDrawer from './ShortcutsDrawer.svelte';
 </script>
 
 <header class="site-header">
@@ -12,7 +13,8 @@
         stroke="currentColor"
         stroke-width="1.5"
       /></svg
-    >Eisengrau<span class="brand-beta">GB</span></a
+    ><span class="brand-name">Eisengrau</span><span class="brand-beta">GB</span
+    ></a
   >
   <nav aria-label="Primary navigation">
     <a href="/" aria-current={page.url.pathname === '/' ? 'page' : undefined}
@@ -21,6 +23,20 @@
       href="/terminal"
       aria-current={page.url.pathname === '/terminal' ? 'page' : undefined}
       >Terminal</a
+    ><a
+      href="/sources"
+      aria-label="Data sources"
+      aria-current={page.url.pathname === '/sources' ? 'page' : undefined}
+      ><span class="nav-long">Data sources</span><span class="nav-short"
+        >Data</span
+      ></a
+    ><a
+      href="/quick-start"
+      aria-label="Quick start"
+      aria-current={page.url.pathname === '/quick-start' ? 'page' : undefined}
+      ><span class="nav-long">Quick start</span><span class="nav-short"
+        >Guide</span
+      ></a
     ><a
       href="/status"
       aria-current={page.url.pathname === '/status' ? 'page' : undefined}
@@ -31,5 +47,5 @@
       >About</a
     >
   </nav>
-  <SettingsDrawer />
+  <div class="header-tools"><ShortcutsDrawer /><SettingsDrawer /></div>
 </header>

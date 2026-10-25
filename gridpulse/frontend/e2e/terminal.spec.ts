@@ -137,6 +137,15 @@ test('Terminal renders linked data, keeps hover local and saves the workspace', 
   await expect(
     page.getByRole('tab', { name: 'Market investigation', exact: true }),
   ).toBeVisible();
+  await expect(
+    page
+      .locator('.terminal-widget-content')
+      .getByRole('button', { name: 'Export chart CSV', exact: true }),
+  ).toHaveCount(0);
+  await page
+    .getByRole('button', { name: 'Settings for Time series', exact: true })
+    .click();
+  const exportRequests = requests.length;
   const csvDownload = page.waitForEvent('download');
   await page
     .getByRole('button', { name: 'Export chart CSV', exact: true })
@@ -149,6 +158,8 @@ test('Terminal renders linked data, keeps hover local and saves the workspace', 
   const contents = Buffer.concat(chunks).toString('utf8');
   expect(contents).toContain('"timestamp_utc"');
   expect(contents).toContain('"price (GBP/MWh)"');
+  expect(requests.length).toBe(exportRequests);
+  await page.getByRole('button', { name: 'Close drawer' }).click();
   const before = requests.length;
   const plot = page.getByRole('slider', { name: 'Chart selected period' });
   await plot.hover({ position: { x: 300, y: 100 } });
@@ -204,6 +215,30 @@ test('catalogue opens an algorithm workspace with a consistent pinned chart/tabl
   await expect(
     page.getByRole('button', { name: /Run computation/ }),
   ).toHaveCount(0);
+  await expect(
+    page
+      .locator('.terminal-widget-content')
+      .getByRole('button', { name: 'Export table CSV', exact: true }),
+  ).toHaveCount(0);
+  await page
+    .getByRole('button', { name: 'Settings for Results table', exact: true })
+    .click();
+  const tableDownload = page.waitForEvent('download');
+  await page
+    .getByRole('dialog', { name: 'Widget settings', exact: true })
+    .getByRole('button', { name: 'Export table CSV', exact: true })
+    .click();
+  const exportedTable = await tableDownload;
+  expect(exportedTable.suggestedFilename()).toBe(
+    'eisengrau-metrics-run-12.csv',
+  );
+  const tableStream = await exportedTable.createReadStream();
+  const tableChunks = [];
+  for await (const chunk of tableStream!) tableChunks.push(chunk);
+  expect(Buffer.concat(tableChunks).toString('utf8')).toContain(
+    'seasonal_naive_forecast',
+  );
+  await page.getByRole('button', { name: 'Close drawer' }).click();
   await page.screenshot({
     path: test.info().outputPath('terminal-algorithm.png'),
   });
@@ -900,6 +935,73 @@ test('widget group badges switch groups without opening settings', async ({
   await expect(compactBadge).toContainText('B');
 });
 
+test('keyboard panel has its own navbar button, traps focus and blocks workspace shortcuts behind it', async ({
+  page,
+}) => {
+  await page.goto('/terminal');
+  await expect(
+    page.locator('path[data-terminal-series="price"]'),
+  ).toBeVisible();
+  const keyboard = page.getByRole('button', {
+    name: 'Open keyboard shortcuts',
+    exact: true,
+  });
+  const gear = page.getByRole('button', { name: 'Open settings', exact: true });
+  const keyboardBox = await keyboard.boundingBox();
+  const gearBox = await gear.boundingBox();
+  expect(keyboardBox!.x + keyboardBox!.width).toBeLessThanOrEqual(gearBox!.x);
+  await keyboard.click();
+  const shortcuts = page.getByRole('dialog', {
+    name: 'Keyboard shortcuts',
+    exact: true,
+  });
+  await expect(shortcuts).toBeVisible();
+  await expect(
+    shortcuts.getByRole('table', { name: 'Charts', exact: true }),
+  ).toContainText('Home / End');
+  await expect(shortcuts.getByRole('radio')).toHaveCount(0);
+  const close = shortcuts.getByRole('button', {
+    name: 'Close keyboard shortcuts',
+    exact: true,
+  });
+  await close.focus();
+  await page.keyboard.press('Tab');
+  await expect(close).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(close).toBeFocused();
+  await page.keyboard.press('Control+k');
+  await expect(shortcuts).toBeVisible();
+  await expect(
+    page.getByRole('dialog', { name: 'Search / Add', exact: true }),
+  ).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await expect(shortcuts).not.toBeVisible();
+  await expect(keyboard).toBeFocused();
+  await gear.click();
+  const settings = page.getByRole('dialog', { name: 'Settings', exact: true });
+  await expect(settings.getByRole('table')).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Control+k');
+  await expect(
+    page.getByRole('dialog', { name: 'Search / Add', exact: true }),
+  ).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(
+    page.getByRole('dialog', { name: 'Search / Add', exact: true }),
+  ).toHaveCount(0);
+  const tabs = page
+    .getByRole('tablist', { name: 'Workspaces', exact: true })
+    .getByRole('tab');
+  await page
+    .getByRole('button', { name: 'New blank workspace', exact: true })
+    .click();
+  await expect(tabs).toHaveCount(2);
+  await page.keyboard.press('Control+z');
+  await expect(tabs).toHaveCount(1);
+  await page.keyboard.press('Control+Shift+z');
+  await expect(tabs).toHaveCount(2);
+});
+
 test('AI opens a dockable conversation, applies a view and can undo it', async ({
   page,
 }) => {
@@ -1387,6 +1489,16 @@ test('AI source data tables render wind and demand rows instead of an algorithm 
       exact: true,
     }),
   ).toHaveCount(0);
+  await page
+    .getByRole('button', {
+      name: 'Settings for Wind and demand data',
+      exact: true,
+    })
+    .click();
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: /Export.*CSV/i }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe('eisengrau-source-data.csv');
 });
 
 function failedTableProposal() {
