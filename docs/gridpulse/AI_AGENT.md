@@ -1,6 +1,6 @@
 # Terminal AI agent
 
-Implemented on `feat/terminal-ai-agent`; live CanopyWave/Kimi evidence retrieval and a stored algorithm execution have been verified. The [approved plan](AI_AGENT_IMPLEMENTATION_PLAN.md) records product decisions; this page describes the current code.
+Implemented on `feat/terminal-ai-agent`; live OpenRouter evidence retrieval and a stored algorithm execution have been verified. The [approved plan](AI_AGENT_IMPLEMENTATION_PLAN.md) records product decisions; this page describes the current code.
 
 ## User flow
 
@@ -18,11 +18,19 @@ Execution first reuses an available matching run. The conservative automatic tie
 
 Requests allow at most 366 days, bounded schema-declared parameter values, six model rounds, at most one additional schema-repair call, and twelve tool calls. Jobs run in spawned processes with their own DB connection and one fit worker; they have a 90-second default deadline. Cancellation first terminates gracefully and then kills an unresponsive process. Completed runs remain reusable. If a process requires a hard kill, its interrupted run can remain marked running; it is not served as a successful result.
 
+Normal views use `layout_mode=research`: a trusted frontend planner supplies a wide chart-first layout, a compact chat sidebar (about 340 px) or bottom dock (about 300 px), and supporting tabs. Primary charts come first in the proposal. Charts prefer at least 260 px height; at most three analytical rows are foregrounded, and crowded content stays accessible as tabs. Empty inspectors/unbound placeholders are not promoted into useful panels. Chart colours reuse the Overview metric catalogue and remain stable across source ordering.
+
+`layout_mode=preserve` retains explicit relative placement and snapped resizing for requests such as moving a table below an existing chart. Both modes use the layout engine's minimum sizes/reflow and document validation, commit once, and remain undoable. Manual docking remains available.
+
+Source tables project existing `/series` responses into virtualised rows with UTC timestamps, units, null gaps and linked zoom; they do not require an algorithm. Algorithm tables require a real named table. Comparisons require an inspected numeric algorithm table/metric/category and cannot stand in for raw wind/demand data. No additional data-table backend or per-hover requests are introduced.
+
+The model receives widget-specific capabilities and UX instructions from `agent/prompts.py` and `agent/tools.py`. One bounded presentation correction is allowed for incompatible widgets or empty final explanations, within the existing round budget. Unsupported results are rejected before the client can create a placeholder.
+
 The view compiler validates source/output/table identifiers, pins algorithm run IDs, protects chat, checks two-unit chart limits, resolves relative placement and optional snapped divider steps, and uses existing atomic workspace actions. Clickable evidence opens the corresponding widget/run; uninspected run lists are not treated as a specific result. Data widgets continue fetching through the normal request pool, and hover remains local.
 
 ## Configuration and deployment
 
-Backend reads `CWAVE_API_KEY`, `AGENT_BASE_URL` and `AGENT_MODEL`; defaults select CanopyWave Kimi K2.6. The [provider note](AI_AGENT_PROVIDER_RESEARCH.md) records endpoint details and live-check evidence. Earlier Gemini fields remain optional compatibility settings, not fallback behaviour.
+Backend reads `OPENROUTER_API_KEY`, `AGENT_PROVIDER`, `AGENT_BASE_URL`, `AGENT_MODEL` and `AGENT_REASONING_EFFORT`; defaults select OpenRouter GPT-5.4 mini with low reasoning. CanopyWave/Kimi is an explicit legacy configuration, not an automatic fallback. The [provider note](AI_AGENT_PROVIDER_RESEARCH.md) records endpoint details and live-check evidence. Earlier provider fields remain optional compatibility settings, not fallback behaviour.
 
 Set the same random `AGENT_ACCESS_TOKEN` in the backend environment and the SvelteKit server environment. Local development uses root/application `.env` for the backend and `gridpulse/frontend/.env` for SvelteKit. Never prefix it PUBLIC_. Docker Compose passes only that proxy token to the web service; inference credentials stay backend-only. A matching local token was generated in ignored env files during implementation.
 
@@ -38,6 +46,8 @@ Live verification: a real Kimi turn fetched price/wind evidence for 23 October 2
 
 Deployment-specific cancellation/proxy streaming remains to be checked after deployment. Mocked tests establish application behaviour, not broad model quality. One live example is not evidence that all investigations will choose the best algorithms.
 
-A real headless-browser smoke test also traversed the local SvelteKit POST proxy, authenticated backend, Kimi and Tiger Data, then rendered a price/wind chart with no browser or chat errors. Single-day evidence retains 30-minute settlement values to match the plotted data; wider daily aggregates and partial samples must be labelled in answers.
+A real headless-browser smoke test also traversed the local SvelteKit POST proxy, authenticated backend, OpenRouter and Tiger Data, then rendered a price/wind chart with no browser or chat errors. Single-day evidence retains 30-minute settlement values to match the plotted data; wider daily aggregates and partial samples must be labelled in answers.
 
-Final local checks: backend agent/API suite **61 passed**; frontend unit suite **41 passed**; browser suite **35 passed**; Svelte check reported zero errors/warnings; production build succeeded. The browser suite includes compact-screen chat docking and manual-edit conflict handling. Deployed-stack checks remain separate from these local results.
+Final local checks: backend agent/API suite **67 passed**; frontend unit suite **47 passed**; browser suite **36 passed**; Svelte check reported zero errors/warnings; production build succeeded. The browser suite includes compact-screen chat docking and manual-edit conflict handling. Deployed-stack checks remain separate from these local results.
+
+Current model selection and February–March chart/table verification: [provider and model note](AI_AGENT_PROVIDER_RESEARCH.md). Earlier Kimi/Fourier smoke tests above record the initial implementation; they do not identify the current default model.

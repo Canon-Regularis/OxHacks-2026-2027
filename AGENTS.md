@@ -10,7 +10,7 @@ Use this file as repository-wide guidance when working on GridPulse. It records 
 - **MVP:** existing API-to-CSV exporter → backend ingestion → Tiger Data → backend algorithms → backend API → polished frontend dashboard.
 - **Current constraint:** no ML model training in the MVP. Reuse existing algorithm implementations where suitable, with their actual inputs, outputs and limitations documented.
 - **Hosting:** Vultr for the application.
-- **Main extension:** a backend Kimi K2.6 agent through CanopyWave that uses data and analysis tools to investigate results and answer higher-level questions.
+- **Main extension:** a backend OpenRouter agent (GPT-5.4 mini by default) that uses data and analysis tools to investigate results and answer higher-level questions.
 - **Optional sponsor exploration:** Snowflake API, with its useful role still to be decided. It is not a core dependency.
 
 ## Intended code and design sources
@@ -61,14 +61,14 @@ Other proposed extensions include a probabilistic scenario engine, an autonomous
 
 ## Confirmed frontend and map direction
 
-**Confirmed frontend scope:** Overview, Terminal (formerly Explore) and Methods are MVP pages. Overview and the docked Terminal are implemented; About holds the globe and animated explanations. Methods remains planned; the Kimi Terminal agent is implemented, while the synoptic weather map remains an extension.
+**Confirmed frontend scope:** Overview, Terminal (formerly Explore) and Methods are MVP pages. Overview and the docked Terminal are implemented; About holds the globe and animated explanations. Methods remains planned; the Terminal AI agent is implemented, while the synoptic weather map remains an extension.
 
 
 Follow [FRONTEND_DESIGN.md](docs/gridpulse/FRONTEND_DESIGN.md). Preserve KCPC responsiveness/theme and requested globe/fade effects; use committee-style motion where appropriate and Software-style cards for sectioned content. Reference repos are selective reuse sources, not a requirement to copy the whole site.
 
 Before changing Overview selection, cards, axes or scan behaviour, read the selection rules in [FRONTEND_DESIGN.md](docs/gridpulse/FRONTEND_DESIGN.md#confirmed-implementation-decisions). Keep the shared metric catalogue as the definition of units and colours.
 
-The Kimi Terminal agent should support animated view changes during investigations. The synoptic-map extension should represent wind, pressure, fronts and isobars correctly and allow a separate UK electricity-use/forecast overlay. Exact tools, weather providers and regional-data sources are not selected. Do not promote proposed layouts, API recommendations or scenario-engine ideas into confirmed scope.
+The Terminal AI agent should support animated view changes during investigations. The synoptic-map extension should represent wind, pressure, fronts and isobars correctly and allow a separate UK electricity-use/forecast overlay. Exact tools, weather providers and regional-data sources are not selected. Do not promote proposed layouts, API recommendations or scenario-engine ideas into confirmed scope.
 
 ## Integration agreements still needed
 

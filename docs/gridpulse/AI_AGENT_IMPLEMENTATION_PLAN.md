@@ -6,9 +6,9 @@ Status: user-approved design, 25 October 2026. Implementation begins on `feat/te
 
 An AI button on Terminal opens a chat tab. The user asks a question; the agent discovers suitable available algorithms and views, retrieves supporting results, chooses widgets and their relative orientation, and loads the view automatically. Follow-up questions can refine the view. Keep the system modular so new catalogue algorithms become discoverable without adding a prompt branch for each one.
 
-Use Kimi K2.6 through the configured inference provider. Earlier Gemini-only descriptions are superseded for this feature. Do not train ML models or invent missing results. Reuse matching stored results first; run missing registered analyses with supported parameters, requiring explicit confirmation for expensive jobs. Continue using the shared [frontend API](FRONTEND_API.md), [algorithm display contract](ALGORITHM_DISPLAY.md) and [Terminal workspace rules](TERMINAL_WORKSPACE.md).
+Use the configured OpenRouter agent model; the current default is GPT-5.4 mini with low reasoning. This supersedes the earlier Kimi default. Earlier Gemini-only descriptions are superseded for this feature. Do not train ML models or invent missing results. Reuse matching stored results first; run missing registered analyses with supported parameters, requiring explicit confirmation for expensive jobs. Continue using the shared [frontend API](FRONTEND_API.md), [algorithm display contract](ALGORITHM_DISPLAY.md) and [Terminal workspace rules](TERMINAL_WORKSPACE.md).
 
-UX decisions below were confirmed through the grilling interview. Provider endpoint compatibility remains a technical prerequisite; `CWAVE_API_KEY` is configured server-side with an explicit base URL and model.
+UX decisions below were confirmed through the grilling interview. Provider endpoint compatibility remains a technical prerequisite; `OPENROUTER_API_KEY` is configured server-side with an explicit provider, base URL and model.
 
 ## Confirmed interaction and state rules
 
@@ -44,7 +44,7 @@ This is architectural inspiration, not a wholesale port of Discord, web scraping
 ```text
 Terminal chat + bounded workspace snapshot
   → dedicated same-origin POST proxy
-  → backend agent orchestrator → Kimi provider adapter
+  → backend agent orchestrator → configured model adapter
                             ↔ allowlisted data/catalogue tools
   ← answer/progress/evidence + complete typed view proposal
   → frontend view compiler → dry-run validated actions
@@ -86,11 +86,11 @@ A successful proposal applies immediately and becomes one undo transaction. Fail
 
 ## Provider and transport
 
-See [provider research](AI_AGENT_PROVIDER_RESEARCH.md). The user confirmed CanopyWave: `https://inference.canopywave.io/v1`, model `moonshotai/kimi-k2.6`, backend `CWAVE_API_KEY`. Earlier CoreWeave assumptions are superseded. Do not silently switch to Minimax or Gemini. Keep explicit server-side base URL/model configuration and the async HTTP client in runtime dependencies.
+See [provider/model research](AI_AGENT_PROVIDER_RESEARCH.md). The selected provider is OpenRouter (`https://openrouter.ai/api/v1`), model `openai/gpt-5.4-mini`, key `OPENROUTER_API_KEY`, reasoning effort `low`. CanopyWave remains explicit legacy configuration only; do not silently fall back to it or another model.
 
-The first implementation uses schema-validated JSON decision envelopes over ordinary Chat Completions; malformed output fails closed. This does not depend on provider-native tool or structured-output extensions. The corrected credential passed a live JSON check and a read-only Tiger Data investigation. One schema-only repair per investigation handles malformed model decisions while preserving strict validation.
+The adapter requests JSON-object output and excludes private reasoning, then validates locally. One schema repair per investigation and one presentation correction within the existing six-round budget handle malformed decisions and incompatible/empty widgets. The dedicated SSE endpoint, same-origin proxy, cancellation, execution approval and evidence rules remain unchanged. Model identity is supplied in the started event rather than hardcoded in chat.
 
-The dedicated endpoint is `POST /api/agent/turns/stream`, application SSE over fetch. Events are `started`, `progress`, `evidence`, `answer`, `view`, `confirmation`, `completed`, `error`. Normal events carry version, turn ID and sequence; terminal errors may omit sequence. Provider answer tokens are not yet streamed incrementally. Layout application is acknowledged locally in the transcript only after successful compilation; no server transcript or apply-ack endpoint is retained in this version. AbortController propagates cancellation through the proxy and ASGI response.
+Presentation uses `layout_mode=research` by default: the frontend assigns wide chart geometry and compact chat/supporting tabs. Use `preserve` for explicit relative placement/resize requests. The model still selects content, outputs, groups, table metrics/categories and primary ordering; it cannot create an unsupported renderer. Source tables are real time-series data tables; comparisons require inspected numeric algorithm tables. See [the implementation guide](AI_AGENT.md) for current layout and compatibility rules.
 
 Exclude agent streams from response caching/recording and buffering middleware; review GZip, deployment proxy buffering and timeouts. Never log full prompts, secrets or provider bodies by default. Provider reasoning fields needed for continuation remain server-side; do not expose chain-of-thought as chat content.
 
@@ -162,4 +162,4 @@ First usable milestone: “show price and wind with an available relevant algori
 - [x] Missing-analysis execution, expensive-job confirmation and cancellation.
 - [x] Integration tests, provider compatibility evidence and documentation.
 
-Implementation details, limits, tests and remaining live verification are tracked in [AI_AGENT.md](AI_AGENT.md). Live Kimi price/wind retrieval and a real Fourier computation (stored run 49) succeeded. Deployed-stack streaming/cancellation verification remains a deployment check.
+Implementation details, limits, tests and remaining live verification are tracked in [AI_AGENT.md](AI_AGENT.md). Live price/wind retrieval and a real Fourier computation (stored run 49) succeeded. Deployed-stack streaming/cancellation verification remains a deployment check.
