@@ -7,7 +7,6 @@
     | null
   >(null);
   let reduced = $derived(reducedMotion(settings));
-  let globeWidth = $state(360);
   let ready = $state(false);
   const globeColor = '#fafafa';
   onMount(() => {
@@ -31,19 +30,19 @@
     </p>
     <a class="text-link" href="/">Open the overview <span>↗</span></a>
   </div>
-  <div class="hero-globe" bind:clientWidth={globeWidth} aria-hidden="true">
-    {#if Globe && ready}{#key `${Math.round(globeWidth)}-${reduced}-${globeColor}`}<Globe
-          width={Math.max(240, Math.round(globeWidth))}
-          height={310}
-          scale={125}
-          rotationSpeed={reduced ? 0 : 0.2}
-          autoRotate={!reduced}
-          scrollable={false}
-          landOutlineColor={globeColor}
-          graticuleColor="#a1a1a1"
-          coastColor={globeColor}
-          halftoneDotColor="#a1a1a1"
-        />{/key}{/if}
+  <div class="hero-globe" aria-hidden="true">
+    {#if Globe && ready}<Globe
+        width={420}
+        height={310}
+        scale={125}
+        rotationSpeed={reduced ? 0 : 0.2}
+        autoRotate={!reduced}
+        scrollable={false}
+        landOutlineColor={globeColor}
+        graticuleColor="#a1a1a1"
+        coastColor={globeColor}
+        halftoneDotColor="#a1a1a1"
+      />{/if}
     <span class="globe-caption">GREAT BRITAIN / CONNECTED ENERGY</span>
   </div>
 </section>

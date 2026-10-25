@@ -64,7 +64,8 @@
     <div class="absolute inset-0" aria-hidden="true">
       {#if Pixels && !reduced}<Pixels
           color="#e6b080"
-          speed={1}
+          speed={0.35}
+          patternDensity={1.8}
           edgeFade={0.7}
           rippleSpeed={0.2}
         />{/if}
