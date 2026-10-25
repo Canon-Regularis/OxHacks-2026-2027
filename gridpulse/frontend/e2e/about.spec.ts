@@ -39,3 +39,27 @@ test('About, its decorative bands, header and footer fill the viewport', async (
     ).toBe(true);
   }
 });
+
+test('favicon serves the navbar logo as SVG on every page', async ({
+  page,
+}) => {
+  for (const path of ['/about', '/', '/status']) {
+    await page.goto(path);
+    const icon = page.locator('link[rel="icon"]');
+    await expect(icon).toHaveAttribute('type', 'image/svg+xml');
+    const href = await icon.getAttribute('href');
+    const response = await page.request.get(new URL(href!, page.url()).href);
+    expect(response.ok()).toBe(true);
+    expect(response.headers()['content-type']).toContain('image/svg+xml');
+    const svg = await response.text();
+    const matches = await page.evaluate((source) => {
+      const favicon = new DOMParser().parseFromString(source, 'image/svg+xml');
+      return (
+        favicon.querySelector('path')?.getAttribute('d') ===
+          document.querySelector('.brand svg path')?.getAttribute('d') &&
+        favicon.querySelector('circle')?.getAttribute('r') === '13'
+      );
+    }, svg);
+    expect(matches).toBe(true);
+  }
+});
