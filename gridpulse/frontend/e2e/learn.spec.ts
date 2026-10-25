@@ -182,6 +182,7 @@ test('new pages and navigation fit narrow screens while the dataset table scroll
         'Terminal',
         'Data sources',
         'Quick start',
+        'Status',
         'About',
       ])
         await expect(

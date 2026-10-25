@@ -1001,3 +1001,725 @@ test('keyboard panel has its own navbar button, traps focus and blocks workspace
   await page.keyboard.press('Control+Shift+z');
   await expect(tabs).toHaveCount(2);
 });
+
+test('AI opens a dockable conversation, applies a view and can undo it', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.route('**/api/agent/turns/stream', async (route) => {
+    const turn = route.request().postDataJSON();
+    const messages = [
+      { type: 'started' },
+      { type: 'answer', text: 'Here is your price view.', references: [] },
+      {
+        type: 'view',
+        workspace_id: turn.workspace_id,
+        revision: turn.revision,
+        view: {
+          version: 1,
+          from_date: date,
+          to_date: date,
+          widgets: [
+            {
+              key: 'price',
+              existing: null,
+              type: 'chart',
+              title: 'AI price evidence',
+              series: ['price'],
+              algorithm: null,
+              run_id: null,
+              outputs: [],
+              table: '',
+              group: 'A',
+              relative_to: null,
+              position: 'tab',
+              notes: '',
+            },
+          ],
+          remove: [],
+          background_chat: true,
+          new_workspace: false,
+          name: 'AI view',
+        },
+      },
+      { type: 'completed' },
+    ];
+    await route.fulfill({
+      contentType: 'text/event-stream',
+      body: messages
+        .map(
+          (event, i) =>
+            `data: ${JSON.stringify({ version: 1, turn_id: turn.turn_id, sequence: i + 1, ...event })}\n\n`,
+        )
+        .join(''),
+    });
+  });
+  await page.goto('/terminal');
+  await page.getByRole('button', { name: '✦ AI', exact: true }).click();
+  await page
+    .getByRole('textbox', { name: 'Message AI' })
+    .fill('Set up a price workspace');
+  await page.getByRole('button', { name: 'Send ↗', exact: true }).click();
+  await expect(
+    page.getByRole('tab', { name: 'AI price evidence', exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: '✦ AI', exact: true }).click();
+  await expect(
+    page.getByText('View updated. Use Go back to undo.', { exact: false }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: '↶ Go back', exact: true }).click();
+  await expect(
+    page.getByRole('tab', { name: 'AI price evidence', exact: true }),
+  ).toHaveCount(0);
+  await page.reload();
+  await page.getByRole('button', { name: '✦ AI', exact: true }).click();
+  await expect(
+    page.getByText('Set up a price workspace', { exact: true }),
+  ).toBeVisible();
+  const persistent = await page.evaluate(() =>
+    localStorage.getItem('eisengrau:terminal:v1'),
+  );
+  expect(persistent).not.toContain('"type":"chat"');
+  expect(errors).toEqual([]);
+});
+
+test('empty workspace starts with chat and promotes it after submission', async ({
+  page,
+}) => {
+  await page.route('**/api/agent/turns/stream', async (route) => {
+    const turn = route.request().postDataJSON();
+    await route.fulfill({
+      contentType: 'text/event-stream',
+      body: [
+        {
+          type: 'answer',
+          text: 'Which wind series would you like?',
+          references: [],
+        },
+        { type: 'completed' },
+      ]
+        .map(
+          (event, i) =>
+            `data: ${JSON.stringify({ version: 1, turn_id: turn.turn_id, sequence: i + 1, ...event })}\n\n`,
+        )
+        .join(''),
+    });
+  });
+  await page.goto('/terminal');
+  await page
+    .getByRole('button', { name: 'New blank workspace', exact: true })
+    .click();
+  await expect(
+    page.getByRole('heading', { name: 'What would you like to investigate?' }),
+  ).toBeVisible();
+  await page.getByRole('textbox', { name: 'Message AI' }).fill('Show wind');
+  await page.getByRole('button', { name: 'Send ↗', exact: true }).click();
+  await expect(
+    page.getByRole('tab', { name: 'AI chat', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText('Which wind series would you like?', { exact: true }),
+  ).toBeVisible();
+});
+
+test('multiple AI tabs keep conversations separate and cancel a pending turn', async ({
+  page,
+}) => {
+  await page.route('**/api/agent/turns/stream', async (route) => {
+    const turn = route.request().postDataJSON();
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    await route
+      .fulfill({
+        contentType: 'text/event-stream',
+        body: [
+          { type: 'answer', text: `Answer to ${turn.message}`, references: [] },
+          { type: 'completed' },
+        ]
+          .map(
+            (event, i) =>
+              `data: ${JSON.stringify({ version: 1, turn_id: turn.turn_id, sequence: i + 1, ...event })}\n\n`,
+          )
+          .join(''),
+      })
+      .catch(() => {});
+  });
+  await page.goto('/terminal');
+  await page.getByRole('button', { name: '✦ AI', exact: true }).click();
+  await page
+    .getByRole('textbox', { name: 'Message AI' })
+    .fill('First conversation');
+  await page.getByRole('button', { name: 'Send ↗', exact: true }).click();
+  await expect(
+    page.getByText('Answer to First conversation', { exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'New chat', exact: true }).click();
+  const inputs = page.getByRole('textbox', { name: 'Message AI' });
+  await expect(inputs).toHaveCount(2);
+  await inputs.last().fill('Second conversation');
+  await page
+    .getByRole('button', { name: 'Send ↗', exact: true })
+    .last()
+    .click();
+  await page
+    .getByRole('button', { name: 'Cancel', exact: true })
+    .last()
+    .click();
+  await expect(
+    page.getByText('Cancelled. Completed results remain available.', {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByText('Answer to Second conversation', { exact: true }),
+  ).toHaveCount(0);
+});
+
+test('AI computation confirmation is explicit and carries its approval token', async ({
+  page,
+}) => {
+  const submissions: Record<string, unknown>[] = [];
+  await page.route('**/api/agent/turns/stream', async (route) => {
+    const turn = route.request().postDataJSON();
+    submissions.push(turn);
+    const events = turn.approval
+      ? [
+          {
+            type: 'answer',
+            text: 'Approved analysis completed.',
+            references: [],
+          },
+          { type: 'completed' },
+        ]
+      : [
+          {
+            type: 'confirmation',
+            approval: 'test-approval',
+            request: {
+              algorithm: 'price_naive_backtest',
+              from_date: date,
+              to_date: date,
+              params: {},
+            },
+            message: 'Confirm this backtest before running.',
+          },
+          { type: 'completed' },
+        ];
+    await route.fulfill({
+      contentType: 'text/event-stream',
+      body: events
+        .map(
+          (event, i) =>
+            `data: ${JSON.stringify({ version: 1, turn_id: turn.turn_id, sequence: i + 1, ...event })}\n\n`,
+        )
+        .join(''),
+    });
+  });
+  await page.goto('/terminal');
+  await page.getByRole('button', { name: '✦ AI', exact: true }).click();
+  await page
+    .getByRole('textbox', { name: 'Message AI' })
+    .fill('Run a backtest');
+  await page.getByRole('button', { name: 'Send ↗', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Run analysis', exact: true }),
+  ).toBeVisible();
+  expect(submissions).toHaveLength(1);
+  await page.getByRole('button', { name: 'Run analysis', exact: true }).click();
+  await expect(
+    page.getByText('Approved analysis completed.', { exact: true }),
+  ).toBeVisible();
+  expect(submissions[1].approval).toBe('test-approval');
+});
+
+test('manual edits during an AI turn cause one refresh instead of being overwritten', async ({
+  page,
+}) => {
+  let count = 0;
+  await page.route('**/api/agent/turns/stream', async (route) => {
+    const turn = route.request().postDataJSON();
+    count++;
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await route.fulfill({
+      contentType: 'text/event-stream',
+      body: [
+        {
+          type: 'view',
+          workspace_id: turn.workspace_id,
+          revision: turn.revision,
+          view: {
+            version: 1,
+            from_date: date,
+            to_date: date,
+            widgets: [],
+            remove: [],
+            background_chat: false,
+            new_workspace: false,
+            name: 'View',
+          },
+        },
+        { type: 'completed' },
+      ]
+        .map(
+          (event, i) =>
+            `data: ${JSON.stringify({ version: 1, turn_id: turn.turn_id, sequence: i + 1, ...event })}\n\n`,
+        )
+        .join(''),
+    });
+  });
+  await page.goto('/terminal');
+  await page.getByRole('button', { name: '✦ AI', exact: true }).click();
+  await page
+    .getByRole('textbox', { name: 'Message AI' })
+    .fill('Inspect the workspace');
+  await page.getByRole('button', { name: 'Send ↗', exact: true }).click();
+  await expect.poll(() => count).toBe(1);
+  await page
+    .getByRole('button', { name: 'Layout unlocked', exact: true })
+    .click();
+  await expect.poll(() => count).toBe(2);
+  await page.getByRole('button', { name: '🔒 Locked', exact: true }).click();
+  await expect(
+    page.getByText('Workspace changed again.', { exact: false }),
+  ).toBeVisible();
+  expect(count).toBe(2);
+  await expect(
+    page.getByRole('button', { name: 'Layout unlocked', exact: true }),
+  ).toBeVisible();
+});
+
+test('AI chat opens in compact mode without discarding the desktop tree', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/terminal');
+  await expect(
+    page.getByRole('button', { name: '✦ AI', exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: '✦ AI', exact: true }).click();
+  await expect(page.getByRole('textbox', { name: 'Message AI' })).toBeVisible();
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(page.getByRole('textbox', { name: 'Message AI' })).toBeVisible();
+  await expect(
+    page.locator('path[data-terminal-series="price"]'),
+  ).toBeVisible();
+});
+
+test('AI renders a February–March investigation with charts placed relative to newly created charts', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.route('**/api/agent/turns/stream', async (route) => {
+    const turn = route.request().postDataJSON();
+    const base = {
+      existing: null,
+      type: 'chart',
+      series: ['price'],
+      algorithm: null,
+      run_id: null,
+      outputs: [],
+      table: '',
+      group: 'A',
+      relative_to: null,
+      position: 'right',
+      notes: '',
+    };
+    const events = [
+      {
+        type: 'answer',
+        text: 'Here are the February–March views.',
+        references: [],
+      },
+      {
+        type: 'view',
+        workspace_id: turn.workspace_id,
+        revision: turn.revision,
+        view: {
+          version: 1,
+          from_date: '2026-02-01',
+          to_date: '2026-03-31',
+          widgets: [
+            { ...base, key: 'price', title: 'February–March prices' },
+            {
+              ...base,
+              key: 'wind',
+              title: 'February–March wind',
+              series: ['wind'],
+              relative_to: 'price',
+              position: 'bottom',
+            },
+            {
+              ...base,
+              key: 'demand',
+              title: 'February–March demand',
+              series: ['demand'],
+              relative_to: 'wind',
+              position: 'tab',
+            },
+          ],
+          remove: [],
+          background_chat: false,
+          new_workspace: false,
+          name: 'Market relationships',
+        },
+      },
+      { type: 'completed' },
+    ];
+    await route.fulfill({
+      contentType: 'text/event-stream',
+      body: events
+        .map(
+          (event, i) =>
+            `data: ${JSON.stringify({ version: 1, turn_id: turn.turn_id, sequence: i + 1, ...event })}\n\n`,
+        )
+        .join(''),
+    });
+  });
+  await page.goto('/terminal');
+  await page
+    .getByRole('button', { name: 'New blank workspace', exact: true })
+    .click();
+  await page
+    .getByRole('textbox', { name: 'Message AI' })
+    .fill('Visualise prices, wind and demand from February to March 2026');
+  await page.getByRole('button', { name: 'Send ↗', exact: true }).click();
+  for (const title of [
+    'February–March prices',
+    'February–March wind',
+    'February–March demand',
+  ])
+    await expect(
+      page.getByRole('tab', { name: title, exact: true }),
+    ).toBeVisible();
+  await expect(
+    page.getByText('View updated. Use Go back to undo.', { exact: false }),
+  ).toBeVisible();
+  await expect(page.locator('.terminal-chat [role="alert"]')).toHaveCount(0);
+  await expect
+    .poll(() =>
+      requests.some(
+        (url) =>
+          url.includes('/api/series?') &&
+          url.includes('from=2026-02-01') &&
+          url.includes('to=2026-03-31'),
+      ),
+    )
+    .toBe(true);
+  await page.getByRole('button', { name: '↶ Go back', exact: true }).click();
+  for (const title of [
+    'February–March prices',
+    'February–March wind',
+    'February–March demand',
+  ])
+    await expect(
+      page.getByRole('tab', { name: title, exact: true }),
+    ).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('AI source data tables render wind and demand rows instead of an algorithm placeholder', async ({
+  page,
+}) => {
+  await page.route('**/api/agent/turns/stream', async (route) => {
+    const turn = route.request().postDataJSON();
+    const events = [
+      {
+        type: 'view',
+        workspace_id: turn.workspace_id,
+        revision: turn.revision,
+        view: {
+          version: 1,
+          from_date: date,
+          to_date: date,
+          widgets: [
+            {
+              key: 'data',
+              existing: null,
+              type: 'table',
+              title: 'Wind and demand data',
+              series: ['wind', 'demand'],
+              algorithm: null,
+              run_id: null,
+              outputs: [],
+              table: '',
+              group: 'A',
+              relative_to: null,
+              position: 'tab',
+              notes: '',
+            },
+          ],
+          remove: [],
+          background_chat: false,
+          new_workspace: false,
+          name: 'Data',
+        },
+      },
+      { type: 'completed' },
+    ];
+    await route.fulfill({
+      contentType: 'text/event-stream',
+      body: events
+        .map(
+          (event, i) =>
+            `data: ${JSON.stringify({ version: 1, turn_id: turn.turn_id, sequence: i + 1, ...event })}\n\n`,
+        )
+        .join(''),
+    });
+  });
+  await page.goto('/terminal');
+  await page.getByRole('button', { name: '✦ AI', exact: true }).click();
+  await page
+    .getByRole('textbox', { name: 'Message AI' })
+    .fill('Show a table of wind and demand');
+  await page.getByRole('button', { name: 'Send ↗', exact: true }).click();
+  await page
+    .getByRole('tab', { name: 'Wind and demand data', exact: true })
+    .click();
+  await expect(
+    page.getByRole('columnheader', { name: /Wind forecast/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('columnheader', { name: /National demand/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByText('Choose an algorithm binding in widget settings.', {
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await page
+    .getByRole('button', {
+      name: 'Settings for Wind and demand data',
+      exact: true,
+    })
+    .click();
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: /Export.*CSV/i }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe('eisengrau-source-data.csv');
+});
+
+function failedTableProposal() {
+  return {
+    version: 1,
+    layout_mode: 'preserve',
+    from_date: date,
+    to_date: date,
+    widgets: [
+      {
+        key: 'numbers',
+        existing: null,
+        type: 'table',
+        title: 'Repaired numerical data',
+        series: ['wind', 'demand'],
+        algorithm: null,
+        run_id: null,
+        outputs: [],
+        table: '',
+        group: 'A',
+        relative_to: null,
+        position: 'tab',
+        size_step: 1,
+        notes: '',
+      },
+    ],
+    remove: [],
+    background_chat: false,
+    new_workspace: false,
+    name: 'Data',
+  };
+}
+test('AI receives a minimum-size error and repairs the layout without publishing false success', async ({
+  page,
+}) => {
+  const submissions: {
+    layout_feedback: { error: string; attempt: number } | null;
+    approval: string | null;
+    history: { content: string }[];
+  }[] = [];
+  await page.route('**/api/agent/turns/stream', async (route) => {
+    const turn = route.request().postDataJSON();
+    submissions.push(turn);
+    const view = failedTableProposal();
+    if (turn.layout_feedback) {
+      view.layout_mode = 'research';
+      view.widgets[0].size_step = 8;
+    }
+    const events = [
+      {
+        type: 'answer',
+        text: turn.layout_feedback
+          ? 'Prepared a corrected numerical table.'
+          : 'I already added the table successfully.',
+        references: [],
+      },
+      {
+        type: 'view',
+        workspace_id: turn.workspace_id,
+        revision: turn.revision,
+        view,
+      },
+      { type: 'completed' },
+    ];
+    await route.fulfill({
+      contentType: 'text/event-stream',
+      body: events
+        .map(
+          (event, i) =>
+            `data: ${JSON.stringify({ version: 1, turn_id: turn.turn_id, sequence: i + 1, ...event })}\n\n`,
+        )
+        .join(''),
+    });
+  });
+  await page.goto('/terminal');
+  await page.getByRole('button', { name: '✦ AI', exact: true }).click();
+  await page
+    .getByRole('textbox', { name: 'Message AI' })
+    .fill('Add a numerical wind and demand table');
+  await page.getByRole('button', { name: 'Send ↗', exact: true }).click();
+  await expect(
+    page.getByRole('tab', { name: 'Repaired numerical data', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText('Prepared a corrected numerical table.', { exact: false }),
+  ).toBeVisible();
+  await expect(
+    page.getByText('I already added the table successfully.', { exact: false }),
+  ).toHaveCount(0);
+  expect(submissions).toHaveLength(2);
+  expect(submissions[1].layout_feedback!.error).toBe(
+    'Minimum widget size reached.',
+  );
+  expect(submissions[1].layout_feedback!.attempt).toBe(1);
+  expect(submissions[1].approval).toBeNull();
+  expect(
+    submissions[1].history.some((message) =>
+      message.content.includes('already added'),
+    ),
+  ).toBe(false);
+  await page.getByRole('button', { name: '↶ Go back', exact: true }).click();
+  await expect(
+    page.getByRole('tab', { name: 'Repaired numerical data', exact: true }),
+  ).toHaveCount(0);
+});
+test('AI stops after two failed layout repairs and keeps the previous workspace', async ({
+  page,
+}) => {
+  let requests = 0;
+  await page.route('**/api/agent/turns/stream', async (route) => {
+    const turn = route.request().postDataJSON();
+    requests++;
+    const events = [
+      {
+        type: 'answer',
+        text: 'I already added the table successfully.',
+        references: [],
+      },
+      {
+        type: 'view',
+        workspace_id: turn.workspace_id,
+        revision: turn.revision,
+        view: failedTableProposal(),
+      },
+      { type: 'completed' },
+    ];
+    await route.fulfill({
+      contentType: 'text/event-stream',
+      body: events
+        .map(
+          (event, i) =>
+            `data: ${JSON.stringify({ version: 1, turn_id: turn.turn_id, sequence: i + 1, ...event })}\n\n`,
+        )
+        .join(''),
+    });
+  });
+  await page.goto('/terminal');
+  await page.getByRole('button', { name: '✦ AI', exact: true }).click();
+  await page
+    .getByRole('textbox', { name: 'Message AI' })
+    .fill('Add a numerical table');
+  await page.getByRole('button', { name: 'Send ↗', exact: true }).click();
+  await expect(
+    page.getByText('Could not apply the view after 2 repair attempts.', {
+      exact: false,
+    }),
+  ).toBeVisible();
+  expect(requests).toBe(3);
+  await expect(
+    page.getByRole('tab', { name: 'Repaired numerical data', exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText('I already added the table successfully.', { exact: false }),
+  ).toHaveCount(0);
+  await expect(
+    page.locator('path[data-terminal-series="price"]'),
+  ).toBeVisible();
+});
+
+test('AI separates five analytical panels while leaving its chat behind a tab', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1600, height: 1100 });
+  let turns = 0;
+  await page.route('**/api/agent/turns/stream', async (route) => {
+    const turn = route.request().postDataJSON();
+    turns++;
+    const view = failedTableProposal();
+    view.layout_mode = turns === 1 ? 'research' : 'separate';
+    view.new_workspace = turns === 1;
+    view.background_chat = turns !== 1;
+    view.widgets =
+      turns === 1
+        ? Array.from({ length: 5 }, (_, i) => ({
+            ...view.widgets[0],
+            key: `panel${i}`,
+            title: `Test panel ${i}`,
+            type: i < 3 ? 'chart' : 'table',
+            size_step: 8,
+          }))
+        : [];
+    const events = [
+      { type: 'answer', text: 'Panels prepared.', references: [] },
+      {
+        type: 'view',
+        workspace_id: turn.workspace_id,
+        revision: turn.revision,
+        view,
+      },
+      { type: 'completed' },
+    ];
+    await route.fulfill({
+      contentType: 'text/event-stream',
+      body: events
+        .map(
+          (event, i) =>
+            `data: ${JSON.stringify({ version: 1, turn_id: turn.turn_id, sequence: i + 1, ...event })}\n\n`,
+        )
+        .join(''),
+    });
+  });
+  await page.goto('/terminal');
+  await page.getByRole('button', { name: '✦ AI', exact: true }).click();
+  await page
+    .getByRole('textbox', { name: 'Message AI' })
+    .fill('Create three graphs and two numerical views');
+  await page.getByRole('button', { name: 'Send ↗', exact: true }).click();
+  await expect(
+    page.getByText('Panels prepared.', { exact: false }),
+  ).toBeVisible();
+  await page
+    .getByRole('textbox', { name: 'Message AI' })
+    .fill('Separate all current tabs except your tab');
+  await page.getByRole('button', { name: 'Send ↗', exact: true }).click();
+  await expect(page.locator('.terminal-tile')).toHaveCount(5);
+  for (let i = 0; i < 5; i++)
+    await expect(
+      page.getByRole('tab', { name: `Test panel ${i}`, exact: true }),
+    ).toBeVisible();
+  expect(turns).toBe(2);
+  await page.getByRole('button', { name: '✦ AI', exact: true }).click();
+  await page.getByRole('button', { name: '↶ Go back', exact: true }).click();
+  await expect(page.locator('.terminal-tile')).not.toHaveCount(5);
+});

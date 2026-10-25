@@ -1,5 +1,5 @@
 export type WidgetType =
-  'chart' | 'table' | 'comparison' | 'inspector' | 'context';
+  'chart' | 'table' | 'comparison' | 'inspector' | 'context' | 'chat';
 export type Position = 'left' | 'right' | 'top' | 'bottom' | 'tab';
 export type Layout =
   | { kind: 'stack'; id: string; widgets: string[]; active: string }
@@ -75,6 +75,7 @@ export const LIMITS = {
   history: 40,
 };
 export const MINIMUM: Record<WidgetType, Size> = {
+  chat: { width: 300, height: 240 },
   chart: { width: 320, height: 200 },
   table: { width: 280, height: 180 },
   comparison: { width: 280, height: 180 },
@@ -94,6 +95,7 @@ export function createWidget(
     id: uid(),
     type,
     title: {
+      chat: 'AI chat',
       chart: 'Time series',
       table: 'Results table',
       comparison: 'Metric comparison',

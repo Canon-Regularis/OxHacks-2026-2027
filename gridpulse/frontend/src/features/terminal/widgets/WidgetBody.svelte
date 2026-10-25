@@ -8,6 +8,7 @@
   import { isWidgetType } from '../model/document';
   import Chart from './Chart.svelte';
   import ResultTable from './ResultTable.svelte';
+  import { sourceTable } from './sourceTable';
   import Comparison from './Comparison.svelte';
   let {
     widget,
@@ -111,7 +112,12 @@
       ? widget.settings.table
       : Object.keys(data?.tables ?? {})[0],
   );
-  let table = $derived(data?.tables[tableName]);
+  let tableZoom = $derived(ctx.zoom);
+  let table = $derived(
+    widget.type === 'table' && binding?.kind === 'source' && data
+      ? sourceTable(data.t, data.columns, tableZoom, widget.settings.outputs)
+      : data?.tables[tableName],
+  );
   let csvExport = $derived.by(() => {
     const loaded = data;
     if (loading || error || !loaded) return null;
@@ -128,7 +134,7 @@
       (widget.type === 'table' || widget.type === 'comparison') &&
       selectedTable
     ) {
-      const filename = `eisengrau-${tableName.replace(/[^a-zA-Z0-9_-]/g, '_')}${runSuffix}.csv`;
+      const filename = `eisengrau-${(tableName ?? 'source-data').replace(/[^a-zA-Z0-9_-]/g, '_')}${runSuffix}.csv`;
       return () => downloadCsv(tableCsv(selectedTable), filename);
     }
     return null;
@@ -175,6 +181,7 @@
   {:else if widget.type === 'table'}{#if table}<ResultTable
         {table}
         onselect={onpin}
+        scope={binding?.kind === 'source' ? 'selected time range' : 'whole run'}
       />{:else}<p class="terminal-empty">
         {binding?.kind === 'algorithm'
           ? 'This run has no result tables.'

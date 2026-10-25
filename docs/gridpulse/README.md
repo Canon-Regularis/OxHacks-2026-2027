@@ -66,3 +66,7 @@ Keep retrospective observations distinguishable from forecasts. If presenting an
 - [ALGORITHMS_AND_ANALYSIS.md](ALGORITHMS_AND_ANALYSIS.md): integration contracts, backend API and validation.
 - [BUILD_AND_DEMO.md](BUILD_AND_DEMO.md): ownership, 25-hour checkpoints, dashboard and hosting.
 - [RESEARCH_AND_EXTENSIONS.md](RESEARCH_AND_EXTENSIONS.md): Gemini agent, optional Snowflake role and limitations.
+
+- [AI_AGENT_IMPLEMENTATION_PLAN.md](AI_AGENT_IMPLEMENTATION_PLAN.md): approved OpenRouter-powered Terminal chat, evidence tools and validated automatic layouts.
+
+- [AI_AGENT.md](AI_AGENT.md): implemented Terminal agent, configuration, execution limits and live-check status.
