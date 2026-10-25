@@ -37,19 +37,37 @@ def _bucket(resolution: str, column: str) -> sql.Composed:
 
 
 def series_values(
-    conn: Connection, series: Series, resolution: str, start: datetime, end: datetime
-) -> dict[datetime, float | None]:
-    query = sql.SQL(
-        "SELECT {bucket}, {agg}({column}) FROM {view}"
-        " WHERE bucket >= %(start)s AND bucket < %(end)s GROUP BY 1"
-    ).format(
-        bucket=_bucket(resolution, "bucket"),
-        agg=sql.SQL(series.agg),
-        column=sql.Identifier(series.column),
-        view=_view(series.relation),
+    conn: Connection, series: dict[str, Series], resolution: str, start: datetime, end: datetime
+) -> dict[str, dict[datetime, float | None]]:
+    """Several series in one query: series id -> {bucket: value}.
+
+    Each view is joined once onto the period grid, however many series read it. Every join repeats
+    the range because Postgres does not carry a range filter across a join.
+    """
+    relations = list(dict.fromkeys(s.relation for s in series.values()))
+    alias = {relation: sql.Identifier(f"r{i}") for i, relation in enumerate(relations)}
+    columns = [
+        sql.SQL("{agg}({alias}.{column})").format(
+            agg=sql.SQL(s.agg), alias=alias[s.relation], column=sql.Identifier(s.column)
+        )
+        for s in series.values()
+    ]
+    joins = [
+        sql.SQL(
+            "LEFT JOIN {view} {alias} ON {alias}.bucket = grid.t"
+            " AND {alias}.bucket >= %(start)s AND {alias}.bucket < %(end)s"
+        ).format(view=_view(relation), alias=alias[relation])
+        for relation in relations
+    ]
+    query = sql.SQL("SELECT {bucket}, {columns} FROM {grid} {joins} GROUP BY 1").format(
+        bucket=_bucket(resolution, "t"),
+        columns=sql.SQL(", ").join(columns),
+        grid=sql.SQL(_GRID),
+        joins=sql.SQL(" ").join(joins),
     )
     params = {"width": RESOLUTIONS[resolution], "start": start, "end": end}
-    return dict(conn.execute(query, params).fetchall())
+    rows = conn.execute(query, params).fetchall()
+    return {sid: {row[0]: row[i] for row in rows} for i, sid in enumerate(series, start=1)}
 
 
 def extremes(
@@ -59,7 +77,7 @@ def extremes(
     query = sql.SQL(
         "SELECT bucket, {column} FROM {view}"
         " WHERE bucket >= %s AND bucket < %s AND {column} IS NOT NULL"
-        " ORDER BY {column} {direction} LIMIT %s"
+        " ORDER BY {column} {direction}, bucket LIMIT %s"  # both halves of a WINDFOR hour tie
     ).format(
         column=sql.Identifier(series.column),
         view=_view(series.relation),
@@ -84,9 +102,11 @@ def forecast_vintages(
     """Every stored published version of a forecast for one period, oldest first."""
     query = sql.SQL(
         "SELECT published_at_utc, {column} FROM {view}"
-        " WHERE delivery_start_utc = %s ORDER BY published_at_utc DESC LIMIT %s"
+        " WHERE delivery_start_utc = %(t)s"
+        "   AND source_start_utc > %(t)s - INTERVAL '1 hour' AND source_start_utc <= %(t)s"
+        " ORDER BY published_at_utc DESC LIMIT %(limit)s"
     ).format(column=sql.Identifier(column), view=_view(view))
-    return conn.execute(query, (delivery_start, limit)).fetchall()[::-1]
+    return conn.execute(query, {"t": delivery_start, "limit": limit}).fetchall()[::-1]
 
 
 # --- Algorithm inputs -------------------------------------------------------------------------
@@ -120,12 +140,14 @@ ORDER BY grid.t
 
 # What was known at `cutoff`: forecasts published by then (and, as in the *_30m views, before the
 # period started), and prices/outturns for periods that had ended by then. Publication delays of
-# actuals (e.g. NESO demand, ~21 days) are not modelled.
+# actuals (e.g. NESO demand, ~21 days) are not modelled. The source_start_utc bounds let the
+# vintage views skip chunks (a source row starts at most an hour before its delivery period).
 _AS_OF_INPUTS = f"""
 WITH wind AS (
     SELECT delivery_start_utc AS t, last(wind_mw, published_at_utc) AS wind_mw
     FROM gridpulse.wind_forecast_vintages
     WHERE delivery_start_utc >= %(start)s AND delivery_start_utc < %(end)s
+      AND source_start_utc > %(start)s::timestamptz - INTERVAL '1 hour' AND source_start_utc < %(end)s
       AND published_at_utc <= %(cutoff)s AND published_at_utc <= delivery_start_utc
     GROUP BY 1
 ),
@@ -133,6 +155,7 @@ demand AS (
     SELECT delivery_start_utc AS t, last(demand_mw, published_at_utc) AS demand_mw
     FROM gridpulse.demand_forecast_vintages
     WHERE delivery_start_utc >= %(start)s AND delivery_start_utc < %(end)s
+      AND source_start_utc > %(start)s::timestamptz - INTERVAL '1 hour' AND source_start_utc < %(end)s
       AND published_at_utc <= %(cutoff)s AND published_at_utc <= delivery_start_utc
     GROUP BY 1
 ),
