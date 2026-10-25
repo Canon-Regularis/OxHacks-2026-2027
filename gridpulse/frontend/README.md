@@ -1,6 +1,6 @@
 # GridPulse frontend
 
-The Overview is implemented in SvelteKit 2 / Svelte 5 with Tailwind 4 and selected KCPC source components. Explore and Methods are visibly disabled; About is a read-only explanation page. Gemini and weather mapping remain extensions.
+The Overview is implemented in SvelteKit 2 / Svelte 5 with Tailwind 4 and selected KCPC source components. Terminal is implemented at `/terminal`; Methods remains visibly disabled; About is a read-only explanation page. Gemini and weather mapping remain extensions.
 
 ## Local development
 
@@ -65,3 +65,7 @@ The catalogue offers seven electricity series: price, forecast/actual wind, fore
 `DaySummary.svelte` sits below the content-sized selector. It uses the selected day’s preloaded records for averages of selected properties, price extremes and their first UTC timestamps, negative-price periods/duration, and peak forecast demand. It remains fixed during hover. Missing records are excluded, and price coverage is shown so incomplete days remain identifiable. Each settlement period contributes 30 minutes, including 46/50-period clock-change days.
 
 Start with the [API reference](../../docs/gridpulse/FRONTEND_API.md) and [algorithm display guide](../../docs/gridpulse/ALGORITHM_DISPLAY.md) for future Explore integration; additional response types are in `src/lib/types.ts`. Deployment uses the SvelteKit Node server; see [deployment setup](../deploy/README.md).
+
+## Terminal workspace
+
+See [Terminal usage and extension seams](../../docs/gridpulse/TERMINAL_WORKSPACE.md) and the [implementation plan](../../docs/gridpulse/TERMINAL_IMPLEMENTATION_PLAN.md). `/explore` redirects to `/terminal`. The page discovers stored algorithms through the shared catalogue and uses the canonical types in `src/lib/types.ts`. It supports docked snapping tiles, linked groups, source/algorithm overlays, tables/comparisons, notes, local workspaces/presets, import/export, recovery and compact navigation. Computation submission and agent execution remain deferred.

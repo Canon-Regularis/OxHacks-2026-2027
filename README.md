@@ -60,3 +60,5 @@ Pushes that change the application are tested and deployed to the Vultr VPS by G
 
 
 The demo must show which data is cached, its source and freshness, algorithm version and limitations. This is analysis of electricity prices and forecasts; indicators are not claims of grid failure or guaranteed future outcomes.
+
+The **Terminal** research page is available at `/terminal` (formerly Explore), with dockable linked widgets, stored algorithm charts/tables, source overlays and saved workspaces. See [Terminal usage and extension rules](docs/gridpulse/TERMINAL_WORKSPACE.md).

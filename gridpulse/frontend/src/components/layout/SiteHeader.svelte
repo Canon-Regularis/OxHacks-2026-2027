@@ -16,14 +16,12 @@
   <nav aria-label="Primary navigation">
     <a href="/" aria-current={page.url.pathname === '/' ? 'page' : undefined}
       >Overview</a
-    ><button disabled title="Explore is planned for the MVP"
-      >Explore <span>Soon</span></button
+    ><a
+      href="/terminal"
+      aria-current={page.url.pathname === '/terminal' ? 'page' : undefined}
+      >Terminal</a
     ><button disabled title="Methods is planned for the MVP"
       >Methods <span>Soon</span></button
-    ><a
-      href="/status"
-      aria-current={page.url.pathname === '/status' ? 'page' : undefined}
-      >Status</a
     ><a
       href="/about"
       aria-current={page.url.pathname === '/about' ? 'page' : undefined}
