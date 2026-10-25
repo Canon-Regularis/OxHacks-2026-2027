@@ -28,9 +28,30 @@ export const POST: RequestHandler = async ({
       secure: url.protocol === 'https:',
     });
   }
-  const body = await request.text();
-  if (new TextEncoder().encode(body).length > 200000)
-    return new Response('Context too large', { status: 413 });
+  const reader = request.body?.getReader();
+  if (!reader) return new Response('Request body required', { status: 400 });
+  const parts: Uint8Array[] = [];
+  let length = 0;
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      length += value.byteLength;
+      if (length > 200000) {
+        await reader.cancel();
+        return new Response('Context too large', { status: 413 });
+      }
+      parts.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const body = new Uint8Array(length);
+  let offset = 0;
+  for (const part of parts) {
+    body.set(part, offset);
+    offset += part.byteLength;
+  }
   try {
     const response = await fetch(
       new URL(

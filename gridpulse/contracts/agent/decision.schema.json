@@ -1,0 +1,343 @@
+{
+  "$defs": {
+    "Read": {
+      "additionalProperties": false,
+      "properties": {
+        "from_date": {
+          "format": "date",
+          "title": "From Date",
+          "type": "string"
+        },
+        "to_date": {
+          "format": "date",
+          "title": "To Date",
+          "type": "string"
+        },
+        "tool": {
+          "enum": [
+            "coverage",
+            "series",
+            "runs",
+            "analysis",
+            "tables",
+            "period",
+            "execute"
+          ],
+          "title": "Tool",
+          "type": "string"
+        },
+        "ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 9,
+          "title": "Ids",
+          "type": "array"
+        },
+        "algorithm": {
+          "default": "",
+          "maxLength": 100,
+          "title": "Algorithm",
+          "type": "string"
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Run Id"
+        },
+        "table": {
+          "default": "",
+          "maxLength": 100,
+          "title": "Table",
+          "type": "string"
+        },
+        "period": {
+          "default": 1,
+          "maximum": 50,
+          "minimum": 1,
+          "title": "Period",
+          "type": "integer"
+        },
+        "params": {
+          "additionalProperties": true,
+          "title": "Params",
+          "type": "object"
+        }
+      },
+      "required": [
+        "from_date",
+        "to_date",
+        "tool"
+      ],
+      "title": "Read",
+      "type": "object"
+    },
+    "View": {
+      "additionalProperties": false,
+      "properties": {
+        "from_date": {
+          "format": "date",
+          "title": "From Date",
+          "type": "string"
+        },
+        "to_date": {
+          "format": "date",
+          "title": "To Date",
+          "type": "string"
+        },
+        "version": {
+          "const": 1,
+          "default": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "widgets": {
+          "items": {
+            "$ref": "#/$defs/ViewWidget"
+          },
+          "maxItems": 12,
+          "title": "Widgets",
+          "type": "array"
+        },
+        "remove": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12,
+          "title": "Remove",
+          "type": "array"
+        },
+        "background_chat": {
+          "default": false,
+          "title": "Background Chat",
+          "type": "boolean"
+        },
+        "new_workspace": {
+          "default": false,
+          "title": "New Workspace",
+          "type": "boolean"
+        },
+        "name": {
+          "default": "AI investigation",
+          "maxLength": 80,
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "from_date",
+        "to_date",
+        "widgets"
+      ],
+      "title": "View",
+      "type": "object"
+    },
+    "ViewWidget": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Key",
+          "type": "string"
+        },
+        "existing": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Existing"
+        },
+        "type": {
+          "enum": [
+            "chart",
+            "table",
+            "comparison",
+            "inspector",
+            "context"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "series": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 9,
+          "title": "Series",
+          "type": "array"
+        },
+        "algorithm": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Algorithm"
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Run Id"
+        },
+        "outputs": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 30,
+          "title": "Outputs",
+          "type": "array"
+        },
+        "table": {
+          "default": "",
+          "maxLength": 100,
+          "title": "Table",
+          "type": "string"
+        },
+        "group": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Z]$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "A",
+          "title": "Group"
+        },
+        "relative_to": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Relative To"
+        },
+        "position": {
+          "default": "right",
+          "enum": [
+            "left",
+            "right",
+            "top",
+            "bottom",
+            "tab"
+          ],
+          "title": "Position",
+          "type": "string"
+        },
+        "size_step": {
+          "anyOf": [
+            {
+              "maximum": 23,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Optional parent divider step: horizontal 1..23 out of 24, vertical 1..15 out of 16; measures the first child share.",
+          "title": "Size Step"
+        },
+        "notes": {
+          "default": "",
+          "maxLength": 2000,
+          "title": "Notes",
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "type",
+        "title"
+      ],
+      "title": "ViewWidget",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "answer": {
+      "default": "",
+      "maxLength": 10000,
+      "title": "Answer",
+      "type": "string"
+    },
+    "details": {
+      "default": "",
+      "maxLength": 10000,
+      "title": "Details",
+      "type": "string"
+    },
+    "reads": {
+      "items": {
+        "$ref": "#/$defs/Read"
+      },
+      "maxItems": 4,
+      "title": "Reads",
+      "type": "array"
+    },
+    "view": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/View"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "evidence": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 20,
+      "title": "Evidence",
+      "type": "array"
+    }
+  },
+  "title": "Decision",
+  "type": "object"
+}

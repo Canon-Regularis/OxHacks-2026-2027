@@ -8,6 +8,11 @@ from pathlib import Path
 
 
 def _worker(database_url, query_timeout, spec, output):
+    import signal
+    os.environ["GRIDPULSE_WORKERS"] = "1"  # parent deadline controls the entire job, no detached fit pools
+    def cancelled(signum, frame):
+        raise RuntimeError("Analysis cancelled")
+    signal.signal(signal.SIGTERM, cancelled)
     # Spawned process owns its connection; no API pool or model credentials are passed.
     from gridpulse.analysis.algorithms import ALGORITHMS
     from gridpulse.analysis.service import run_algorithm

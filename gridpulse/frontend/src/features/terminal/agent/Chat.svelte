@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import type { Conversation, Evidence } from './types';
   let {
     chat,
@@ -22,6 +23,14 @@
     onclear: () => void;
   } = $props();
   let input = $state('');
+  let log: HTMLDivElement;
+  $effect(() => {
+    chat.messages.length;
+    chat.status;
+    void tick().then(() => {
+      if (log) log.scrollTop = log.scrollHeight;
+    });
+  });
   function submit() {
     if (!input.trim() || busy) return;
     const text = input.trim();
@@ -37,7 +46,12 @@
       onclick={onclear}>Clear</button
     ><button disabled={!canUndo} onclick={onundo}>↶ Go back</button>
   </div>
-  <div class="terminal-chat-messages" role="log" aria-label="AI conversation">
+  <div
+    class="terminal-chat-messages"
+    bind:this={log}
+    role="log"
+    aria-label="AI conversation"
+  >
     {#if !chat.messages.length}<div class="terminal-chat-welcome">
         <h2>What would you like to investigate?</h2>
         <p>
@@ -89,7 +103,7 @@
       maxlength="4000"
       rows="2"
       onkeydown={(event) => {
-        if (event.key === 'Enter' && !event.shiftKey) {
+        if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
           event.preventDefault();
           submit();
         }

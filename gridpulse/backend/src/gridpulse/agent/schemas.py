@@ -42,6 +42,7 @@ class ViewWidget(Strict):
     group: str | None = Field(default="A", pattern=r"^[A-Z]$")
     relative_to: str | None = Field(default=None, max_length=100)
     position: Literal["left", "right", "top", "bottom", "tab"] = "right"
+    size_step: int | None = Field(default=None, ge=1, le=23, description="Optional parent divider step: horizontal 1..23 out of 24, vertical 1..15 out of 16; measures the first child share.")
     notes: str = Field(default="", max_length=2000)
 
 

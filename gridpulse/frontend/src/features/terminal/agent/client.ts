@@ -30,7 +30,10 @@ export async function streamTurn(
       bytes += value.byteLength;
       if (bytes > 1000000)
         throw new Error('AI response exceeded the session limit.');
-      buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, '\n');
+      buffer = (buffer + decoder.decode(value, { stream: true })).replace(
+        /\r\n/g,
+        '\n',
+      );
       let end: number;
       while ((end = buffer.indexOf('\n\n')) >= 0) {
         const frame = buffer.slice(0, end);

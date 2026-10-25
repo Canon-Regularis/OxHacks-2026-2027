@@ -1,0 +1,120 @@
+{
+  "$defs": {
+    "Message": {
+      "additionalProperties": false,
+      "properties": {
+        "role": {
+          "enum": [
+            "user",
+            "assistant"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "content": {
+          "maxLength": 12000,
+          "title": "Content",
+          "type": "string"
+        }
+      },
+      "required": [
+        "role",
+        "content"
+      ],
+      "title": "Message",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1,
+      "default": 1,
+      "title": "Version",
+      "type": "integer"
+    },
+    "turn_id": {
+      "pattern": "^[a-zA-Z0-9_-]{1,100}$",
+      "title": "Turn Id",
+      "type": "string"
+    },
+    "conversation": {
+      "pattern": "^[a-zA-Z0-9_-]{1,100}$",
+      "title": "Conversation",
+      "type": "string"
+    },
+    "tab_id": {
+      "default": "browser",
+      "pattern": "^[a-zA-Z0-9_-]{1,100}$",
+      "title": "Tab Id",
+      "type": "string"
+    },
+    "workspace_id": {
+      "maxLength": 100,
+      "title": "Workspace Id",
+      "type": "string"
+    },
+    "revision": {
+      "maxLength": 100000,
+      "title": "Revision",
+      "type": "string"
+    },
+    "message": {
+      "maxLength": 4000,
+      "minLength": 1,
+      "title": "Message",
+      "type": "string"
+    },
+    "history": {
+      "items": {
+        "$ref": "#/$defs/Message"
+      },
+      "maxItems": 16,
+      "title": "History",
+      "type": "array"
+    },
+    "summary": {
+      "default": "",
+      "maxLength": 6000,
+      "title": "Summary",
+      "type": "string"
+    },
+    "snapshot": {
+      "additionalProperties": true,
+      "title": "Snapshot",
+      "type": "object"
+    },
+    "recent_states": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "maxItems": 3,
+      "title": "Recent States",
+      "type": "array"
+    },
+    "approval": {
+      "anyOf": [
+        {
+          "maxLength": 100,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Approval"
+    }
+  },
+  "required": [
+    "turn_id",
+    "conversation",
+    "workspace_id",
+    "revision",
+    "message",
+    "snapshot"
+  ],
+  "title": "Turn",
+  "type": "object"
+}

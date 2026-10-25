@@ -6,14 +6,37 @@ import {
   createWidget,
   context,
   uid,
+  type Layout,
   type Size,
   type TerminalDocument,
   type Workspace,
 } from '../model/types';
-import { findStack, fits } from '../layout/engine';
+import { findStack, fits, mapNode } from '../layout/engine';
 import type { View } from './types';
 
 export const revision = (workspace: Workspace) => JSON.stringify(workspace);
+/** Send metadata, not full notes, style maps or fetched data, to the model. */
+export function workspaceContext(workspace: Workspace) {
+  return {
+    id: workspace.id,
+    name: workspace.name,
+    locked: workspace.locked,
+    layout: workspace.layout,
+    groups: workspace.groups,
+    bindings: workspace.bindings,
+    widgets: Object.values(workspace.widgets).map((w) => ({
+      id: w.id,
+      type: w.type,
+      title: w.title,
+      binding: w.binding,
+      group: w.group,
+      context: w.context,
+      outputs: w.settings.outputs,
+      table: w.settings.table,
+      notes: w.type === 'chat' ? '' : w.settings.notes.slice(0, 200),
+    })),
+  };
+}
 export function persistentDocument(doc: TerminalDocument): TerminalDocument {
   const copy = structuredClone(doc);
   const clean = (ws: Workspace) => {
@@ -79,7 +102,6 @@ export function compileView(
   const commands: WorkspaceAction[] = [];
   const keys = new Map<string, string>();
   const existing = new Set<string>();
-  const ids = new Set<string>();
   for (const spec of view.widgets) {
     if (
       !spec ||
@@ -103,7 +125,6 @@ export function compileView(
     if (spec.existing) existing.add(spec.existing);
     const id = spec.existing ?? uid();
     keys.set(spec.key, id);
-    ids.add(id);
   }
   for (const id of view.remove) {
     if (
@@ -141,9 +162,12 @@ export function compileView(
         (!algorithm || !Object.hasOwn(algorithm.tables, spec.table)))
     )
       throw new Error('AI references unknown algorithm results.');
+    const selectedOutputs = spec.outputs.length
+      ? spec.outputs
+      : Object.keys(algorithm?.outputs ?? {});
     const units = new Set([
       ...spec.series.map((id) => catalog.series.find((s) => s.id === id)!.unit),
-      ...spec.outputs.map((id) => algorithm!.outputs[id]),
+      ...selectedOutputs.map((id) => algorithm!.outputs[id]),
     ]);
     if (spec.type === 'chart' && units.size > 2)
       throw new Error('Use separate charts for more than two units.');
@@ -182,7 +206,10 @@ export function compileView(
     const widget = createWidget(spec.type, range, binding?.id ?? null);
     Object.assign(widget, { id, title: spec.title, group: spec.group });
     Object.assign(widget.settings, {
-      outputs: spec.outputs,
+      outputs:
+        algorithm && spec.outputs.length
+          ? [...spec.outputs, ...spec.series.map((id) => 'source:' + id)]
+          : spec.outputs,
       table: spec.table,
       notes: spec.notes,
     });
@@ -226,6 +253,26 @@ export function compileView(
     target = id;
   }
   next = applyActions(next, commands, size);
+  for (const spec of view.widgets) {
+    if (spec.size_step == null) continue;
+    const id = keys.get(spec.key)!;
+    const live = next.workspaces.find((w) => w.id === next.active)!;
+    const leaf = findStack(live.layout, id);
+    function parent(
+      node: Layout | null,
+    ): Extract<Layout, { kind: 'split' }> | null {
+      if (!node || node.kind === 'stack') return null;
+      if (node.children.some((child) => child.id === leaf)) return node;
+      return parent(node.children[0]) ?? parent(node.children[1]);
+    }
+    const divider = parent(live.layout);
+    if (divider)
+      next = applyActions(
+        next,
+        [{ type: 'layout.resize', id: divider.id, step: spec.size_step }],
+        size,
+      );
+  }
   ws = next.workspaces.find((w) => w.id === next.active)!;
   if (view.background_chat && ws.widgets[chat] && target && target !== chat) {
     const destination = findStack(ws.layout, target)!;
@@ -239,6 +286,22 @@ export function compileView(
     );
   }
   ws = next.workspaces.find((w) => w.id === next.active)!;
+  if (view.background_chat && ws.layout && target && ws.widgets[chat]) {
+    const leaf = findStack(ws.layout, target);
+    ws.layout = mapNode(ws.layout, leaf!, (node) =>
+      node.kind === 'stack'
+        ? {
+            ...node,
+            widgets: [
+              target!,
+              chat,
+              ...node.widgets.filter((id) => id !== target && id !== chat),
+            ],
+            active: target!,
+          }
+        : node,
+    );
+  }
   if (!fits(ws.layout, ws, size) && size.width >= 850)
     throw new Error(
       'Workspace has no room at readable minimum sizes. Remove widgets or request a new workspace.',
@@ -248,4 +311,20 @@ export function compileView(
     if (!Object.values(ws.widgets).some((w) => w.binding === key))
       delete ws.bindings[key];
   return parseDocument(JSON.stringify(next));
+}
+
+/** The active analytical tab sharing the chat stack, used by compact navigation too. */
+export function chatCompanion(
+  workspace: Workspace,
+  chat: string,
+): string | null {
+  function visit(node: Layout | null): string | null {
+    if (!node) return null;
+    if (node.kind === 'stack')
+      return node.widgets.includes(chat) && node.active !== chat
+        ? node.active
+        : null;
+    return visit(node.children[0]) ?? visit(node.children[1]);
+  }
+  return visit(workspace.layout);
 }

@@ -36,6 +36,15 @@ def _error(status: int, code: str, message: str) -> JSONResponse:
     return JSONResponse({"detail": {"code": code, "message": message}}, status_code=status)
 
 
+class AgentSafeGZipMiddleware(GZipMiddleware):
+    """Do not depend on a particular Starlette version to exempt SSE from compression."""
+    async def __call__(self, scope, receive, send):
+        if scope.get("path", "").startswith("/api/agent/"):
+            await self.app(scope, receive, send)
+        else:
+            await super().__call__(scope, receive, send)
+
+
 def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(title="GridPulse API", version=__version__, lifespan=lifespan)
@@ -50,7 +59,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
         expose_headers=["X-GridPulse-Mode"],
     )
-    app.add_middleware(GZipMiddleware, minimum_size=1000)
+    app.add_middleware(AgentSafeGZipMiddleware, minimum_size=1000)
 
     for module in (system, market, analysis, weather, agent):
         app.include_router(module.router, prefix="/api")

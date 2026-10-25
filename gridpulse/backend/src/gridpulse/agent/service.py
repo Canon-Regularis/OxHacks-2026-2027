@@ -8,7 +8,7 @@ from gridpulse.agent.provider import Provider
 from gridpulse.agent.schemas import Decision
 
 POLICY = """You are Eisengrau's electricity-market analyst and Terminal assistant.
-Answer questions concisely using retrieved evidence. Explain uncertainty and limitations. Correlation is not causation.
+Answer questions concisely using retrieved evidence. State the evidence resolution: aggregated buckets are means, not settlement-period extremes. Partial samples are not full-range statistics. Explain uncertainty and limitations. Correlation is not causation.
 Return ONLY one JSON object matching the supplied Decision schema. No markdown wrapper.
 Use reads to inspect data before claiming numbers or selecting stored algorithm results. Tool dates are inclusive London settlement dates.
 Use the workspace's dates by default; mention assumptions. Ask the user when ambiguity matters. No silent date substitution.
@@ -18,6 +18,8 @@ tables (run tables), period (one settlement period), execute (reuse matching run
 Expensive jobs require a user approval supplied by the application; never claim permission yourself.
 Evidence IDs are assigned by the server. Include the evidence IDs supporting your answer. Do not invent IDs, runs or values.
 View widgets reference registered source IDs or an inspected algorithm/run_id. Reference output keys and table names exactly.
+view.widgets contains only analytical changes, not the whole workspace. Never include type=chat or recreate existing chat; the application manages its placement.
+If reads are needed, set view=null and answer="" until their evidence is returned.
 Each widget has a unique key; existing is an existing widget ID when updating. relative_to is another proposal key or existing widget ID.
 position is left/right/top/bottom/tab. Orientations and units must be sensible; use separate charts for more than two distinct units.
 Preserve existing useful widgets unless removal helps the request. Never remove chat. Respect locked layouts and 12 widgets including chat.
@@ -42,9 +44,10 @@ async def investigate(turn, pool, settings, session, provider=None):
 
     yield event("started")
     if turn.approval:
-        saved = APPROVALS.pop(turn.approval, None)
+        saved = APPROVALS.get(turn.approval)
         if not saved or saved[:2] != (session, turn.conversation) or saved[2] < time.monotonic():
             raise ValueError("Computation approval expired or belongs to another conversation.")
+        APPROVALS.pop(turn.approval, None)
         spec = saved[3]
         yield event("progress", message=f"Running approved {spec.algorithm}")
         result = await jobs.execute(settings, spec)

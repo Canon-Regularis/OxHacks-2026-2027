@@ -40,8 +40,8 @@ class Settings(BaseSettings):
     # Terminal agent. Provider credentials and proxy token never leave the server.
     cwave_api_key: str = ""
     agent_access_token: str = ""
-    agent_base_url: str = "https://api.inference.wandb.ai/v1"
-    agent_model: str = "moonshotai/Kimi-K2.6"
+    agent_base_url: str = "https://inference.canopywave.io/v1"
+    agent_model: str = "moonshotai/kimi-k2.6"
     agent_max_tokens: int = 5000
     agent_turn_timeout_seconds: int = 180
     agent_job_timeout_seconds: int = 90

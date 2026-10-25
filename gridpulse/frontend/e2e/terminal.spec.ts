@@ -869,51 +869,306 @@ test('widget group badges switch groups without opening settings', async ({
   await expect(compactBadge).toContainText('B');
 });
 
-test('AI opens a dockable conversation, applies a view and can undo it', async ({ page }) => {
+test('AI opens a dockable conversation, applies a view and can undo it', async ({
+  page,
+}) => {
   const errors: string[] = [];
-  page.on('pageerror', error => errors.push(error.message));
+  page.on('pageerror', (error) => errors.push(error.message));
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.route('**/api/agent/turns/stream', async route => {
+  await page.route('**/api/agent/turns/stream', async (route) => {
     const turn = route.request().postDataJSON();
     const messages = [
       { type: 'started' },
       { type: 'answer', text: 'Here is your price view.', references: [] },
-      { type: 'view', workspace_id: turn.workspace_id, revision: turn.revision, view: {
-        version: 1, from_date: date, to_date: date, widgets: [{ key: 'price', existing: null, type: 'chart', title: 'AI price evidence', series: ['price'], algorithm: null, run_id: null, outputs: [], table: '', group: 'A', relative_to: null, position: 'tab', notes: '' }], remove: [], background_chat: true, new_workspace: false, name: 'AI view',
-      } },
+      {
+        type: 'view',
+        workspace_id: turn.workspace_id,
+        revision: turn.revision,
+        view: {
+          version: 1,
+          from_date: date,
+          to_date: date,
+          widgets: [
+            {
+              key: 'price',
+              existing: null,
+              type: 'chart',
+              title: 'AI price evidence',
+              series: ['price'],
+              algorithm: null,
+              run_id: null,
+              outputs: [],
+              table: '',
+              group: 'A',
+              relative_to: null,
+              position: 'tab',
+              notes: '',
+            },
+          ],
+          remove: [],
+          background_chat: true,
+          new_workspace: false,
+          name: 'AI view',
+        },
+      },
       { type: 'completed' },
     ];
-    await route.fulfill({ contentType: 'text/event-stream', body: messages.map((event, i) => `data: ${JSON.stringify({ version: 1, turn_id: turn.turn_id, sequence: i+1, ...event })}\n\n`).join('') });
+    await route.fulfill({
+      contentType: 'text/event-stream',
+      body: messages
+        .map(
+          (event, i) =>
+            `data: ${JSON.stringify({ version: 1, turn_id: turn.turn_id, sequence: i + 1, ...event })}\n\n`,
+        )
+        .join(''),
+    });
   });
   await page.goto('/terminal');
   await page.getByRole('button', { name: '✦ AI', exact: true }).click();
-  await page.getByRole('textbox', { name: 'Message AI' }).fill('Set up a price workspace');
+  await page
+    .getByRole('textbox', { name: 'Message AI' })
+    .fill('Set up a price workspace');
   await page.getByRole('button', { name: 'Send ↗', exact: true }).click();
-  await expect(page.getByRole('tab', { name: 'AI price evidence', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('tab', { name: 'AI price evidence', exact: true }),
+  ).toBeVisible();
   await page.getByRole('button', { name: '✦ AI', exact: true }).click();
-  await expect(page.getByText('View updated. Use Go back to undo.', { exact: false })).toBeVisible();
+  await expect(
+    page.getByText('View updated. Use Go back to undo.', { exact: false }),
+  ).toBeVisible();
   await page.getByRole('button', { name: '↶ Go back', exact: true }).click();
-  await expect(page.getByRole('tab', { name: 'AI price evidence', exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole('tab', { name: 'AI price evidence', exact: true }),
+  ).toHaveCount(0);
   await page.reload();
   await page.getByRole('button', { name: '✦ AI', exact: true }).click();
-  await expect(page.getByText('Set up a price workspace', { exact: true })).toBeVisible();
-  const persistent = await page.evaluate(() => localStorage.getItem('eisengrau:terminal:v1'));
+  await expect(
+    page.getByText('Set up a price workspace', { exact: true }),
+  ).toBeVisible();
+  const persistent = await page.evaluate(() =>
+    localStorage.getItem('eisengrau:terminal:v1'),
+  );
   expect(persistent).not.toContain('"type":"chat"');
   expect(errors).toEqual([]);
 });
 
-test('empty workspace starts with chat and promotes it after submission', async ({ page }) => {
-  await page.route('**/api/agent/turns/stream', async route => {
+test('empty workspace starts with chat and promotes it after submission', async ({
+  page,
+}) => {
+  await page.route('**/api/agent/turns/stream', async (route) => {
     const turn = route.request().postDataJSON();
-    await route.fulfill({ contentType: 'text/event-stream', body: [
-      { type: 'answer', text: 'Which wind series would you like?', references: [] }, { type: 'completed' },
-    ].map((event, i) => `data: ${JSON.stringify({ version: 1, turn_id: turn.turn_id, sequence: i+1, ...event })}\n\n`).join('') });
+    await route.fulfill({
+      contentType: 'text/event-stream',
+      body: [
+        {
+          type: 'answer',
+          text: 'Which wind series would you like?',
+          references: [],
+        },
+        { type: 'completed' },
+      ]
+        .map(
+          (event, i) =>
+            `data: ${JSON.stringify({ version: 1, turn_id: turn.turn_id, sequence: i + 1, ...event })}\n\n`,
+        )
+        .join(''),
+    });
   });
   await page.goto('/terminal');
-  await page.getByRole('button', { name: 'New blank workspace', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'What would you like to investigate?' })).toBeVisible();
+  await page
+    .getByRole('button', { name: 'New blank workspace', exact: true })
+    .click();
+  await expect(
+    page.getByRole('heading', { name: 'What would you like to investigate?' }),
+  ).toBeVisible();
   await page.getByRole('textbox', { name: 'Message AI' }).fill('Show wind');
   await page.getByRole('button', { name: 'Send ↗', exact: true }).click();
-  await expect(page.getByRole('tab', { name: 'AI chat', exact: true })).toBeVisible();
-  await expect(page.getByText('Which wind series would you like?', { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('tab', { name: 'AI chat', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText('Which wind series would you like?', { exact: true }),
+  ).toBeVisible();
+});
+
+test('multiple AI tabs keep conversations separate and cancel a pending turn', async ({
+  page,
+}) => {
+  await page.route('**/api/agent/turns/stream', async (route) => {
+    const turn = route.request().postDataJSON();
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    await route
+      .fulfill({
+        contentType: 'text/event-stream',
+        body: [
+          { type: 'answer', text: `Answer to ${turn.message}`, references: [] },
+          { type: 'completed' },
+        ]
+          .map(
+            (event, i) =>
+              `data: ${JSON.stringify({ version: 1, turn_id: turn.turn_id, sequence: i + 1, ...event })}\n\n`,
+          )
+          .join(''),
+      })
+      .catch(() => {});
+  });
+  await page.goto('/terminal');
+  await page.getByRole('button', { name: '✦ AI', exact: true }).click();
+  await page
+    .getByRole('textbox', { name: 'Message AI' })
+    .fill('First conversation');
+  await page.getByRole('button', { name: 'Send ↗', exact: true }).click();
+  await expect(
+    page.getByText('Answer to First conversation', { exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'New chat', exact: true }).click();
+  const inputs = page.getByRole('textbox', { name: 'Message AI' });
+  await expect(inputs).toHaveCount(2);
+  await inputs.last().fill('Second conversation');
+  await page
+    .getByRole('button', { name: 'Send ↗', exact: true })
+    .last()
+    .click();
+  await page
+    .getByRole('button', { name: 'Cancel', exact: true })
+    .last()
+    .click();
+  await expect(
+    page.getByText('Cancelled. Completed results remain available.', {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByText('Answer to Second conversation', { exact: true }),
+  ).toHaveCount(0);
+});
+
+test('AI computation confirmation is explicit and carries its approval token', async ({
+  page,
+}) => {
+  const submissions: Record<string, unknown>[] = [];
+  await page.route('**/api/agent/turns/stream', async (route) => {
+    const turn = route.request().postDataJSON();
+    submissions.push(turn);
+    const events = turn.approval
+      ? [
+          {
+            type: 'answer',
+            text: 'Approved analysis completed.',
+            references: [],
+          },
+          { type: 'completed' },
+        ]
+      : [
+          {
+            type: 'confirmation',
+            approval: 'test-approval',
+            request: {
+              algorithm: 'price_naive_backtest',
+              from_date: date,
+              to_date: date,
+              params: {},
+            },
+            message: 'Confirm this backtest before running.',
+          },
+          { type: 'completed' },
+        ];
+    await route.fulfill({
+      contentType: 'text/event-stream',
+      body: events
+        .map(
+          (event, i) =>
+            `data: ${JSON.stringify({ version: 1, turn_id: turn.turn_id, sequence: i + 1, ...event })}\n\n`,
+        )
+        .join(''),
+    });
+  });
+  await page.goto('/terminal');
+  await page.getByRole('button', { name: '✦ AI', exact: true }).click();
+  await page
+    .getByRole('textbox', { name: 'Message AI' })
+    .fill('Run a backtest');
+  await page.getByRole('button', { name: 'Send ↗', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Run analysis', exact: true }),
+  ).toBeVisible();
+  expect(submissions).toHaveLength(1);
+  await page.getByRole('button', { name: 'Run analysis', exact: true }).click();
+  await expect(
+    page.getByText('Approved analysis completed.', { exact: true }),
+  ).toBeVisible();
+  expect(submissions[1].approval).toBe('test-approval');
+});
+
+test('manual edits during an AI turn cause one refresh instead of being overwritten', async ({
+  page,
+}) => {
+  let count = 0;
+  await page.route('**/api/agent/turns/stream', async (route) => {
+    const turn = route.request().postDataJSON();
+    count++;
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await route.fulfill({
+      contentType: 'text/event-stream',
+      body: [
+        {
+          type: 'view',
+          workspace_id: turn.workspace_id,
+          revision: turn.revision,
+          view: {
+            version: 1,
+            from_date: date,
+            to_date: date,
+            widgets: [],
+            remove: [],
+            background_chat: false,
+            new_workspace: false,
+            name: 'View',
+          },
+        },
+        { type: 'completed' },
+      ]
+        .map(
+          (event, i) =>
+            `data: ${JSON.stringify({ version: 1, turn_id: turn.turn_id, sequence: i + 1, ...event })}\n\n`,
+        )
+        .join(''),
+    });
+  });
+  await page.goto('/terminal');
+  await page.getByRole('button', { name: '✦ AI', exact: true }).click();
+  await page
+    .getByRole('textbox', { name: 'Message AI' })
+    .fill('Inspect the workspace');
+  await page.getByRole('button', { name: 'Send ↗', exact: true }).click();
+  await expect.poll(() => count).toBe(1);
+  await page
+    .getByRole('button', { name: 'Layout unlocked', exact: true })
+    .click();
+  await expect.poll(() => count).toBe(2);
+  await page.getByRole('button', { name: '🔒 Locked', exact: true }).click();
+  await expect(
+    page.getByText('Workspace changed again.', { exact: false }),
+  ).toBeVisible();
+  expect(count).toBe(2);
+  await expect(
+    page.getByRole('button', { name: 'Layout unlocked', exact: true }),
+  ).toBeVisible();
+});
+
+test('AI chat opens in compact mode without discarding the desktop tree', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/terminal');
+  await expect(
+    page.getByRole('button', { name: '✦ AI', exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: '✦ AI', exact: true }).click();
+  await expect(page.getByRole('textbox', { name: 'Message AI' })).toBeVisible();
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(page.getByRole('textbox', { name: 'Message AI' })).toBeVisible();
+  await expect(
+    page.locator('path[data-terminal-series="price"]'),
+  ).toBeVisible();
 });

@@ -98,3 +98,104 @@ describe('agent view transactions', () => {
     );
   });
 });
+
+it('keeps chat exactly second in a setup stack and carries it into an explicit new workspace', () => {
+  const doc = createDocument(range),
+    ws = doc.workspaces[0];
+  const chat = createWidget('chat', range);
+  chat.group = null;
+  ws.widgets[chat.id] = chat;
+  ws.layout = {
+    kind: 'stack',
+    id: crypto.randomUUID(),
+    widgets: Object.keys(ws.widgets),
+    active: chat.id,
+  };
+  const view = intent();
+  view.background_chat = true;
+  view.widgets[0].position = 'tab';
+  const result = compileView(doc, view, catalog, size, chat.id);
+  const stack = result.workspaces[0].layout!;
+  expect(stack.kind).toBe('stack');
+  if (stack.kind === 'stack') expect(stack.widgets[1]).toBe(chat.id);
+  view.new_workspace = true;
+  const branched = compileView(doc, view, catalog, size, chat.id);
+  expect(branched.workspaces).toHaveLength(2);
+  expect(branched.workspaces[0].widgets[chat.id]).toBeUndefined();
+  expect(branched.workspaces[1].widgets[chat.id].type).toBe('chat');
+});
+
+it('compiles the real Kimi source-view response through the application boundary', async () => {
+  const fixture =
+    await import('../../../../../contracts/agent/view.example.json');
+  const sources: Catalog = {
+    ...catalog,
+    series: [
+      ...catalog.series,
+      { id: 'wind', label: 'Wind', unit: 'MW', kind: 'forecast', datasets: [] },
+    ],
+  };
+  const ws = createDocument(range).workspaces[0];
+  const chat = createWidget('chat', range);
+  chat.group = null;
+  ws.widgets = { [chat.id]: chat };
+  ws.bindings = {};
+  ws.layout = {
+    kind: 'stack',
+    id: crypto.randomUUID(),
+    widgets: [chat.id],
+    active: chat.id,
+  };
+  const doc = { version: 1 as const, active: ws.id, workspaces: [ws] };
+  const result = compileView(
+    doc,
+    JSON.parse(JSON.stringify(fixture.default)),
+    sources,
+    size,
+    chat.id,
+  );
+  expect(
+    Object.values(result.workspaces[0].widgets).filter(
+      (w) => w.type === 'chart',
+    ),
+  ).toHaveLength(1);
+  expect(result.workspaces[0].widgets[chat.id]).toBeDefined();
+});
+
+it('retains source overlays when the agent selects specific algorithm outputs', () => {
+  const algoCatalog: Catalog = {
+    ...catalog,
+    algorithms: [
+      {
+        id: 'forecast',
+        version: '1',
+        description: 'Forecast',
+        inputs: [],
+        datasets: [],
+        outputs: { prediction: 'GBP/MWh' },
+        tables: {},
+        params: {},
+        param_descriptions: {},
+        limitations: 'Example',
+        latest_run: null,
+      },
+    ],
+  };
+  const view = intent();
+  Object.assign(view.widgets[0], {
+    algorithm: 'forecast',
+    run_id: 49,
+    outputs: ['prediction'],
+  });
+  const result = compileView(
+    createDocument(range),
+    view,
+    algoCatalog,
+    size,
+    'chat',
+  );
+  const widget = Object.values(result.workspaces[0].widgets).find(
+    (w) => w.title === 'Price evidence',
+  )!;
+  expect(widget.settings.outputs).toEqual(['prediction', 'source:price']);
+});

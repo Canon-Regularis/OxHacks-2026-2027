@@ -13,7 +13,7 @@ from gridpulse.api.deps import api_error
 from gridpulse.config import get_settings
 
 router = APIRouter(tags=["agent"])
-ACTIVE: set[tuple[str, str]] = set()
+ACTIVE: dict[tuple[str, str], float] = {}
 SEEN: dict[tuple[str, str], float] = {}
 ADMISSIONS: deque[tuple[float, str]] = deque()
 
@@ -42,6 +42,9 @@ async def stream(request: Request):
     key = (session + ":" + turn.tab_id, turn.workspace_id)
     identity = (session, turn.turn_id)
     now = time.monotonic()
+    for old in list(ACTIVE):
+        if ACTIVE[old] < now:
+            ACTIVE.pop(old, None)
     while ADMISSIONS and ADMISSIONS[0][0] < now - 3600:
         ADMISSIONS.popleft()
     for old in list(SEEN):
@@ -53,7 +56,7 @@ async def stream(request: Request):
         raise api_error(409, "agent_busy", "An investigation is already running. Wait or cancel it first.")
     if len(ADMISSIONS) >= settings.agent_hourly_limit or sum(s == session for _, s in ADMISSIONS) >= 20:
         raise api_error(429, "agent_rate_limit", "AI usage limit reached. Try again later.")
-    ACTIVE.add(key)
+    ACTIVE[key] = now + settings.agent_turn_timeout_seconds + 5
     SEEN[identity] = now
     ADMISSIONS.append((now, session))
 
@@ -70,6 +73,6 @@ async def stream(request: Request):
         except Exception:
             yield "data: " + json.dumps({"version": 1, "type": "error", "turn_id": turn.turn_id, "message": "Investigation failed. Existing workspace content has been preserved."}) + "\n\n"
         finally:
-            ACTIVE.discard(key)
+            ACTIVE.pop(key, None)
 
     return StreamingResponse(generate(), media_type="text/event-stream", headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})

@@ -12,6 +12,7 @@ export interface ViewWidget {
   group: string | null;
   relative_to: string | null;
   position: Position;
+  size_step?: number | null;
   notes: string;
 }
 export interface View {

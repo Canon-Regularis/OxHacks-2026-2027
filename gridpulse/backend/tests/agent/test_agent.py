@@ -52,3 +52,56 @@ def test_foreign_approval_is_rejected():
         return [event async for event in service.investigate(turn, None, None, "session")]
     with pytest.raises(ValueError, match="another conversation"):
         asyncio.run(run())
+
+
+def test_expensive_analysis_waits_for_user_confirmation(monkeypatch):
+    class Fake:
+        async def decide(self, messages):
+            return Decision.model_validate({"reads": [{"tool": "execute", "algorithm": "price_naive_backtest", "from_date": "2026-10-25", "to_date": "2026-10-25"}]})
+    monkeypatch.setattr(tools, "read", lambda *_: {"error": "no_run"})
+    async def forbidden(*args):
+        raise AssertionError("Unapproved job executed")
+    monkeypatch.setattr(service.jobs, "execute", forbidden)
+    turn = Turn(turn_id="confirm", conversation="c1", workspace_id="w1", revision="v1", message="Investigate", snapshot={})
+    async def run():
+        return [event async for event in service.investigate(turn, None, SimpleNamespace(max_range_days=3660), "session", Fake())]
+    events = asyncio.run(run())
+    confirmation = next(e for e in events if e['type'] == 'confirmation')
+    assert confirmation['request']['algorithm'] == 'price_naive_backtest'
+    assert service.APPROVALS[confirmation['approval']][:2] == ('session', 'c1')
+    assert events[-1]['type'] == 'completed'
+
+
+def test_matching_result_does_not_launch_job(monkeypatch):
+    class Fake:
+        calls = 0
+        async def decide(self, messages):
+            self.calls += 1
+            if self.calls == 1:
+                return Decision.model_validate({"reads": [{"tool": "execute", "algorithm": "price_naive_backtest", "from_date": "2026-10-25", "to_date": "2026-10-25"}]})
+            return Decision(answer="Existing result reused.", evidence=['e1'])
+    monkeypatch.setattr(tools, "read", lambda *_: {"run": {"run_id": 7, "algorithm_id": "price_naive_backtest"}})
+    async def forbidden(*args):
+        raise AssertionError("Cached result recomputed")
+    monkeypatch.setattr(service.jobs, "execute", forbidden)
+    turn = Turn(turn_id="cached", conversation="c1", workspace_id="w1", revision="v1", message="Investigate", snapshot={})
+    async def run():
+        return [event async for event in service.investigate(turn, None, SimpleNamespace(max_range_days=3660), "session", Fake())]
+    events = asyncio.run(run())
+    assert not any(e['type'] == 'confirmation' for e in events)
+    assert events[-1]['type'] == 'completed'
+
+
+def test_single_day_evidence_retains_settlement_resolution(monkeypatch):
+    from contextlib import nullcontext
+    from gridpulse.api import market
+    observed=[]
+    def series(dates, ids, resolution, cutoff, conn):
+        observed.append(resolution)
+        return SimpleNamespace(model_dump=lambda **_: {'resolution':resolution,'series':{}})
+    monkeypatch.setattr(market,'series',series)
+    pool=SimpleNamespace(connection=lambda **_: nullcontext(object()))
+    spec=Read(tool='series',ids=['price','wind'],from_date='2026-10-25',to_date='2026-10-25')
+    result=tools.read(pool,spec,SimpleNamespace(max_range_days=3660))
+    assert result['resolution']=='30m'
+    assert observed==['30m']

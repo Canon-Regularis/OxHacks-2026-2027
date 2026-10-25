@@ -16,6 +16,8 @@ AUTOMATIC = {"calendar_fourier_terms", "price_rolling_signals", "wind_price_corr
 def validate(spec, settings):
     if (spec.to_date - spec.from_date).days + 1 > min(settings.max_range_days, 366):
         raise ValueError("Agent analysis requests are limited to 366 days.")
+    if spec.run_id is not None and spec.params:
+        raise ValueError("Choose a stored run ID or parameter overrides, not both.")
     if spec.tool in {"runs", "analysis", "execute"}:
         if spec.algorithm not in ALGORITHMS:
             raise ValueError("Unknown algorithm; choose from the capability catalogue.")
@@ -51,7 +53,7 @@ def read(pool, spec, settings):
                 result = system.catalog(conn)
             elif spec.tool == "series":
                 # Model gets bounded evidence; UI loads its own higher-resolution data.
-                result = market.series(dates, ",".join(spec.ids), "1d" if (spec.to_date-spec.from_date).days > 2 else "1h", None, conn)
+                result = market.series(dates, ",".join(spec.ids), "1d" if (spec.to_date-spec.from_date).days > 2 else "30m", None, conn)
             elif spec.tool == "runs":
                 result = analysis.runs(ALGORITHMS[spec.algorithm], 10, conn)
             elif spec.tool == "analysis":
