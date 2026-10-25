@@ -1,0 +1,127 @@
+{
+  "_fixture": "Synthetic example for UI development; not real data. seasonal_indices truncated to six phases; real tables have one row per phase of the period.",
+  "run": {
+    "run_id": 32,
+    "algorithm_id": "price_decomposition",
+    "algorithm_version": "0.1.0",
+    "params": {
+      "period": 48,
+      "seasonal_window": 7,
+      "trend_window": null,
+      "max_periods": 2688
+    },
+    "overrides": {},
+    "datasets": {
+      "elexon_system_prices": "2026-10-24T14:10:00Z"
+    },
+    "range_start_utc": "2026-08-28T23:00:00Z",
+    "range_end_utc": "2026-10-23T23:00:00Z",
+    "cutoff_utc": null,
+    "finished_at_utc": "2026-10-25T09:20:00Z"
+  },
+  "tables": {
+    "sample": {
+      "description": "The gap-free stretch decomposed: its first and last period, its length and how many periods of the range were left out",
+      "columns": [
+        "first_utc",
+        "last_utc",
+        "periods",
+        "excluded_periods"
+      ],
+      "rows": [
+        [
+          "2026-08-28T23:00:00Z",
+          "2026-10-23T22:30:00Z",
+          2688,
+          0
+        ]
+      ]
+    },
+    "seasonal_indices": {
+      "description": "Seasonal effect per phase in GBP/MWh by each method (STL's averaged over cycles), with the first period of each phase",
+      "columns": [
+        "phase",
+        "first_utc",
+        "stl_gbp_mwh",
+        "classical_gbp_mwh"
+      ],
+      "rows": [
+        [
+          0,
+          "2026-08-28T23:00:00Z",
+          -11.6,
+          -12.7
+        ],
+        [
+          1,
+          "2026-08-28T23:30:00Z",
+          -12.1,
+          -14.8
+        ],
+        [
+          2,
+          "2026-08-29T00:00:00Z",
+          -21.8,
+          -24.2
+        ],
+        [
+          3,
+          "2026-08-29T00:30:00Z",
+          -27.6,
+          -29.7
+        ],
+        [
+          4,
+          "2026-08-29T01:00:00Z",
+          -36.9,
+          -38.7
+        ],
+        [
+          5,
+          "2026-08-29T01:30:00Z",
+          -35.8,
+          -36.3
+        ]
+      ]
+    },
+    "strength": {
+      "description": "Trend and seasonal strengths from 0 to 1 of the classical decomposition",
+      "columns": [
+        "period",
+        "trend_strength",
+        "seasonal_strength",
+        "status",
+        "message"
+      ],
+      "rows": [
+        [
+          48,
+          0.187,
+          0.385,
+          "ok",
+          null
+        ]
+      ]
+    },
+    "methods": {
+      "description": "Whether each decomposition ran; a row that did not explains why",
+      "columns": [
+        "method",
+        "status",
+        "message"
+      ],
+      "rows": [
+        [
+          "stl",
+          "ok",
+          null
+        ],
+        [
+          "classical",
+          "ok",
+          null
+        ]
+      ]
+    }
+  }
+}

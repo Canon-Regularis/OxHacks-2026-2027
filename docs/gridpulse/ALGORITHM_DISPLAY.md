@@ -2,7 +2,7 @@
 
 How to present each algorithm's outputs and tables. Endpoints, fields and errors are in [FRONTEND_API.md](FRONTEND_API.md); response types are in [`gridpulse/frontend/src/lib/types.ts`](../../gridpulse/frontend/src/lib/types.ts). Visual style, motion and page layout follow [FRONTEND_DESIGN.md](FRONTEND_DESIGN.md).
 
-All eleven algorithms are live: the two references and the nine built on Orchid. Their example responses are in [`contracts/examples/algorithms/`](../../gridpulse/contracts/examples/algorithms/), kept identical to the real metadata and table columns by tests. Show an algorithm only when it appears in `/api/catalog`, and show "not computed yet" while its `latest_run` is `null`.
+All thirteen algorithms are live: the two references and the eleven built on Orchid. Their example responses are in [`contracts/examples/algorithms/`](../../gridpulse/contracts/examples/algorithms/), kept identical to the real metadata and table columns by tests. Show an algorithm only when it appears in `/api/catalog`, and show "not computed yet" while its `latest_run` is `null`.
 
 ## Rules for every algorithm
 
@@ -168,13 +168,47 @@ These recur across algorithms. Build each once as a component.
   - ARCH-LM: does error size cluster in time.
 - **Wording:** "Statistics and p-values only; no pass/fail threshold." Do not show green ticks or red crosses.
 
+### `price_decomposition` (live)
+
+- **Page:** Methods; Terminal.
+- **Outputs (GBP/MWh):**
+  - `stl_trend`, `stl_seasonal`, `stl_remainder` and `classical_trend`, `classical_seasonal`, `classical_remainder`, on the decomposed stretch only (see `sample`), so they are `null` elsewhere. For each method, trend + seasonal + remainder = price.
+  - The classical trend and remainder are also `null` within 24 periods of the stretch's ends.
+  - `price_median_9`, `price_savgol_13` and `price_lowess_49`: centred smoothers over every run of present prices, `null` within half their window of a gap or the range's ends.
+- **Tables:**
+  - `sample` as for the correlograms.
+  - `seasonal_indices` (`phase`, `first_utc`, `stl_gbp_mwh`, `classical_gbp_mwh`): the average seasonal effect at each phase. `first_utc` is the first period with that phase, so label the phase with that period's London time. After a clock change in the stretch, the profile is an hour off the clock.
+  - `strength` (`period`, `trend_strength`, `seasonal_strength`, `status`, `message`): two fractions from 0 to 1.
+  - `methods` (`method`, `status`, `message`): a method without enough complete cycles (STL needs seven) is `insufficient_data` and its outputs are `null`.
+- **Show:**
+  - Three stacked panes sharing the time axis: price with the trend, seasonal, and remainder. Offer STL by default and classical as a toggle.
+  - The seasonal indices as one daily profile line per method, labelled by London time.
+  - The strengths as two numbers from 0 to 1 ("seasonal strength 0.28: 0 is no daily cycle, 1 is a cycle with no noise around it"), not a gauge or a percentage chance.
+  - The smoothers as overlays on the price chart. The median strips short spikes, Savitzky–Golay keeps the shape of the peaks, and LOWESS follows the daily level.
+- **Wording:** "Retrospective: each value uses prices after it as well as before, so it was not knowable at the time."
+
+### `price_stationarity` (live)
+
+- **Page:** Methods.
+- **Outputs:** none; fetch the tables by `latest_run.run_id`.
+- **Tables:**
+  - `sample` as above.
+  - `unit_root` (`series`, `test`, `regression`, `null_hypothesis`, `statistic`, `critical_1`, `critical_2_5`, `critical_5`, `critical_10`, `rejected_at`, `lags`, `n`, `status`, `message`): one row per test, for three series (`price`, `price_change_1` and `price_change_48`) and two regressions (`c`, constant; `ct`, constant and trend). `critical_2_5` is `null` for ADF. `rejected_at` lists the levels at which the null is rejected, or says `none`.
+  - `difference_orders` (`season_length`, `seasonal_choice`, `seasonal`, `regular`, `status`, `message`): the differences AutoARIMA would take, with its seasonal test (`tested`) and with the daily difference fixed as `price_day_ahead_forecast` does (`fixed`).
+  - `spectrum` (`frequency`, `period_hours`, `density`): density in (GBP/MWh)² per cycle per half-hour, from 0 to 0.5 cycles per half-hour. `period_hours` is `null` at frequency 0.
+  - `spectrum_fit` (`order`, `innovation_variance`, `status`, `message`).
+- **Show:**
+  - `unit_root` as a table per series, with ADF and KPSS side by side and their nulls spelt out. ADF rejecting says no unit root; KPSS rejecting says not stationary. When both reject, or neither does, say the evidence is mixed rather than picking one.
+  - The spectrum as a line on a log density axis against `period_hours`, with the 168, 24 and 12 hour harmonics marked. This needs a numeric x-axis, which the Terminal chart does not yet have; until then show the rows near those periods.
+- **Wording:** "Statistics of the whole stretch, with no pass/fail verdict and no p-values." No ticks or crosses.
+
 ## Page map
 
 | Page | Algorithms |
 |---|---|
 | Overview | `price_forecast_backtest` (forecast vs actual), `price_day_ahead_forecast` (tomorrow), `price_rolling_signals` (overlays), `wind_price_correlation`, `price_naive_backtest` as a fallback |
 | Terminal | All backtest scorecards, by-horizon charts and fold timelines; `price_p1_backtest`'s `dm_tests`; `price_driver_correlograms`; `worst_misses` and extremes linking to the period inspector |
-| Methods | Every algorithm's `description`, `inputs` and `datasets` (with each dataset's source), `params` with `param_descriptions`, and `limitations`; `calendar_fourier_terms`; `price_residual_diagnostics`; dataset coverage from the catalog, with the series built from each dataset |
+| Methods | `price_decomposition` and `price_stationarity`; every algorithm's `description`, `inputs` and `datasets` (with each dataset's source), `params` with `param_descriptions`, and `limitations`; `calendar_fourier_terms`; `price_residual_diagnostics`; dataset coverage from the catalog, with the series built from each dataset |
 
 ## States
 
