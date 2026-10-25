@@ -26,6 +26,7 @@ WINDOWS: dict[str, tuple[int, int]] = {
     "price_forecast_backtest": (56, 0),
     "price_baseline_backtest": (56, 0),
     "price_regression_backtest": (56, 0),
+    "price_p1_backtest": (56, 0),
     "price_day_ahead_forecast": (1, 0),
     "price_rolling_signals": (120, 0),
     "price_driver_correlograms": (56, 0),

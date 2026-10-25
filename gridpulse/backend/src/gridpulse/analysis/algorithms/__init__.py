@@ -13,6 +13,7 @@ from gridpulse.analysis.algorithms import (
     price_day_ahead_forecast,
     price_driver_correlograms,
     price_forecast_backtest,
+    price_p1_backtest,
     price_regression_backtest,
     price_residual_diagnostics,
     price_rolling_signals,
@@ -31,5 +32,6 @@ ALGORITHMS = {
         price_driver_correlograms.ALGORITHM,
         price_residual_diagnostics.ALGORITHM,
         calendar_fourier_terms.ALGORITHM,
+        price_p1_backtest.ALGORITHM,
     ]
 }

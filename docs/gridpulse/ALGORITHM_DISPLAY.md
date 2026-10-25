@@ -2,7 +2,7 @@
 
 How to present each algorithm's outputs and tables. Endpoints, fields and errors are in [FRONTEND_API.md](FRONTEND_API.md); response types are in [`gridpulse/frontend/src/lib/types.ts`](../../gridpulse/frontend/src/lib/types.ts). Visual style, motion and page layout follow [FRONTEND_DESIGN.md](FRONTEND_DESIGN.md).
 
-All ten algorithms are live: the two references and the eight built on Orchid. Their example responses are in [`contracts/examples/algorithms/`](../../gridpulse/contracts/examples/algorithms/), kept identical to the real metadata and table columns by tests. Show an algorithm only when it appears in `/api/catalog`, and show "not computed yet" while its `latest_run` is `null`.
+All eleven algorithms are live: the two references and the nine built on Orchid. Their example responses are in [`contracts/examples/algorithms/`](../../gridpulse/contracts/examples/algorithms/), kept identical to the real metadata and table columns by tests. Show an algorithm only when it appears in `/api/catalog`, and show "not computed yet" while its `latest_run` is `null`.
 
 ## Rules for every algorithm
 
@@ -53,6 +53,7 @@ Format table cells by column name:
 | `lag_periods`, `lag_hours` | Integer; `lag_hours` is `lag_periods / 2` |
 | `status` | A chip: `ok` neutral; `missing_data`, `insufficient_data`, `degenerate_data`, `failed` muted with `message` as tooltip. An `ok` fold may still carry a `message`: a fit warning, such as a forecast spanning a clock change |
 | `n_*` | Integer count |
+| `statistic`, `mean_loss_*` | 3 significant figures; a `mean_loss_*` column is in the unit its `loss` column implies: GBP/MWh for `absolute`, (GBP/MWh)² for `squared` |
 | anything else | Numbers to 3 significant figures; text as is |
 
 Tables are small (at most 20,000 rows, usually far fewer); sort and filter them in the browser.
@@ -111,6 +112,15 @@ These recur across algorithms. Build each once as a component.
 - **Tables:** `metrics`, `by_horizon`, `folds`.
 - **Show:** the same components as the other backtests. Point out that `calendar` follows the GB clock and so is the only regression exact on clock-change days.
 
+### `price_p1_backtest` (live)
+
+- **Page:** Terminal.
+- **Outputs:** `seasonal_naive_forecast`, `theta_forecast`, `ar_forecast`, `discount_dlm_forecast`, `structural_forecast` and `ensemble_forecast`, with 80% and 95% bands for every model except the seasonal naive. `ensemble` is the mean of `theta`, `ar` and `discount_dlm` (its `members` param), and each of its band edges is the mean of theirs.
+- **Tables:** `metrics`, `by_horizon`, `folds` and `fold_params` as for `price_forecast_backtest`. In `fold_params`, Theta reports `alpha` and `drift` (GBP/MWh per half-hour), AR reports `ar.L1`, `ar.L2`, `intercept` and `sigma2`, the DLM reports `observation_variance` and `dof`, and the structural model reports `variance.level`, `variance.irregular`, `log_likelihood`, `aic` and `bic`.
+- **`dm_tests`** (`model`, `benchmark`, `horizon_step`, `lead_hours`, `loss`, `n`, `mean_loss_model`, `mean_loss_benchmark`, `statistic`, `p_value`, `status`, `message`): one Diebold–Mariano test per model against the seasonal naive at 30 minutes and 24 hours ahead (`dm_leads` 1 and 48). The mean losses are MAEs in GBP/MWh for the default `absolute` loss, or mean squared errors in (GBP/MWh)² for `squared`. A **positive** `statistic` means the model's errors were smaller than the benchmark's. Format `status` as for folds: `insufficient_data` means fewer than 30 periods at that lead had both forecasts, for example because folds were excluded.
+- **Show:** the scorecard and lead-time chart as for the other backtests. Show `dm_tests` as a table grouped by lead, with the two mean losses side by side. Do not mark rows as "significant" or "beats", and do not hide rows with large p-values: there are ten tests, so one small p-value can be chance.
+- **Wording:** "Out-of-sample: each day's forecast was made the day before, from models refitted on the previous 28 days. The Diebold–Mariano test asks whether two forecasts were equally accurate over these days; it does not say which will be more accurate next."
+
 ### `price_day_ahead_forecast` (live)
 
 - **Page:** Overview: the "tomorrow" panel.
@@ -163,7 +173,7 @@ These recur across algorithms. Build each once as a component.
 | Page | Algorithms |
 |---|---|
 | Overview | `price_forecast_backtest` (forecast vs actual), `price_day_ahead_forecast` (tomorrow), `price_rolling_signals` (overlays), `wind_price_correlation`, `price_naive_backtest` as a fallback |
-| Terminal | All backtest scorecards, by-horizon charts and fold timelines; `price_driver_correlograms`; `worst_misses` and extremes linking to the period inspector |
+| Terminal | All backtest scorecards, by-horizon charts and fold timelines; `price_p1_backtest`'s `dm_tests`; `price_driver_correlograms`; `worst_misses` and extremes linking to the period inspector |
 | Methods | Every algorithm's `description`, `inputs` and `datasets` (with each dataset's source), `params` with `param_descriptions`, and `limitations`; `calendar_fourier_terms`; `price_residual_diagnostics`; dataset coverage from the catalog, with the series built from each dataset |
 
 ## States

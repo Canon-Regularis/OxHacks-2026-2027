@@ -50,6 +50,9 @@ These are decisions made while wiring Matthew's methods into the API. Each is re
 | Day-ahead forecasts the whole next settlement day (46, 48 or 50 periods) | `price_day_ahead_forecast.py` | A "tomorrow" panel should match the settlement day | The day is recorded in the `forecast_day` table |
 | AutoARIMA with the daily difference fixed (`seasonal_differencing: 1`) | `price_day_ahead_forecast.py` | Matthew's notes advise fixing it when the cycle is known | **Contradicted by finding 3**; left to its own test, AutoARIMA drops it and picks ARIMA(0,1,1) |
 | Seasonal lags count elapsed half-hours | all seasonal models | Orchid works on a regular grid | On and after a clock change, such as **25 October 2026, this weekend**, origins shift by an hour of local time and seasonal lags point an hour off; fits carry a warning |
+| Structural model without seasons in the P1 backtest | `price_p1_backtest.py` | A seasonal `fit_structural` takes 14–50 s on four weeks, which at 56 origins is up to 47 minutes of fitting | `structural` is a local level, which at day-ahead leads is a flat forecast like the naive |
+| Ensemble of Theta, AR and the DLM, equally weighted | `price_p1_backtest.py` | The cheap members; ETS or the structural model would double the cost of every fold, and weights fitted on the same folds would flatter the ensemble | Its bands average the members' bounds, which keeps them nested but does not recalibrate coverage |
+| Diebold–Mariano at leads 1 and 48 only, against the seasonal naive, with absolute loss | `price_p1_backtest.py` | One test per lead keeps errors from separate origins (test horizon 1); absolute loss matches MAE and is less dominated by price spikes | Ten tests per run, so expect some small p-values by chance; other leads or the naive benchmark are param overrides |
 
 ## Batch runtime
 
@@ -71,6 +74,8 @@ Outputs are unchanged, so no algorithm versions moved. On the refresh windows to
 The pool only helps with more than one vCPU. A 1-vCPU VPS keeps only the in-process trims, which save about 7 s. Rejected options:
 
 - **Warm-starting each fold from the previous fold's parameters.** `ARIMA.fit` takes no start values; only the lower-level `css_estimate` does. `ETSForecaster` has none. Either change would alter results and need version bumps.
+
+`price_p1_backtest` was timed on synthetic prices (56 folds of the default 28-day window, 4 workers, the same laptop): 48 s for a fresh run, almost all of it the local-level structural model's maximum-likelihood refit at every origin. Theta, AR, the DLM and the ensemble each take well under a second per fold. Like the other backtests it declares `memo`, so a daily refresh refits only the newest fold. It has not yet been timed on Tiger data.
 
 ### Reusing folds between runs (memo)
 
