@@ -1,5 +1,4 @@
 <script lang="ts">
-  import capture from './capture.json';
   import TerminalShortcuts from '../../components/help/TerminalShortcuts.svelte';
   const steps = [
     { id: 'start', number: '01', label: 'Start with the data' },
@@ -8,13 +7,6 @@
     { id: 'save', number: '04', label: 'Save & export' },
     { id: 'shortcuts', number: '⌨', label: 'Keyboard shortcuts' },
   ];
-  const day = (value: string) =>
-    new Date(value).toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      timeZone: 'UTC',
-    });
 </script>
 
 <a class="skip-link" href="#quick-start-main">Skip to quick start</a>
@@ -283,11 +275,6 @@
         </p>
         <TerminalShortcuts />
       </section>
-      <p class="quick-capture-note">
-        Screenshots are examples captured from the app using real stored data
-        for {day(capture.from)}–{day(capture.to)} and {capture.algorithm} run #{capture.run_id}.
-        Your available dates, runs and layout may differ.
-      </p>
       <div class="quick-finish">
         <div>
           <p class="learn-eyebrow">YOUR NEXT QUESTION</p>

@@ -161,7 +161,7 @@ test('quick start has four usable screenshots, working section links and no mark
   ).toBeInViewport();
   await expect(
     page.getByText(/Screenshots are examples captured from the app/),
-  ).toBeVisible();
+  ).toHaveCount(0);
   expect(apiRequests).toEqual([]);
 });
 
@@ -177,6 +177,12 @@ test('new pages and navigation fit narrow screens while the dataset table scroll
     for (const width of [1440, 768, 390, 320]) {
       await page.setViewportSize({ width, height: 900 });
       const nav = page.getByRole('navigation', { name: 'Primary navigation' });
+      await expect(
+        nav.getByRole('group', { name: 'Workspace pages' }).getByRole('link'),
+      ).toHaveCount(2);
+      await expect(
+        nav.getByRole('group', { name: 'Information pages' }).getByRole('link'),
+      ).toHaveCount(4);
       for (const name of [
         'Overview',
         'Terminal',

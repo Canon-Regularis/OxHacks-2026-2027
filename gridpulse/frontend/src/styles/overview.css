@@ -1851,3 +1851,95 @@ select:focus-visible,
     --about-gutter: 18px;
   }
 }
+
+.about-story {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(32px, 6vw, 110px);
+}
+.about-story-copy {
+  grid-column: 1;
+  grid-row: 1;
+}
+.about-data-copy {
+  grid-column: 2;
+  grid-row: 1;
+}
+.about-story-animation {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  width: 100%;
+  height: clamp(260px, 28vw, 390px);
+  overflow: hidden;
+  border-radius: 20px;
+  isolation: isolate;
+}
+.about-data .about-story-animation {
+  grid-column: 1;
+}
+.story-animation-fallback {
+  position: absolute;
+  inset: 18%;
+  z-index: -1;
+  opacity: 0.35;
+}
+.story-square {
+  border: 2px solid var(--orange);
+  border-radius: 18%;
+  transform: rotate(-12deg);
+}
+.story-cubes {
+  background-image:
+    linear-gradient(var(--orange) 1px, transparent 1px),
+    linear-gradient(90deg, var(--orange) 1px, transparent 1px);
+  background-size: 35px 35px;
+  transform: perspective(450px) rotateX(25deg) rotateZ(-12deg);
+}
+.story-fluid {
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 40%, var(--orange), transparent 60%),
+    radial-gradient(ellipse at 70% 65%, var(--wind), transparent 65%);
+  filter: blur(22px);
+}
+.status-age-warning {
+  margin: 18px 0;
+  padding: 14px 18px;
+  border-left: 2px solid var(--orange);
+  background: var(--orange-wash);
+  color: var(--muted-foreground);
+  font-size: 13px;
+  line-height: 1.6;
+}
+@media (max-width: 850px) {
+  .about-story {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+  .about-story-copy,
+  .about-data-copy {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .about-story .about-story-animation {
+    grid-column: 1;
+    grid-row: 2;
+    height: 240px;
+    max-width: 420px;
+    justify-self: center;
+  }
+}
+.about-story-animation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.about-story-animation .story-cube-grid {
+  width: min(78%, 320px);
+  flex: none;
+}
+.animation-ready .story-animation-fallback {
+  visibility: hidden;
+}

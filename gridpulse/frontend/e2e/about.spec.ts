@@ -165,6 +165,8 @@ test.describe('dot animation visibility', () => {
           let frames = 0;
           gl.drawElements = (...params) => {
             draw(...params);
+            // Sample this effect only; About also contains other WebGL illustrations.
+            if (!this.closest('.about-pixel-section')) return;
             if (++frames % 3) return;
             const pixels = new Uint8Array(
               gl.drawingBufferWidth * gl.drawingBufferHeight * 4,
@@ -202,4 +204,38 @@ test.describe('dot animation visibility', () => {
     await expect(page.locator('.about-pixel-section canvas')).toHaveCount(0);
     await expect(page.locator('.about-pixel-copy')).toBeVisible();
   });
+});
+
+test('story illustrations load in their spare columns and respect reduced motion', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/about');
+  for (const kind of ['square', 'cubes', 'fluid']) {
+    const illustration = page.locator(`[data-animation="${kind}"]`);
+    await illustration.scrollIntoViewIfNeeded();
+    await expect(illustration).toBeVisible();
+    await expect(
+      illustration.locator(kind === 'cubes' ? '.cube' : 'canvas').first(),
+    ).toBeVisible();
+  }
+  await page.screenshot({
+    path: test.info().outputPath('about-story-illustrations.png'),
+    fullPage: true,
+  });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect(
+    page.locator('.about-story-animation canvas, .about-story-animation .cube'),
+  ).toHaveCount(0);
+  await expect(page.locator('.story-animation-fallback')).toHaveCount(3);
+  await page.setViewportSize({ width: 390, height: 900 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  expect(errors).toEqual([]);
 });

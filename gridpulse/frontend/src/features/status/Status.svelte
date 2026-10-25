@@ -20,7 +20,7 @@
   const REFRESH_MS = 30_000;
   const WORDS: Record<Level, string> = {
     ok: 'OK',
-    warn: 'Attention',
+    warn: 'Older data',
     bad: 'Problem',
     unknown: 'Unknown',
   };
@@ -127,11 +127,18 @@
       <h2>{loading && !checkedAt ? 'Checking…' : summary.headline}</h2>
       <p>
         {#if issues.length}{issues.length}
-          {issues.length === 1 ? 'item needs' : 'items need'} attention.{:else if checkedAt}No
+          {issues.length === 1 ? 'data notice' : 'data notices'} below.{:else if checkedAt}No
           issues found.{/if}
       </p>
     </div>
   </section>
+
+  {#if datasets.some((d) => d.loadedAgeHours !== null && d.loadedAgeHours > AGEING_HOURS)}
+    <p class="status-age-warning" role="note">
+      The data is a bit old. Check the load times and coverage below before
+      treating it as current market data.
+    </p>
+  {/if}
 
   <div class="status-cards">
     <article class="status-card" data-level={summary.api}>
@@ -178,7 +185,7 @@
       <h3>
         Analysis runs <InfoTooltip
           label="About analysis runs"
-          text="Algorithms with a stored run being served. Attention means a dataset was reloaded after the run, so the stored result predates the data."
+          text="Algorithms with a stored run being served. Inputs updated means a dataset was reloaded after the run, so the stored result predates the data."
         />
       </h3>
       <p class="status-value">
@@ -211,8 +218,18 @@
                   >{d.dataset}{#if d.source}<small>{d.source}</small>{/if}</th
                 >
                 <td
-                  ><span class="pill" data-level={d.level}
-                    >{WORDS[d.level]}</span
+                  ><span
+                    class="pill"
+                    data-level={!d.note &&
+                    d.loadedAgeHours !== null &&
+                    d.loadedAgeHours > AGEING_HOURS
+                      ? 'warn'
+                      : d.level}
+                    >{!d.note &&
+                    d.loadedAgeHours !== null &&
+                    d.loadedAgeHours > AGEING_HOURS
+                      ? 'Older data'
+                      : WORDS[d.level]}</span
                   >{#if d.note}<small>{d.note}</small>{/if}</td
                 >
                 <td title={timestampLabel(d.loadedUtc)}
@@ -246,7 +263,9 @@
                 <th scope="row">{a.id}<small>v{a.version}</small></th>
                 <td
                   ><span class="pill" data-level={a.level}
-                    >{WORDS[a.level]}</span
+                    >{a.level === 'warn'
+                      ? 'Inputs updated'
+                      : WORDS[a.level]}</span
                   >{#if a.note}<small>{a.note}</small>{/if}</td
                 >
                 <td title={timestampLabel(a.finishedUtc)}
