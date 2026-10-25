@@ -32,7 +32,7 @@ Read these before implementing related modules:
 
 Verified from current code:
 
-- Registered algorithms: `wind_price_correlation` and `price_naive_backtest`. Additional Orchid functions exist, but the eight proposed adapters are not registered. Fixtures are test data, not available user tools.
+- At planning baseline `7d68fc3`, only `wind_price_correlation` and `price_naive_backtest` were registered. The pre-PR merge of main `50314d2` adds the eight Orchid adapters, bringing the current registry to ten algorithms. Terminal discovers them through `/api/catalog`; fixtures remain test data, not user results.
 - All analysis endpoints read completed runs. Parameter overrides select an existing variant; `404 no_run` means not computed, not a request to compute.
 - `/api/catalog` supplies series, algorithm outputs/units, tables, defaults, descriptions, limits and dataset lineage.
 - Parameter defaults/descriptions are not a full validation schema. This release selects stored runs and displays their parameters; it does not invent generic parameter editors.
@@ -230,7 +230,7 @@ Run targeted unit/browser tests while building each stage. At each integrated mi
 
 The release is complete when users can discover current data/registered algorithms, open their stored results, arrange readable snapping tiles, link compatible views, inspect a selected period, compare run results, save/recover a workspace and use a compact screen without corrupting the desktop layout. Unknown future numeric outputs and tables must work with generic widgets. All visible values retain units, missingness, run identity and source/mode context.
 
-Deferred: submitting computations, job progress/cancellation, arbitrary parameter editors, registering the eight planned algorithm adapters, specialised views beyond the initial set, agent execution, cloud accounts/collaboration, unrestricted floating windows and guaranteed semantic rendering for every future output shape. Additional capabilities require explicit scope decisions rather than being silently folded into this build.
+Deferred: submitting computations, job progress/cancellation, arbitrary parameter editors, specialised views beyond the initial set, agent execution, cloud accounts/collaboration, unrestricted floating windows and guaranteed semantic rendering for every future output shape. Additional capabilities require explicit scope decisions rather than being silently folded into this build.
 
 ## 14. Implementation record
 
@@ -239,3 +239,5 @@ The environment template was committed separately with empty server-side credent
 The shared action interface is in `model/actions.ts`; UI placement uses the same pure layout engine. Source and algorithm series can coexist in one chart. The inspector uses preloaded values for hover and fetches full publication history on committed selection. This preserves the no-per-hover-request rule without prefetching hundreds of period-detail responses. Tab headers accept insertion before the target tab; keyboard-accessible move settings offer the same placement.
 
 Compact-layout refinement: remove the Terminal title block and its site footer, combine dates and actions into one toolbar, automatically place added content into a legal split, with presets managed separately in Workspaces. New splits may minimally rebalance existing snapped dividers while preserving tile order and minimum readable sizes. The revised tests demonstrate four visible charts plus the two supporting widgets on one desktop screen.
+
+Pre-PR integration: main `50314d2` is merged, including the ten registered algorithms and backend performance work. No computation submission was added to Terminal; it continues to select stored results through the shared API.
