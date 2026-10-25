@@ -76,7 +76,7 @@
   >
     <div class="absolute inset-0" aria-hidden="true">
       {#if Pixels && !reduced}<Pixels
-          color="#9f0100"
+          color="#a2c7b8"
           speed={1}
           edgeFade={0.7}
           rippleSpeed={0.2}
