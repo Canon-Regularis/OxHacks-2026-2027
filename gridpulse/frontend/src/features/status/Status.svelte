@@ -140,6 +140,13 @@
     </div>
   </section>
 
+  {#if datasets.some((d) => d.loadedAgeHours !== null && d.loadedAgeHours > AGEING_HOURS)}
+    <p class="status-age-warning" role="note">
+      The data is a bit old. Check the load times and coverage below before
+      treating it as current market data.
+    </p>
+  {/if}
+
   <div class="status-cards">
     <article class="status-card" data-level={summary.api}>
       <h3>

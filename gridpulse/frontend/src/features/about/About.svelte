@@ -4,6 +4,7 @@
   import { useSettings, reducedMotion } from '$lib/state/settings.svelte';
   const settings = useSettings();
   import Hero from './Hero.svelte';
+  import StoryAnimation from './StoryAnimation.svelte';
   import DotBackground from '$lib/vendor/kcpc/backgrounds/dot-background/dot-background.svelte';
   import TextShimmer from '$lib/vendor/kcpc/text/text-shimmer/text-shimmer.svelte';
   import Card from '$lib/vendor/kcpc/primitives/card/card.svelte';
@@ -107,7 +108,8 @@
       mask={20}
       dotsClassName="opacity-30"
     />
-    <div>
+    <StoryAnimation kind="square" />
+    <div class="about-story-copy">
       <p class="eyebrow">LOOK BEYOND THE FORECAST</p>
       <h2 id="about-models-heading">Put every model to the test.</h2>
       <p>
@@ -131,6 +133,7 @@
       mask={20}
       dotsClassName="opacity-30"
     />
+    <StoryAnimation kind="cubes" />
     <div class="about-data-copy">
       <p class="eyebrow">DATA BEHIND THE ANALYSIS</p>
       <h2 id="about-data-heading">Trace every result to its source.</h2>
@@ -175,7 +178,8 @@
       mask={20}
       dotsClassName="opacity-30"
     />
-    <div>
+    <StoryAnimation kind="fluid" />
+    <div class="about-story-copy">
       <p class="eyebrow">CONTINUE THE INVESTIGATION</p>
       <h2 id="about-workspace-heading">Pick up where you left off.</h2>
       <p>
