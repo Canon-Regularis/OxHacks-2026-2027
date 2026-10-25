@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head
-  ><title>GridPulse — Market overview</title><meta
+  ><title>Eisengrau — Market overview</title><meta
     name="description"
     content="Explore GB electricity imbalance prices, wind and demand, with time-aligned weather context."
   /></svelte:head

@@ -17,22 +17,12 @@
       "by_horizon": "MAE, RMSE and 80%/95% coverage per model and lead step",
       "folds": "Every forecast origin per model with its status; excluded folds carry a message"
     },
-    "limitations": "Only calendar_forecast follows the Europe/London clock, so it alone is exact on 46- and 50-period days; the others count elapsed half-hours. Each forecast uses only prices settled before its origin (the previous day's end). Intervals come from each model's interval_method; sqrt-horizon is a heuristic. WMAPE and sMAPE are fractions. Not a probability of a price spike or a trading signal.",
-    "datasets": [
-      "elexon_system_prices"
-    ],
-    "version": "0.1.0",
+    "limitations": "Only calendar follows the Europe/London clock, so it alone is exact on 46- and 50-period days; the others count elapsed half-hours. Point forecasts only are stored. Out-of-sample: each forecast uses only prices settled before its origin, and every model is refitted at every origin. Origins step by elapsed half-hours, so they shift by an hour of local time across a clock change. Intervals are model-based; WMAPE and sMAPE are fractions. A fold with a missing price in its window or targets is excluded, not imputed. Not a probability of a price spike or a trading signal.",
     "params": {
-      "initial": 1344,
-      "window": 1344,
       "horizon": 48,
-      "step": 48,
+      "window": 1344,
       "max_folds": 60,
       "season_length": 48,
-      "levels": [
-        0.8,
-        0.95
-      ],
       "models": {
         "trend": {
           "degree": 1
@@ -53,31 +43,26 @@
         }
       }
     },
+    "datasets": [
+      "elexon_system_prices"
+    ],
+    "version": "0.1.0",
     "param_descriptions": {
-      "initial": "Settlement periods of history before the first forecast origin (1344 = 28 days)",
-      "window": "Sliding training window in periods; null would use an expanding window",
-      "horizon": "Periods forecast from each origin (48 = one day ahead)",
-      "step": "Periods between consecutive origins (48 = one origin per day)",
-      "max_folds": "Most origins a run may use; a longer range is an error, not a truncation",
+      "horizon": "Periods forecast from each origin, which is also the step between origins (48 = one day ahead, once a day)",
+      "window": "Settled periods each fit uses, ending at the origin; at most 1344 (28 days)",
+      "max_folds": "Most origins a run may use; a longer range fails instead of running for hours (60 = about 60 days at horizon 48)",
       "season_length": "Seasonal period in half-hours used to scale MASE, RMSSE and MSIS (48 = daily)",
-      "levels": "Central prediction-interval levels scored, as fractions",
-      "models": "Model name -> its settings; names match the output prefixes and the model column of tables"
+      "models": "Settings of each model; the names match the output prefixes and the model column of the tables"
     },
     "latest_run": {
       "run_id": 25,
       "algorithm_id": "price_regression_backtest",
       "algorithm_version": "0.1.0",
       "params": {
-        "initial": 1344,
-        "window": 1344,
         "horizon": 48,
-        "step": 48,
+        "window": 1344,
         "max_folds": 60,
         "season_length": 48,
-        "levels": [
-          0.8,
-          0.95
-        ],
         "models": {
           "trend": {
             "degree": 1
@@ -113,16 +98,10 @@
     "algorithm_id": "price_regression_backtest",
     "algorithm_version": "0.1.0",
     "params": {
-      "initial": 1344,
-      "window": 1344,
       "horizon": 48,
-      "step": 48,
+      "window": 1344,
       "max_folds": 60,
       "season_length": 48,
-      "levels": [
-        0.8,
-        0.95
-      ],
       "models": {
         "trend": {
           "degree": 1

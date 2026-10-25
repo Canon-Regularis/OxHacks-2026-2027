@@ -1,10 +1,13 @@
 """The frontend builds against gridpulse/contracts/examples/; keep them parseable by the real schemas."""
 
 import json
+import sys
 
 import pytest
 
+from gridpulse.analysis.algorithms import ALGORITHMS
 from gridpulse.api import schemas
+from gridpulse.api.analysis import algorithm_info
 from gridpulse.catalog import datasets_for
 from gridpulse.config import APP_DIR
 
@@ -77,6 +80,24 @@ def test_algorithm_example(path):
     for name, table in tables.tables.items():
         assert table.description == analysis.algorithm.tables[name]
         assert all(len(row) == len(table.columns) for row in table.rows)
+
+
+def test_examples_of_implemented_algorithms_match_the_registry():
+    implemented = 0
+    for path in ALGORITHM_EXAMPLES:
+        example = json.loads(path.read_text())["algorithm"]
+        algorithm = ALGORITHMS.get(example["id"])
+        if algorithm is None:
+            continue  # planned, not built yet
+        served = algorithm_info(algorithm).model_dump(mode="json", exclude={"latest_run"})
+        assert {k: v for k, v in example.items() if k != "latest_run"} == served, example["id"]
+        tables_path = path.with_name(f"{example['id']}.tables.json")
+        if tables_path.exists():  # columns as the adapter declares them in its TABLE_COLUMNS
+            declared = sys.modules[algorithm.run.__module__].TABLE_COLUMNS
+            tables = json.loads(tables_path.read_text())["tables"]
+            assert {name: t["columns"] for name, t in tables.items()} == declared, example["id"]
+        implemented += 1
+    assert implemented, "at least one planned algorithm is implemented"
 
 
 def test_every_algorithm_example_is_paired():

@@ -57,6 +57,7 @@ Keep retrospective observations distinguishable from forecasts. If presenting an
 - [FRONTEND_DESIGN.md](FRONTEND_DESIGN.md): confirmed reuse patterns, agent-driven view changes and synoptic-map requirements.
 - [FRONTEND_API.md](FRONTEND_API.md): every endpoint, field, parameter and error the frontend uses.
 - [ALGORITHM_DISPLAY.md](ALGORITHM_DISPLAY.md): how to present each algorithm's outputs and tables.
+- [MODELLING_NOTES.md](MODELLING_NOTES.md): first backtest results, adapter modelling choices and open questions.
 
 - [REPOSITORY_STRUCTURE.md](REPOSITORY_STRUCTURE.md): agreed folders, ownership and frontend-to-backend request flow.
 

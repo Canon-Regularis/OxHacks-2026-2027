@@ -1,0 +1,79 @@
+# Reruns stale algorithm results in each environment (`gridpulse refresh`) so new data loads reach
+# the dashboard without anyone running `gridpulse analyse` by hand. Up-to-date algorithms are
+# skipped, so a run with no new data takes seconds; a full rerun takes about three minutes. It runs
+# inside each environment's running backend container, so it uses that environment's deployed code
+# and database. Setup is the deploy workflow's (gridpulse/deploy/README.md).
+name: Refresh analysis
+
+on:
+  schedule:
+    - cron: "17 */3 * * *"  # every three hours, off the hour
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to refresh
+        type: choice
+        options: [both, development, production]
+        default: both
+      force:
+        description: Rerun every algorithm, even if up to date
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    name: Refresh ${{ matrix.environment }}
+    # Skipped until the VPS is configured, like the deploy job.
+    if: vars.VPS_HOST != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [development, production]
+    environment: ${{ matrix.environment }}
+    concurrency:
+      group: refresh-analysis-${{ matrix.environment }}
+      cancel-in-progress: false
+    env:
+      APP_DIR: ${{ matrix.environment == 'production' && '/opt/gridpulse' || '/opt/gridpulse-dev' }}
+      VPS_HOST: ${{ vars.VPS_HOST }}
+      VPS_USER: ${{ vars.VPS_USER }}
+    steps:
+      - name: Choose environments
+        id: pick
+        env:
+          CHOSEN: ${{ inputs.environment || 'both' }}
+        run: |
+          if [ "$CHOSEN" = both ] || [ "$CHOSEN" = "${{ matrix.environment }}" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configure SSH
+        if: steps.pick.outputs.run == 'true'
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          KNOWN_HOSTS: ${{ vars.VPS_SSH_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          if [ -n "$KNOWN_HOSTS" ]; then
+            printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else
+            ssh-keyscan -H "$VPS_HOST" > ~/.ssh/known_hosts
+          fi
+          printf 'Host vps\n  HostName %s\n  User %s\n  IdentityFile ~/.ssh/deploy_key\n  IdentitiesOnly yes\n' \
+            "$VPS_HOST" "${VPS_USER:-deploy}" > ~/.ssh/config
+
+      - name: Refresh stale results
+        if: steps.pick.outputs.run == 'true'
+        env:
+          FORCE: ${{ inputs.force && '--force' || '' }}
+        # Fails when an algorithm fails; the others are still refreshed first.
+        run: ssh vps "cd '$APP_DIR' && docker compose exec -T backend gridpulse refresh $FORCE"

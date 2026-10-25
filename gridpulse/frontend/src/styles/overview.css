@@ -481,6 +481,9 @@ select:focus-visible,
 /* Long-form About uses the original KCPC section hierarchy and effects. */
 .about-page {
   --orange-wash: color-mix(in srgb, var(--orange) 7%, transparent);
+  --about-gutter: 48px;
+  max-width: none;
+  margin: 0;
   width: 100%;
   flex: 1;
 }
@@ -1548,5 +1551,297 @@ select:focus-visible,
   }
   .day-coverage {
     margin-top: 6px;
+  }
+}
+
+/* Keep the entire daily summary visible, including five selected averages. */
+.overview-page .day-summary {
+  padding: 10px 14px;
+  min-height: max-content;
+  overflow: visible;
+}
+.day-summary-body {
+  overflow: visible;
+  flex: none;
+}
+.day-summary h2 {
+  margin-bottom: 7px;
+}
+.day-averages {
+  gap: 6px 12px;
+  padding-bottom: 7px;
+}
+.day-average {
+  gap: 1px;
+}
+.day-facts > div {
+  padding-top: 6px;
+}
+.day-facts dd {
+  overflow-wrap: anywhere;
+}
+@media (min-width: 851px) and (max-height: 800px) {
+  .overview-page .overview-sidebar .series-selector {
+    padding: 9px 14px;
+  }
+  .overview-sidebar .selection-row {
+    min-height: 22px;
+  }
+  .overview-sidebar .selection-row label {
+    padding-block: 2px;
+  }
+  .overview-sidebar .selector-rule {
+    margin: 5px 0;
+  }
+  .overview-sidebar {
+    gap: 9px;
+  }
+  .day-summary h2 {
+    margin-bottom: 5px;
+  }
+  .day-average strong {
+    font-size: 12px;
+  }
+  .day-averages {
+    gap: 4px 10px;
+    padding-bottom: 5px;
+  }
+  .day-facts > div {
+    padding-top: 4px;
+  }
+  .day-coverage {
+    margin-top: 5px;
+  }
+}
+
+/* Distribute daily context through the available panel height. */
+.day-summary-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.day-averages {
+  flex: 1;
+  align-content: space-around;
+  min-height: max-content;
+}
+.day-facts {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+.day-coverage {
+  flex: none;
+  text-align: center;
+}
+
+/* Daily context should be readable at normal browser zoom. */
+.day-summary h2 {
+  font-size: 20px;
+}
+.day-average > span {
+  font-size: 12px;
+}
+.day-average strong {
+  font-size: 19px;
+}
+.day-average small {
+  font-size: 10px;
+}
+.day-facts dt,
+.day-facts dd {
+  font-size: 11px;
+  line-height: 1.45;
+}
+.day-coverage {
+  font-size: 10px;
+}
+@media (min-width: 851px) and (max-height: 800px) {
+  .day-summary h2 {
+    font-size: 18px;
+  }
+  .day-average > span {
+    font-size: 10px;
+  }
+  .day-average strong {
+    font-size: 16px;
+  }
+  .day-average small {
+    font-size: 9px;
+  }
+  .day-facts dt,
+  .day-facts dd {
+    font-size: 10px;
+    line-height: 1.3;
+  }
+  .day-coverage {
+    font-size: 9px;
+  }
+}
+
+/* Health & status page */
+.status-page {
+  padding-bottom: 40px;
+}
+.status-checked {
+  font:
+    10px 'DM Mono',
+    monospace;
+  color: var(--muted-foreground);
+}
+.status-page {
+  --lvl-ok: var(--wind);
+  --lvl-warn: var(--orange);
+  --lvl-bad: #e08a80;
+  --lvl-unknown: var(--muted-foreground);
+}
+[data-level='ok'] {
+  --lvl: var(--lvl-ok);
+}
+[data-level='warn'] {
+  --lvl: var(--lvl-warn);
+}
+[data-level='bad'] {
+  --lvl: var(--lvl-bad);
+}
+[data-level='unknown'] {
+  --lvl: var(--lvl-unknown);
+}
+.status-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  border: 1px solid var(--lvl);
+  border-radius: 6px;
+}
+.status-banner h2 {
+  font-size: 20px;
+  font-weight: 500;
+}
+.status-banner p {
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+.status-lamp {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--lvl);
+  box-shadow: 0 0 10px var(--lvl);
+}
+.status-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.status-card {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--lvl);
+  border-radius: 6px;
+}
+.status-card h3 {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font:
+    10px 'DM Mono',
+    monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+.status-value {
+  margin: 8px 0 2px;
+  font-size: 22px;
+  text-transform: capitalize;
+}
+.status-meta {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.status-section {
+  margin-bottom: 24px;
+}
+.status-section h2 {
+  font-size: 15px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.status-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.status-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.status-table th,
+.status-table td {
+  padding: 9px 12px;
+  text-align: left;
+  font-weight: 400;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.status-table thead th {
+  font:
+    10px 'DM Mono',
+    monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+.status-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+.status-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.status-table small {
+  display: block;
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+.pill {
+  display: inline-block;
+  padding: 1px 8px;
+  border: 1px solid var(--lvl);
+  border-radius: 99px;
+  font-size: 11px;
+}
+@media (max-width: 760px) {
+  .status-page {
+    padding: 0 16px 32px;
+  }
+}
+
+/* Full-width About bands track the page padding at every breakpoint. */
+.about-page .about-spacer,
+.about-page .about-pixel-section {
+  width: calc(100% + 2 * var(--about-gutter));
+  margin-inline: calc(-1 * var(--about-gutter));
+}
+@media (min-width: 1500px) {
+  .about-page {
+    --about-gutter: 58px;
+  }
+}
+@media (max-width: 1100px) {
+  .about-page {
+    --about-gutter: 28px;
+  }
+}
+@media (max-width: 580px) {
+  .about-page {
+    --about-gutter: 18px;
   }
 }

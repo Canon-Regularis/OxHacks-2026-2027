@@ -34,6 +34,12 @@ def test_catalog_lists_raw_datasets(client):
     assert {"elexon_system_prices", "elexon_windfor", "elexon_ndf"} <= datasets
 
 
+def test_catalog_serves_the_same_runs_as_the_run_list(client):
+    for algorithm in client.get("/api/catalog").json()["algorithms"]:
+        listed = client.get("/api/analysis/runs", params={"algorithm": algorithm["id"], "limit": 1}).json()
+        assert algorithm["latest_run"] == listed["algorithm"]["latest_run"], algorithm["id"]
+
+
 def test_series_datasets_are_loaded(client):
     catalog = client.get("/api/catalog").json()
     loaded = {d["dataset"] for d in catalog["datasets"]}

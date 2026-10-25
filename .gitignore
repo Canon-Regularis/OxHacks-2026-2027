@@ -234,9 +234,6 @@ tiger-cloud-*credentials*
 # Frontend source directory (the Python template ignores lib/ globally).
 !/gridpulse/frontend/src/lib/
 
-# Local override for running the deploy stack (gridpulse/deploy/README.md)
-/gridpulse/deploy/docker-compose.override.yml
-
 # Root server credentials provided for local development.
 /.env
 
@@ -244,3 +241,6 @@ tiger-cloud-*credentials*
 .svelte-kit/
 playwright-report/
 test-results/
+
+# Local override for running the deploy stack (gridpulse/deploy/README.md)
+/gridpulse/deploy/docker-compose.override.yml

@@ -2,7 +2,7 @@
 
 How to present each algorithm's outputs and tables. Endpoints, fields and errors are in [FRONTEND_API.md](FRONTEND_API.md); response types are in [`gridpulse/frontend/src/lib/types.ts`](../../gridpulse/frontend/src/lib/types.ts). Visual style, motion and page layout follow [FRONTEND_DESIGN.md](FRONTEND_DESIGN.md).
 
-The two reference algorithms are live. The eight others are planned: build them against [`contracts/examples/algorithms/`](../../gridpulse/contracts/examples/algorithms/), and show an algorithm only when it appears in `/api/catalog`.
+All ten algorithms are live: the two references and the eight built on Orchid. Their example responses are in [`contracts/examples/algorithms/`](../../gridpulse/contracts/examples/algorithms/), kept identical to the real metadata and table columns by tests. Show an algorithm only when it appears in `/api/catalog`, and show "not computed yet" while its `latest_run` is `null`.
 
 ## Rules for every algorithm
 
@@ -51,7 +51,7 @@ Format table cells by column name:
 | `interval_score_*`, `msis_*`, `pinball_*` | 1 decimal; lower is better |
 | `p_value` | 2 significant figures in scientific notation below 0.001; `0` means below about 1e-16, so show "< 1e-16"; `null` shows "n/a" |
 | `lag_periods`, `lag_hours` | Integer; `lag_hours` is `lag_periods / 2` |
-| `status` | A chip: `ok` neutral; `insufficient_data`, `degenerate_data`, `failed` muted with `message` as tooltip |
+| `status` | A chip: `ok` neutral; `missing_data`, `insufficient_data`, `degenerate_data`, `failed` muted with `message` as tooltip. An `ok` fold may still carry a `message`: a fit warning, such as a forecast spanning a clock change |
 | `n_*` | Integer count |
 | anything else | Numbers to 3 significant figures; text as is |
 
@@ -87,7 +87,7 @@ These recur across algorithms. Build each once as a component.
 - **Show:** a line on a fixed −1..1 axis with a zero line. Negative values mean higher wind went with lower prices that week.
 - **Wording:** "Trailing seven-day correlation; descriptive, not a forecast."
 
-### `price_baseline_backtest` (planned)
+### `price_baseline_backtest` (live)
 
 - **Page:** Explore.
 - **Outputs:** one `<model>_forecast` per baseline: `naive` (last settled price), `seasonal_naive_day` (same period yesterday), `seasonal_naive_week` (same period last week), `naive2`, `drift`, `mean`, `moving_average`, `weighted_moving_average`. Point forecasts only.
@@ -95,31 +95,32 @@ These recur across algorithms. Build each once as a component.
 - **Show:** the scorecard first. These are the benchmarks; the message is "how hard is this to beat". Offer the forecast-vs-actual chart with all eight hidden except `seasonal_naive_day`.
 - **Wording:** "Each forecast uses only prices settled before the previous day ended."
 
-### `price_forecast_backtest` (planned)
+### `price_forecast_backtest` (live)
 
 - **Page:** Overview (headline chart), Explore (tables).
 - **Outputs:** `seasonal_naive_forecast`, `ets_forecast`, `arima_forecast`, with 80% and 95% bands for ETS and ARIMA.
-- **Tables:** `metrics`, `by_horizon`, `folds`, plus `fold_params` (`model`, `origin_utc`, `parameter`, `value`): the fitted parameters at each origin.
+- **Tables:** `metrics`, `by_horizon`, `folds`, plus `fold_params` (`model`, `origin_utc`, `parameter`, `value`): the fitted parameters at each origin. ETS reports `alpha` and `gamma` (and `beta`/`phi` with a trend); ARIMA reports its coefficients (`ar.L1`, `ar.L2`, `ma.L1`), `sigma2` and `aicc`. The seasonal naive has none.
+- **Range:** a run covers at most about 60 days (`max_folds`), so the Overview chart should default to its latest week. Excluded folds (`missing_data`, `failed`) are gaps in the series.
 - **Show:** the forecast-vs-actual chart with ETS bands on by default, and the scorecard comparing ETS and ARIMA with the seasonal naive benchmark. Use `coverage_80`/`coverage_95` to show whether the bands are honest: near 80%/95% is well calibrated, lower means the bands were too narrow. On Explore, chart `fold_params` as one small line chart per parameter over `origin_utc`; drift there means the fitted model was unstable.
 - **Wording:** "Out-of-sample: each day's forecast was made the day before, from a model refitted on the previous 28 days."
 
-### `price_regression_backtest` (planned)
+### `price_regression_backtest` (live)
 
 - **Page:** Explore.
 - **Outputs:** `trend_forecast`, `seasonal_dummy_forecast`, `fourier_forecast`, `calendar_forecast`. Point forecasts only.
 - **Tables:** `metrics`, `by_horizon`, `folds`.
 - **Show:** the same components as the other backtests. Point out that `calendar` follows the GB clock and so is the only regression exact on clock-change days.
 
-### `price_day_ahead_forecast` (planned)
+### `price_day_ahead_forecast` (live)
 
 - **Page:** Overview: the "tomorrow" panel.
 - **Outputs:** `seasonal_naive_forecast`, `auto_ets_forecast` and `auto_arima_forecast`, with 80% and 95% bands for the two automatic models. The values lie on the **forecast day**, after the data used.
-- **Finding the day:** take `latest_run` from the catalog. The forecast day is the London date of `range_end_utc` minus 30 minutes. Request `/api/analysis` with `from` and `to` both set to that day, and `/api/series?ids=price` for the same day to draw the actual price once it settles.
-- **Tables:** `selected_models` (`model`, `source`, `parameter`, `value`): the model each automatic search chose and its fitted parameters. Show it as "AutoARIMA chose ARIMA(2,0,1) with a daily seasonal difference". `fit_warnings` (`model`, `warning`): show any rows as notes under the chart.
+- **Finding the day:** fetch the `forecast_day` table of `latest_run.run_id`. Its one row gives `settlement_date`, `first_utc`, `last_utc`, `periods` (46, 48 or 50) and the history used (`history_first_utc`, `history_last_utc`). Request `/api/analysis` with `from` and `to` both set to `settlement_date`, and `/api/series?ids=price` for the same day to draw the actual price once it settles.
+- **Tables:** `selected_models` (`model`, `source`, `parameter`, `value`): the model each automatic search chose and its fitted parameters. Show it as "AutoARIMA chose ARIMA(2,0,1) with a daily seasonal difference". `fit_warnings` (`model`, `warning`): show any rows as notes under the chart. A row starting "not forecast:" means that model produced nothing (its outputs are `null`).
 - **Show:** a fan chart: the 95% band, the 80% band inside it, the point forecast, and the seasonal naive as a dashed comparison line.
 - **Wording:** "Forecast from prices settled by the end of {last day}. Ranges are model-based, not probabilities." Link to `price_forecast_backtest` for how accurate such forecasts have been.
 
-### `price_rolling_signals` (planned)
+### `price_rolling_signals` (live)
 
 - **Page:** Overview, as overlays and a pane under the price chart.
 - **Outputs (GBP/MWh unless noted):**
@@ -130,26 +131,26 @@ These recur across algorithms. Build each once as a component.
 - **Show:** on the price chart, the p10–p90 range as a shaded band and one level line (EWMA by default; let the user pick another). In a pane below, `price_std_48` as volatility. Changes fit a bar pane. Prefer `std` to `variance` for display; its unit matches the price.
 - **Wording:** "Trailing statistics: each value uses only prices up to that period."
 
-### `calendar_fourier_terms` (planned)
+### `calendar_fourier_terms` (live)
 
 - **Page:** Methods.
 - **Outputs:** `daily_sin_1`, `daily_cos_1`, `daily_sin_2`, `daily_cos_2`, `weekly_sin_1`, `weekly_cos_1`, unitless, −1 to 1.
 - **Show:** small multiples over one or two days, to explain how the regressions represent the daily and weekly cycle. Fetch 25 October 2026: the values for 01:00 and 01:30 repeat, because the clock repeats that hour.
 - **Wording:** "Functions of the clock, not of data."
 
-### `price_driver_correlograms` (planned)
+### `price_driver_correlograms` (live)
 
 - **Page:** Explore.
 - **Outputs:** none. Use `latest_run.run_id` and fetch the tables directly.
-- **Tables:** `acf_price` and `pacf_price` (lags 1..96), `ccf_residual_demand` and `ccf_wind` (lags −96..96), each with `lag_periods`, `lag_hours`, `value`, `band`.
+- **Tables:** `acf_price` and `pacf_price` (lags 1..96), `ccf_residual_demand` and `ccf_wind` (lags −96..96), each with `lag_periods`, `lag_hours`, `value`, `band`. `sample` (`first_utc`, `last_utc`, `periods`, `excluded_periods`) is the gap-free stretch they were computed on; show it as "computed over …". The lag tables are empty when that stretch is too short for the lags.
 - **Show:** four correlogram components. For cross-correlations explain the sign of the lag: at a positive lag k, the driver k half-hours earlier is compared with the price now, so a peak at k > 0 means the driver *leads* the price. The ACF shows how long price shocks persist; a spike at 24 h shows the daily cycle.
 - **Wording:** "Association over the whole period, not cause and effect."
 
-### `price_residual_diagnostics` (planned)
+### `price_residual_diagnostics` (live)
 
 - **Page:** Methods.
 - **Outputs:** none; fetch the tables by `latest_run.run_id`.
-- **Tables:** `ljung_box` (`model`, `lag`, `statistic`, `df`, `p_value`) and `tests` (`model`, `test`, `statistic`, `p_value`, `notes`).
+- **Tables:** `ljung_box` (`model`, `lag`, `statistic`, `df`, `p_value`), `tests` (`model`, `test`, `statistic`, `p_value`, `notes`) and `sample` (as for the correlograms: the stretch the models were fitted to, at most the latest 56 days). A `tests` row with `test` = `not_computed` explains in `notes` why a model could not be tested.
 - **Show:** `tests` as a table per model. `ljung_box` as a line of `p_value` against `lag` on a log axis, one line per model. Explain each test in one line:
   - Ljung–Box: is there pattern left in the errors at lags up to k;
   - Durbin–Watson: autocorrelation between consecutive errors, where 2 means none (no p-value);
@@ -161,7 +162,7 @@ These recur across algorithms. Build each once as a component.
 
 | Page | Algorithms |
 |---|---|
-| Overview | `price_forecast_backtest` (forecast vs actual), `price_day_ahead_forecast` (tomorrow), `price_rolling_signals` (overlays), `wind_price_correlation`, `price_naive_backtest` until the planned backtests land |
+| Overview | `price_forecast_backtest` (forecast vs actual), `price_day_ahead_forecast` (tomorrow), `price_rolling_signals` (overlays), `wind_price_correlation`, `price_naive_backtest` as a fallback |
 | Explore | All backtest scorecards, by-horizon charts and fold timelines; `price_driver_correlograms`; `worst_misses` and extremes linking to the period inspector |
 | Methods | Every algorithm's `description`, `inputs` and `datasets` (with each dataset's source), `params` with `param_descriptions`, and `limitations`; `calendar_fourier_terms`; `price_residual_diagnostics`; dataset coverage from the catalog, with the series built from each dataset |
 

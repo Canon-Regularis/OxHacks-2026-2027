@@ -3,9 +3,9 @@
 </script>
 
 <svelte:head
-  ><title>About — GridPulse</title><meta
+  ><title>About — Eisengrau</title><meta
     name="description"
-    content="How GridPulse brings electricity market data and weather context together for evidence-based investigation."
+    content="Inspect published GB electricity forecasts, actual readings and settlement prices with Eisengrau. Learn about the data sources, daily view and analysis scope."
   /></svelte:head
 >
 <a class="skip-link" href="#about-main">Skip to About content</a><About />

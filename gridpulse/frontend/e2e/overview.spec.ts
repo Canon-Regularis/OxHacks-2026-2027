@@ -310,3 +310,35 @@ test('daily context uses the selected day and stays fixed during hover', async (
   ).toBe(true);
   await page.screenshot({ path: test.info().outputPath('daily-context.png') });
 });
+
+test('daily summary fits all text at five selections on desktop', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(page.locator('.scan-period')).toHaveCount(50);
+  await page
+    .getByRole('checkbox', { name: 'Actual wind GW', exact: true })
+    .check();
+  await page
+    .getByRole('checkbox', { name: 'Actual demand GW', exact: true })
+    .check();
+  for (const width of [1440, 1366, 1024]) {
+    await page.setViewportSize({ width, height: 768 });
+    await expect(page.locator('.day-average')).toHaveCount(5);
+    expect(
+      await page
+        .locator('.day-summary-body')
+        .evaluate((el) => el.scrollHeight <= el.clientHeight + 1),
+    ).toBe(true);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollHeight <= innerHeight + 1,
+      ),
+    ).toBe(true);
+    const coverage = await page.locator('.day-coverage').boundingBox();
+    const panel = await page.locator('.day-summary').boundingBox();
+    expect(coverage!.y + coverage!.height).toBeLessThanOrEqual(
+      panel!.y + panel!.height,
+    );
+  }
+});

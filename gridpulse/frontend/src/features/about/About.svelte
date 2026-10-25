@@ -49,10 +49,10 @@
 <main class="page-shell about-page" id="about-main">
   <Hero />
   <section class="about-intro">
-    <p class="eyebrow">ABOUT GRIDPULSE</p>
+    <p class="eyebrow">ABOUT EISENGRAU</p>
     <h2>The bigger picture.<br /><span>Without losing the detail.</span></h2>
     <p>
-      GridPulse is a dashboard for inspecting Great Britain’s electricity
+      Eisengrau is a dashboard for inspecting Great Britain’s electricity
       market, built for OxHack 2026. Overview brings published forecasts,
       available outturns and settlement prices into one daily view, so you can
       compare what was forecast with what happened and inspect the underlying
@@ -116,7 +116,7 @@
     <div class="about-data-copy">
       <p>
         The market series use publicly available Elexon and NESO data, served
-        through GridPulse’s backend from Tiger Data. Wind and demand forecasts
+        through Eisengrau’s backend from Tiger Data. Wind and demand forecasts
         are published source forecasts, with the latest version issued before
         delivery selected for each period. They are separate from actual
         generation and demand readings.
@@ -173,10 +173,12 @@
     <p class="eyebrow">WHAT COMES NEXT</p>
     <h2 id="about-roadmap-heading">More ways to investigate.</h2>
     <p>
-      Overview and this About page are available today. Explore and Methods are
-      planned for deeper data inspection and explanations of analysis.
-      Statistical forecasting and diagnostics are being prepared for dashboard
-      integration; they are not currently displayed in Overview. Weather
+      Overview, Status and this About page are available today. Status shows
+      service health, data freshness and analysis-run availability. Explore and
+      Methods are planned for deeper data inspection and explanations of
+      analysis. The backend now computes statistical forecasts, backtests,
+      rolling signals and diagnostics in batch jobs; their results are available
+      through the API, with dedicated dashboard views still to come. Weather
       analysis is available in the backend, while weather maps and a Gemini
       investigation assistant remain future extensions.
     </p>

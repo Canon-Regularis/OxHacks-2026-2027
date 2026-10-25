@@ -35,8 +35,14 @@ concurrency:
 
 jobs:
   backend-tests:
-    name: Backend tests
+    name: Backend tests ${{ matrix.shard }}/3
     runs-on: ubuntu-latest
+    # Private repositories get two-core runners, which pytest-xdist can only half use. Three
+    # runners each take a third of the tests (tests/conftest.py); all of them must pass.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     defaults:
       run:
         working-directory: gridpulse/backend
@@ -49,7 +55,11 @@ jobs:
           cache-dependency-path: gridpulse/backend/pyproject.toml
       - run: pip install -e ".[dev]"
       # Integration tests skip themselves without GRIDPULSE_INTEGRATION=1 and a database.
-      - run: pytest
+      # Parametrized test ids must not contain addresses or set orderings, or xdist workers
+      # disagree about which tests exist.
+      - run: pytest -n auto
+        env:
+          PYTEST_SHARD: ${{ matrix.shard }}/3
 
   frontend-checks:
     name: Frontend checks
@@ -73,16 +83,51 @@ jobs:
           npm run check --if-present
           npm run test --if-present
 
+  # Pull requests build only the images their diff can change. Pushes and manual runs build both.
+  changes:
+    name: Changed components
+    runs-on: ubuntu-latest
+    outputs:
+      components: ${{ steps.diff.outputs.components }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # A pull request is checked out as a merge commit; its first parent is the base branch.
+          fetch-depth: 2
+      - id: diff
+        run: |
+          backend=false frontend=false
+          if [ "$GITHUB_EVENT_NAME" != pull_request ] || ! git rev-parse -q --verify HEAD^1 > /dev/null; then
+            backend=true frontend=true
+          else
+            while IFS= read -r file; do
+              case "$file" in
+                gridpulse/backend/* | gridpulse/db/* | gridpulse/data/demo/*) backend=true ;;
+                gridpulse/frontend/*) frontend=true ;;
+                # The workflow, deploy files and .dockerignore can affect either image.
+                *) backend=true frontend=true ;;
+              esac
+            done < <(git diff --name-only HEAD^1 HEAD)
+          fi
+          components=()
+          [ "$backend" = true ] && components+=('"backend"')
+          [ "$frontend" = true ] && components+=('"frontend"')
+          echo "components=[$(IFS=,; echo "${components[*]}")]" >> "$GITHUB_OUTPUT"
+
+  # Building does not need the tests to pass; only deploying does. Running them side by side keeps
+  # the slowest of the two off the critical path. On main and production the branch tag therefore
+  # moves before the tests finish, but deploys use the sha tag and wait for them.
   images:
     name: ${{ matrix.component }} image
-    needs: [backend-tests, frontend-checks]
+    needs: changes
+    if: needs.changes.outputs.components != '[]'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
     strategy:
       matrix:
-        component: [backend, frontend]
+        component: ${{ fromJSON(needs.changes.outputs.components) }}
     steps:
       - uses: actions/checkout@v7
       - id: image
@@ -110,7 +155,7 @@ jobs:
 
   deploy:
     name: Deploy ${{ github.ref_name == 'production' && 'production' || 'development' }}
-    needs: images
+    needs: [backend-tests, frontend-checks, images]
     # Only the two deployed branches; skipped until the VPS is configured (gridpulse/deploy/README.md).
     if: >-
       github.event_name != 'pull_request' && vars.VPS_HOST != ''
@@ -145,7 +190,8 @@ jobs:
           else
             ssh-keyscan -H "$VPS_HOST" > ~/.ssh/known_hosts
           fi
-          printf 'Host vps\n  HostName %s\n  User %s\n  IdentityFile ~/.ssh/deploy_key\n  IdentitiesOnly yes\n' \
+          # One connection serves the scp and ssh calls below instead of a handshake for each.
+          printf 'Host vps\n  HostName %s\n  User %s\n  IdentityFile ~/.ssh/deploy_key\n  IdentitiesOnly yes\n  ControlMaster auto\n  ControlPath ~/.ssh/control-%%C\n  ControlPersist 120\n' \
             "$VPS_HOST" "${VPS_USER:-deploy}" > ~/.ssh/config
 
       - name: Copy compose files, proxy config and deploy script

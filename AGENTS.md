@@ -22,7 +22,8 @@ Use this file as repository-wide guidance when working on GridPulse. It records 
 | **Components** | Reusable styling and UI components for frontend polish | [Components](https://github.com/orthant-kcpc/components), local `../components/`, cloned revision `9626af5` |
 | **Existing exporter** | Fetch Elexon data and write CSVs for ingestion | Being implemented by a teammate; sample files, schema and code location pending |
 
-The three reference repositories are cloned as siblings of this repository under `/home/david/Documents/Oxhack/`. Revisions above identify the completed clones, not a guarantee that these checkouts will remain unchanged. Orchid P0 modules are vendored in `gridpulse/backend/src/gridpulse/analysis/algorithms/orchid/`. Selected frontend source components are vendored with exact paths and revisions in `gridpulse/frontend/src/lib/vendor/kcpc/README.md`. Licence/attribution review remains pending. Inspect compatibility and dependencies before choosing components.
+The three reference repositories are cloned as siblings of this repository under `/home/david/Documents/Oxhack/`. Revisions above identify the completed clones, not a guarantee that these checkouts will remain unchanged. Selected frontend source components are vendored with exact paths and revisions in `gridpulse/frontend/src/lib/vendor/kcpc/README.md`. Licence/attribution review remains pending. Inspect compatibility and dependencies before choosing components.
+
 
 ## Orchid modules in use
 
@@ -99,6 +100,7 @@ Before editing the frontend, read [its README](gridpulse/frontend/README.md) for
 - [Overview](docs/gridpulse/README.md)
 - [Data pipeline](docs/gridpulse/DATA_PIPELINE.md)
 - [Algorithms and analysis contracts](docs/gridpulse/ALGORITHMS_AND_ANALYSIS.md)
+- [Modelling notes: first results, adapter choices, open questions](docs/gridpulse/MODELLING_NOTES.md)
 - [Build and demo plan](docs/gridpulse/BUILD_AND_DEMO.md)
 - [Extensions](docs/gridpulse/RESEARCH_AND_EXTENSIONS.md)
 - [Sponsor reference](docs/sponsors.md)
