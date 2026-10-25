@@ -1,6 +1,6 @@
 # Modelling notes
 
-Findings from the first runs of the P0 algorithms, the modelling choices built into their adapters, and the questions they leave open. Written 24 October 2026 from the Tiger **dev** database: runs 23 to 30, imbalance prices from 1 September to 23 October 2026 (53 days, 2,544 periods, none missing). The algorithms themselves are described in [ALGORITHMS_AND_ANALYSIS.md](ALGORITHMS_AND_ANALYSIS.md#registered-algorithms). These numbers come from one autumn period and one market; treat them as a first look, not a result.
+Findings from the first runs of the P0 and P1 algorithms, the modelling choices built into their adapters, and the questions they leave open. Written 24 October 2026 from the Tiger **dev** database: runs 23 to 30, imbalance prices from 1 September to 23 October 2026 (53 days, 2,544 periods, none missing). The algorithms themselves are described in [ALGORITHMS_AND_ANALYSIS.md](ALGORITHMS_AND_ANALYSIS.md#registered-algorithms). These numbers come from one autumn period and one market; treat them as a first look, not a result. The [P1 backtest](#p1-backtest-results) and the [decomposition and stationarity results](#decomposition-and-stationarity-results) were added on 25 October from the same database.
 
 ## Backtest results
 
@@ -33,6 +33,87 @@ Each day from 1 September, every model was refitted on the previous 28 days and 
 6. **Errors are heavy-tailed and cluster in time.** The residual diagnostics give excess kurtosis 6.7 (ETS) and 3.0 (ARIMA), Jarque–Bera p-values of 0 and strong ARCH effects (statistics 196 and 170 on 12 lags). Gaussian intervals are therefore misstated: too narrow in volatile spells and too wide in calm ones. Durbin–Watson is near 2 for both models.
 7. **The drivers move with the price, mostly at the same moment.** The cross-correlation with residual demand peaks at +0.63 (lag −1, effectively simultaneous) and with the wind forecast at −0.46 (lag 0). The white-noise band (±0.039) is far narrower than these values, but it overstates significance for autocorrelated series. These figures say the drivers matter, not that they cause the price.
 
+## P1 backtest results
+
+`price_p1_backtest` was run on 25 October 2026 against Tiger dev, read-only: the input frame was read and the algorithm run in-process, and no run was stored. The range was the refresh window, 29 August to 23 October 2026 (56 days, 2,688 periods, plus the 28-day warm-up, with no price missing), so there were 56 folds per model and none was excluded. To compare like with like, the three P0 backtests were run on the same frame; their numbers differ slightly from the table above, which starts on 1 September. MAE is in £/MWh.
+
+| Model | Algorithm | MAE | MASE | MAE 30 min ahead | MAE 24 h ahead | 80% coverage | 95% coverage | Pinball q10 / q90 |
+|---|---|---|---|---|---|---|---|---|
+| Ensemble (Theta, AR, DLM) | P1 | **48.5** | **0.84** | 24.1 | 45.1 | 0.88 | 0.97 | **12.3 / 10.6** |
+| Theta (θ = 2, daily season) | P1 | 49.2 | 0.85 | 22.5 | 51.7 | 0.94 | 0.99 | 14.1 / 12.9 |
+| ETS (A,N,A) | forecast | 49.2 | 0.85 | 22.5 | 51.7 | 0.94 | 0.99 | 14.3 / 13.1 |
+| Naive2 | baseline | 51.7 | 0.89 | 20.0 | 54.2 | 0.99 | 1.00 | 24.8 / 23.9 |
+| Local-level structural | P1 | 52.8 | 0.91 | 20.3 | 52.4 | 0.96 | 1.00 | 17.3 / 16.5 |
+| Discount DLM (level, δ = 0.95) | P1 | 53.6 | 0.92 | 35.4 | 48.8 | 0.75 | 0.89 | 13.4 / 11.7 |
+| Naive (last value) | baseline | 54.1 | 0.93 | **18.5** | 54.2 | 0.99 | 1.00 | 25.3 / 25.0 |
+| AR(2) | P1 | 54.3 | 0.94 | 22.5 | **39.0** | 0.78 | 0.93 | 14.0 / 10.1 |
+| Mean of the window | baseline | 56.5 | 0.97 | 43.7 | **39.0** | 0.77 | 0.93 | 15.0 / 10.4 |
+| Fourier regression | regression | 54.0 | 0.93 | 44.9 | 40.8 | 0.99 | 1.00 | 36.8 / 36.4 |
+| ARIMA(2,0,1), daily difference | forecast | 60.8 | 1.04 | 34.8 | 54.8 | 0.80 | 0.92 | 14.3 / 14.8 |
+| Seasonal naive, daily | P1, forecast, baseline | 63.9 | 1.10 | 59.4 | 54.2 | 0.78 | 0.92 | 15.2 / 15.6 |
+
+The algorithm's own `dm_tests`, absolute loss, each model against the daily seasonal naive (positive statistic: the model was more accurate; 56 errors per lead):
+
+| Model | 30 min: MAE vs 59.4 | statistic | p-value | 24 h: MAE vs 54.2 | statistic | p-value |
+|---|---|---|---|---|---|---|
+| Theta | 22.5 | 6.01 | < 1e-5 | 51.7 | 1.19 | 0.24 |
+| AR(2) | 22.5 | 6.09 | < 1e-5 | 39.0 | 2.63 | 0.011 |
+| Discount DLM | 35.4 | 4.61 | < 1e-4 | 48.8 | 1.22 | 0.23 |
+| Local level | 20.3 | 6.24 | < 1e-5 | 52.4 | 1.21 | 0.23 |
+| Ensemble | 24.1 | 6.33 | < 1e-5 | 45.1 | 2.74 | 0.008 |
+
+For context, the same test was run outside the algorithm against the stronger P0 benchmarks on the same targets. These comparisons are not stored anywhere.
+
+- **30 minutes ahead,** against the naive (£18.5), every P1 model was less accurate. The local level was closest (£20.3, p = 0.21); for the rest p was 0.0002–0.043.
+- **24 hours ahead,** against the window mean (£39.0), AR(2) was level with it (p = 0.76). Theta, the DLM and the local level were worse (p 0.02–0.04), and the ensemble was worse at p = 0.065.
+- **24 hours ahead,** against ETS (£51.7), AR(2) and the ensemble were more accurate (p 0.03 and 0.026).
+
+These are ten in-algorithm tests plus thirty more, on 56 days of one autumn, so a p-value near 0.03 is weak evidence on its own.
+
+### What the P1 results say
+
+1. **Theta reproduces ETS.** Their forecasts correlate at 0.99999999 and differ by a median of £0.16. With the season adjusted by a fixed classical decomposition, Theta is simple exponential smoothing (alpha 0.46–0.62 across folds, median 0.53) plus a negligible drift (±£0.02 per half-hour). That is what ETS(A,N,A) with gamma 0 is, and the fitted alpha matches ETS's (around 0.53). Two independent implementations agreeing supports finding 4, that a fixed daily profile is what these prices support, rather than an Orchid artefact. It also means Theta adds nothing to ETS on this data.
+2. **The ensemble has the best average, through diversity rather than any good member.** It is not best at either end: 30 minutes ahead it is worse than all of its members except the DLM, and 24 hours ahead it trails AR(2) and the mean. Averaging Theta's daily shape with AR's reversion to the mean still gives the lowest MAE over the day, the lowest pinball losses, and bands closer to nominal (0.88 / 0.97) than any well-scoring P0 model.
+3. **AR(2) is the 28-day mean a day ahead.** Its 24-hour MAE (£39.0) equals the window mean's, and the DM test cannot tell them apart. The fitted coefficients (ar.L1 around 0.66, ar.L2 around 0.18) decay to the mean within a few hours. Close in, it matches Theta (£22.5). This confirms finding 1 from the other side: most of the day-ahead skill available here is the level, not the shape.
+4. **The local level is the best P1 model close in but never beats persistence.** At 30 minutes it is £20.3 against the naive's £18.5, and its fitted signal-to-noise ratio (level variance 737 against irregular 588, in (£/MWh)²) smooths away part of the last price. A day ahead it is a flat line like the naive. Its bands over-cover (0.96 / 1.00).
+5. **The discount DLM is too slow at δ = 0.95.** It has the worst 30-minute error of the P1 models (£35.4) and under-covers (0.75 / 0.89), because its level adapts too slowly for half-hourly prices. Its degrees of freedom reach 1,345, so the Student-t bands are effectively Gaussian. A lower discount, around 0.7–0.8, is worth a backtest; it is one param override.
+6. **The Diebold–Mariano tests separate leads clearly.** Every P1 model beats the daily seasonal naive at 30 minutes (p < 1e-4), but only AR(2) and the ensemble do so at 24 hours. Testing against the seasonal naive, which is the weakest benchmark here (finding 2), flatters every model. For the demo, set `dm_benchmark` to a stronger model, or show the naive and mean comparisons above beside the stored table.
+
+## Decomposition and stationarity results
+
+`price_decomposition` and `price_stationarity` were run on 25 October 2026 against Tiger dev, read-only (nothing stored). They covered the same 56-day refresh window, 29 August to 23 October 2026: 2,688 periods, none missing, all of them decomposed and tested.
+
+**The daily profile** (STL seasonal indices, £/MWh, London time; classical within £6):
+
+| Time | 04:00 | 07:30 | 11:00 | 13:30 | 16:00 | 18:30 | 21:00 | 23:30 |
+|---|---|---|---|---|---|---|---|---|
+| Effect | −24.5 | +26.6 | −41.0 | −44.7 | +8.5 | +59.1 | +26.1 | −1.2 |
+
+- **Strengths:** trend strength 0.47, seasonal strength 0.28.
+- **Component spread:** STL's trend, seasonal and remainder each have a standard deviation of about £38–40. The remainder has excess kurtosis 3.9.
+- **Unit-root tests:**
+  - ADF rejects a unit root in the price at 1% (statistic −3.99 with a constant, −4.09 with a trend), and KPSS does not reject stationarity at 10% (0.32 and 0.088).
+  - Both differences are stationary by both tests.
+- **`difference_orders`:** with the seasonal difference left to its test, it gives no daily difference but one regular difference. With the daily difference fixed, it gives no regular difference.
+- **AR(48) spectrum:**
+  - The density is largest at frequency 0 (287,500) and falls through the weekly frequency (201,200 at 168 hours).
+  - Among the daily harmonics, 12 hours (local peak 107,500 at 12.2 hours) is stronger than 24 hours (71,600, with a nearby local peak of 92,900 at 28 hours). 8 hours is a further, smaller peak (11,900).
+
+### What these results say
+
+1. **The price has a two-peak day with a solar trough.** The evening peak (+£55–62 from 18:00 to 19:30) is the largest, and a smaller morning peak sits at 07:00–08:00. The deepest trough is not overnight but at midday (−£40 to −£45 from 10:30 to 14:00). Two peaks a day put more power at 12 hours than at 24, as the spectrum shows. The midday trough is likely solar, which the dashboard has no input for; weigh that before reading too much into wind as the only driver.
+2. **The daily cycle is real but not dominant.** A seasonal strength of 0.28 against a trend strength of 0.47 means multi-day swings in the level account for more of the variation than the time of day. This fits finding 2, that yesterday's shape is a poor guide, and P1 finding 3, that most day-ahead skill is the level.
+3. **No differencing is needed, so AutoARIMA's automatic choice over-differences.** Over these 56 days both tests agree the price is stationary around a constant, so neither a regular nor a daily difference is warranted.
+   - **The daily difference:** fixing it (as `price_day_ahead_forecast` does) is the over-differencing behind finding 3.
+   - **The regular difference:** left to its own test, AutoARIMA instead takes one, because `difference_orders` uses Orchid's default KPSS lags, under ten for this sample. On this price KPSS rejects stationarity at 1% with 8 to 10 lags (statistics 0.87 to 0.76), at 5% with 24 (0.47) and not at all with 48 (0.32).
+   - **Open question 2:** this suggests a third option to backtest, ARIMA with d = 0 and no seasonal difference, rather than choosing only between the two automatic settings.
+4. **The spectrum shows broad features, not exact cycles.** An AR(48) model cannot resolve a weekly cycle, which needs order 336, so the high density at 168 hours is the rising low-frequency shoulder of the slow level swings, not evidence of a weekly peak. Its daily peaks are smoothed too, which is why the local maximum sits at 28 rather than 24 hours. Use it to compare where variance lies, not to time cycles.
+5. **STL's seasonal varies between days; classical's does not.** STL's seasonal component has a standard deviation of £38 against classical's £30, and its remainder is smaller (£40 against £47). The seasonal indices nonetheless agree within £6. The STL remainder's heavy tails (excess kurtosis 3.9) are the price spikes. A display that shows only the profile hides that day-to-day change.
+
+The window does not include the 25 October clock change. From the next refresh it will, and the profile after that day will be shifted by an hour (see the limitations).
+
+`price_decomposition` took 2.5 s of `algorithm.run` and `price_stationarity` 8.3 s, almost all of it the six ADF regressions with 48 lags. Neither uses the process pool or a memo, so a 1-vCPU host takes about the same.
+
 ## Choices built into the adapters
 
 These are decisions made while wiring Matthew's methods into the API. Each is reasonable but open to review.
@@ -50,6 +131,9 @@ These are decisions made while wiring Matthew's methods into the API. Each is re
 | Day-ahead forecasts the whole next settlement day (46, 48 or 50 periods) | `price_day_ahead_forecast.py` | A "tomorrow" panel should match the settlement day | The day is recorded in the `forecast_day` table |
 | AutoARIMA with the daily difference fixed (`seasonal_differencing: 1`) | `price_day_ahead_forecast.py` | Matthew's notes advise fixing it when the cycle is known | **Contradicted by finding 3**; left to its own test, AutoARIMA drops it and picks ARIMA(0,1,1) |
 | Seasonal lags count elapsed half-hours | all seasonal models | Orchid works on a regular grid | On and after a clock change, such as **25 October 2026, this weekend**, origins shift by an hour of local time and seasonal lags point an hour off; fits carry a warning |
+| Structural model without seasons in the P1 backtest | `price_p1_backtest.py` | A seasonal `fit_structural` takes 14–50 s on four weeks, which at 56 origins is up to 47 minutes of fitting | `structural` is a local level, which at day-ahead leads is a flat forecast like the naive |
+| Ensemble of Theta, AR and the DLM, equally weighted | `price_p1_backtest.py` | The cheap members; ETS or the structural model would double the cost of every fold, and weights fitted on the same folds would flatter the ensemble | Its bands average the members' bounds, which keeps them nested but does not recalibrate coverage |
+| Diebold–Mariano at leads 1 and 48 only, against the seasonal naive, with absolute loss | `price_p1_backtest.py` | One test per lead keeps errors from separate origins (test horizon 1); absolute loss matches MAE and is less dominated by price spikes | Ten tests per run, so expect some small p-values by chance; other leads or the naive benchmark are param overrides |
 
 ## Batch runtime
 
@@ -72,6 +156,8 @@ The pool only helps with more than one vCPU. A 1-vCPU VPS keeps only the in-proc
 
 - **Warm-starting each fold from the previous fold's parameters.** `ARIMA.fit` takes no start values; only the lower-level `css_estimate` does. `ETSForecaster` has none. Either change would alter results and need version bumps.
 
+`price_p1_backtest` on the Tiger dev window above (56 folds, 4 workers, the same laptop): 43.0 s for a fresh `algorithm.run`, against 30.0 s for `price_forecast_backtest`, 10.1 s for `price_regression_backtest` and 2.7 s for `price_baseline_backtest` on the same frame. Loading the frame from Tiger took 2.6 s. Almost all of the time is the local-level structural model's maximum-likelihood refit at every origin; Theta, AR, the DLM and the ensemble each take well under a second per fold. Like the other backtests it declares `memo`. After a run over the window one day earlier, the run to 23 October took 5.3 s with that memo, on 4 workers, and returned series and tables identical to the fresh run. Neither run was stored, so `run_algorithm`'s storage time is not included.
+
 ### Reusing folds between runs (memo)
 
 After one new day, 55 of a backtest's 56 origins see the same prices as in the previous run. The three backtests declare `memo=True` (see `analysis/contract.py`), so `run` also takes `memo`, a dict in which each fold is stored as JSON. Each fold is keyed by a hash of its model and settings, its prices with their start time, the fold settings and the interval levels. A run fits only the folds it does not find. A revised price changes the key of every fold that contains it, so those folds are refitted.
@@ -90,8 +176,8 @@ A routine refresh therefore no longer needs more than one vCPU. The pool still m
 
 ## Open questions and next steps
 
-1. **ETS gamma (Matthew).** Is a zero seasonal weight real or an Orchid artefact? See finding 4.
-2. **AutoARIMA's seasonal difference (team decision).** Keep `seasonal_differencing: 1` or set it to `null` so the test decides? Finding 3 favours dropping it. Settle it with a backtest of both, which costs about 6 minutes for 53 days at 5–7 s per fit. Changing it is one line plus a version bump.
+1. **ETS gamma (Matthew).** Is a zero seasonal weight real or an Orchid artefact? See finding 4. Theta, a separate Orchid implementation, gives the same forecasts ([P1 finding 1](#what-the-p1-results-say)), which points to a real property of the prices.
+2. **AutoARIMA's seasonal difference (team decision).** Keep `seasonal_differencing: 1` or set it to `null` so the test decides? Finding 3 favours dropping it. Settle it with a backtest of both, which costs about 6 minutes for 53 days at 5–7 s per fit. Changing it is one line plus a version bump. `price_stationarity` adds a third option, no differencing at all ([decomposition finding 3](#what-these-results-say)).
 3. **Which lead time matters for the story?** If the dashboard's claim is "day-ahead", compare models at 24 hours ahead, where the mean and the regressions win, rather than averaged over the day.
 4. **Calibrated intervals.** Empirical bands from past backtest errors would fix the coverage problem (finding 5). It estimates quantiles from history without training a model, but check that it fits the no-training constraint before building it.
 5. **Forecast-error analysis of the official forecasts (the HRT angle).** Score Elexon's WINDFOR and NDF against outturn, by lead time and by period. Caveats: `wind_outturn` (FUELHH) excludes embedded wind, so it is not like-for-like with WINDFOR; NESO demand outturn arrives about 21 days late. The forecast vintages are already in `gridpulse.*_forecast_vintages`.

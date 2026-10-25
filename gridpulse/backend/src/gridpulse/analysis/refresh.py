@@ -26,10 +26,13 @@ WINDOWS: dict[str, tuple[int, int]] = {
     "price_forecast_backtest": (56, 0),
     "price_baseline_backtest": (56, 0),
     "price_regression_backtest": (56, 0),
+    "price_p1_backtest": (56, 0),
     "price_day_ahead_forecast": (1, 0),
     "price_rolling_signals": (120, 0),
     "price_driver_correlograms": (56, 0),
     "price_residual_diagnostics": (56, 0),
+    "price_decomposition": (56, 0),
+    "price_stationarity": (56, 0),
     "calendar_fourier_terms": (56, 7),  # from the clock, so it can run ahead of the data
 }
 

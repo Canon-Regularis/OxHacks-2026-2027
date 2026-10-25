@@ -1,0 +1,114 @@
+{
+  "_fixture": "Synthetic example for UI development; not real data. Tables only, so indicators is empty; fetch the tables by run id.",
+  "algorithm": {
+    "id": "price_stationarity",
+    "version": "0.1.0",
+    "description": "ADF and KPSS tests on the imbalance price, its half-hourly change and its daily change; the differences AutoARIMA would apply; and the price's AR spectrum.",
+    "inputs": [
+      "price_gbp_mwh"
+    ],
+    "datasets": [
+      "elexon_system_prices"
+    ],
+    "outputs": {},
+    "tables": {
+      "sample": "The gap-free stretch tested: its first and last period, its length and how many periods of the range were left out",
+      "unit_root": "ADF (null: unit root) and KPSS (null: stationary) per series and deterministic term: statistic, critical values at 1%, 2.5% (KPSS only), 5% and 10%, the levels at which the null is rejected, lags and observations",
+      "difference_orders": "Seasonal and regular differences (0 or 1) AutoARIMA would apply, with the seasonal difference tested and with it fixed at 1",
+      "spectrum": "AR spectral density in (GBP/MWh)^2 per cycle per half-hour, by frequency in cycles per half-hour, with the matching period in hours",
+      "spectrum_fit": "The Burg AR order and innovation variance behind the spectrum, or why it could not be computed"
+    },
+    "params": {
+      "season_length": 48,
+      "adf_lags": 48,
+      "kpss_lags": 48,
+      "regressions": [
+        "c",
+        "ct"
+      ],
+      "spectrum_order": 48,
+      "nfft": 1344,
+      "max_periods": 2688
+    },
+    "param_descriptions": {
+      "season_length": "Seasonal period in half-hours for the seasonal difference and its test (48 = daily)",
+      "adf_lags": "Lagged differences in each ADF regression (48 = one day); fixed, not selected",
+      "kpss_lags": "Autocovariances in KPSS's long-run variance; at least 48 for half-hourly data, or the test rejects stationarity too often",
+      "regressions": "Deterministic terms tested: c (constant) and/or ct (constant and linear trend)",
+      "spectrum_order": "AR order of the Burg fit; 48 can resolve every harmonic of the daily cycle",
+      "nfft": "Frequency grid size; a multiple of 336 puts daily and weekly harmonics on it",
+      "max_periods": "Most recent gap-free periods tested (2688 = 56 days)"
+    },
+    "limitations": "Retrospective: statistics of the whole stretch, with no pass/fail verdict. There are no p-values, only the tabulated levels at which each null is rejected; the tests assume a constant variance, which imbalance prices do not have. ADF and KPSS have opposite nulls, so read them together. difference_orders uses Orchid's default KPSS lags, which can over-difference persistent series, while 48 KPSS lags make it slow to reject on a few weeks of data. The spectrum is of an AR model fitted to the price, not a raw periodogram.",
+    "latest_run": {
+      "run_id": 33,
+      "algorithm_id": "price_stationarity",
+      "algorithm_version": "0.1.0",
+      "params": {
+        "season_length": 48,
+        "adf_lags": 48,
+        "kpss_lags": 48,
+        "regressions": [
+          "c",
+          "ct"
+        ],
+        "spectrum_order": 48,
+        "nfft": 1344,
+        "max_periods": 2688
+      },
+      "overrides": {},
+      "datasets": {
+        "elexon_system_prices": "2026-10-24T14:10:00Z"
+      },
+      "range_start_utc": "2026-08-28T23:00:00Z",
+      "range_end_utc": "2026-10-23T23:00:00Z",
+      "cutoff_utc": null,
+      "finished_at_utc": "2026-10-25T09:20:00Z"
+    }
+  },
+  "run": {
+    "run_id": 33,
+    "algorithm_id": "price_stationarity",
+    "algorithm_version": "0.1.0",
+    "params": {
+      "season_length": 48,
+      "adf_lags": 48,
+      "kpss_lags": 48,
+      "regressions": [
+        "c",
+        "ct"
+      ],
+      "spectrum_order": 48,
+      "nfft": 1344,
+      "max_periods": 2688
+    },
+    "overrides": {},
+    "datasets": {
+      "elexon_system_prices": "2026-10-24T14:10:00Z"
+    },
+    "range_start_utc": "2026-08-28T23:00:00Z",
+    "range_end_utc": "2026-10-23T23:00:00Z",
+    "cutoff_utc": null,
+    "finished_at_utc": "2026-10-25T09:20:00Z"
+  },
+  "from": "2026-10-22",
+  "to": "2026-10-22",
+  "resolution": "30m",
+  "t": [
+    "2026-10-22T15:00:00Z",
+    "2026-10-22T15:30:00Z",
+    "2026-10-22T16:00:00Z",
+    "2026-10-22T16:30:00Z",
+    "2026-10-22T17:00:00Z",
+    "2026-10-22T17:30:00Z"
+  ],
+  "indicators": {},
+  "warnings": [],
+  "tables": [
+    "sample",
+    "unit_root",
+    "difference_orders",
+    "spectrum",
+    "spectrum_fit"
+  ]
+}

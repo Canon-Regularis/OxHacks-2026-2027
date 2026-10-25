@@ -18,10 +18,17 @@
   } from './model';
 
   const REFRESH_MS = 30_000;
-  const WORDS: Record<Level, string> = {
-    ok: 'OK',
-    warn: 'Older data',
-    bad: 'Problem',
+  // Datasets and algorithms fail in different ways, so each gets its own state names.
+  const DATA_WORDS: Record<Level, string> = {
+    ok: 'Up to date',
+    warn: 'Getting old',
+    bad: 'Stale',
+    unknown: 'Unknown',
+  };
+  const RUN_WORDS: Record<Level, string> = {
+    ok: 'Current',
+    warn: 'Needs re-run',
+    bad: 'No result',
     unknown: 'Unknown',
   };
 
@@ -127,8 +134,8 @@
       <h2>{loading && !checkedAt ? 'Checking…' : summary.headline}</h2>
       <p>
         {#if issues.length}{issues.length}
-          {issues.length === 1 ? 'data notice' : 'data notices'} below.{:else if checkedAt}No
-          issues found.{/if}
+          {issues.length === 1 ? 'issue' : 'issues'} found — see the State columns
+          below.{:else if checkedAt}No issues found.{/if}
       </p>
     </div>
   </section>
@@ -185,7 +192,7 @@
       <h3>
         Analysis runs <InfoTooltip
           label="About analysis runs"
-          text="Algorithms with a stored run being served. Inputs updated means a dataset was reloaded after the run, so the stored result predates the data."
+          text="Algorithms with a stored result being served. 'Needs re-run' means a dataset was reloaded after the result was calculated, so it reflects older data."
         />
       </h3>
       <p class="status-value">
@@ -204,7 +211,12 @@
         <table class="status-table">
           <thead
             ><tr
-              ><th>Dataset</th><th>State</th><th>Loaded</th><th
+              ><th>Dataset</th><th
+                >State <InfoTooltip
+                  label="Dataset states"
+                  text={`Up to date: loaded within ${AGEING_HOURS} h. Getting old: loaded ${AGEING_HOURS}–${STALE_HOURS} h ago. Stale: older than ${STALE_HOURS} h or nothing loaded.`}
+                /></th
+              ><th>Loaded</th><th
                 >Coverage ({settings.timeDisplay === 'utc'
                   ? 'UTC'
                   : 'UK local'})</th
@@ -218,18 +230,8 @@
                   >{d.dataset}{#if d.source}<small>{d.source}</small>{/if}</th
                 >
                 <td
-                  ><span
-                    class="pill"
-                    data-level={!d.note &&
-                    d.loadedAgeHours !== null &&
-                    d.loadedAgeHours > AGEING_HOURS
-                      ? 'warn'
-                      : d.level}
-                    >{!d.note &&
-                    d.loadedAgeHours !== null &&
-                    d.loadedAgeHours > AGEING_HOURS
-                      ? 'Older data'
-                      : WORDS[d.level]}</span
+                  ><span class="pill" data-level={d.level}
+                    >{DATA_WORDS[d.level]}</span
                   >{#if d.note}<small>{d.note}</small>{/if}</td
                 >
                 <td title={timestampLabel(d.loadedUtc)}
@@ -255,7 +257,14 @@
       <div class="status-table-wrap">
         <table class="status-table">
           <thead
-            ><tr><th>Algorithm</th><th>State</th><th>Last run</th></tr></thead
+            ><tr
+              ><th>Algorithm</th><th
+                >State <InfoTooltip
+                  label="Algorithm states"
+                  text="Current: result matches the stored data. Needs re-run: input data was reloaded after the result was calculated. No result: the algorithm has never stored a result."
+                /></th
+              ><th>Last run</th></tr
+            ></thead
           >
           <tbody>
             {#each algorithms as a (a.id)}
@@ -263,13 +272,11 @@
                 <th scope="row">{a.id}<small>v{a.version}</small></th>
                 <td
                   ><span class="pill" data-level={a.level}
-                    >{a.level === 'warn'
-                      ? 'Inputs updated'
-                      : WORDS[a.level]}</span
+                    >{RUN_WORDS[a.level]}</span
                   >{#if a.note}<small>{a.note}</small>{/if}</td
                 >
                 <td title={timestampLabel(a.finishedUtc)}
-                  >{ageLabel(a.ageHours)}</td
+                  >{a.finishedUtc ? ageLabel(a.ageHours) : 'Never'}</td
                 >
               </tr>
             {/each}

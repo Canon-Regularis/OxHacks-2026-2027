@@ -1819,6 +1819,7 @@ select:focus-visible,
 }
 .pill {
   display: inline-block;
+  white-space: nowrap;
   padding: 1px 8px;
   border: 1px solid var(--lvl);
   border-radius: 99px;

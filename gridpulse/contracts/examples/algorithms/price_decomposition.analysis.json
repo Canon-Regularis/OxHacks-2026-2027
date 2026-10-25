@@ -1,0 +1,210 @@
+{
+  "_fixture": "Synthetic example for UI development; not real data. Six 30-minute points from one evening peak.",
+  "algorithm": {
+    "id": "price_decomposition",
+    "version": "0.1.0",
+    "description": "Imbalance price split into trend, daily seasonal and remainder by STL and by classical decomposition, with trend and seasonal strengths and three centred smoothers (9-period median, 13-period Savitzky-Golay, 49-period LOWESS).",
+    "inputs": [
+      "price_gbp_mwh"
+    ],
+    "datasets": [
+      "elexon_system_prices"
+    ],
+    "outputs": {
+      "stl_trend": "GBP/MWh",
+      "stl_seasonal": "GBP/MWh",
+      "stl_remainder": "GBP/MWh",
+      "classical_trend": "GBP/MWh",
+      "classical_seasonal": "GBP/MWh",
+      "classical_remainder": "GBP/MWh",
+      "price_median_9": "GBP/MWh",
+      "price_savgol_13": "GBP/MWh",
+      "price_lowess_49": "GBP/MWh"
+    },
+    "tables": {
+      "sample": "The gap-free stretch decomposed: its first and last period, its length and how many periods of the range were left out",
+      "seasonal_indices": "Seasonal effect per phase in GBP/MWh by each method (STL's averaged over cycles), with the first period of each phase",
+      "strength": "Trend and seasonal strengths from 0 to 1 of the classical decomposition",
+      "methods": "Whether each decomposition ran; a row that did not explains why"
+    },
+    "params": {
+      "period": 48,
+      "seasonal_window": 7,
+      "trend_window": null,
+      "max_periods": 2688
+    },
+    "param_descriptions": {
+      "period": "Seasonal period in half-hours (48 = daily, 336 = weekly)",
+      "seasonal_window": "STL seasonal smoothing span in cycles; odd, at least 5. STL needs this many complete cycles",
+      "trend_window": "STL trend smoothing span in periods; odd, at least 5. null takes Cleveland's default (93 at period 48)",
+      "max_periods": "Most recent gap-free periods decomposed (2688 = 56 days)"
+    },
+    "limitations": "Retrospective and two-sided: every component and smoother uses later prices as well as earlier ones, so none was knowable at the time and none is a forecast or a feature. Phases count elapsed half-hours from the first decomposed period, so after a clock change the daily profile is an hour off the local clock. The classical trend and remainder are empty within half a period of the stretch's ends, and each smoother within half its window of any gap. Orchid's STL omits the low-pass filter, and a price spike tens of standard deviations high can leak into the seasonal. Strengths describe this stretch only.",
+    "latest_run": {
+      "run_id": 32,
+      "algorithm_id": "price_decomposition",
+      "algorithm_version": "0.1.0",
+      "params": {
+        "period": 48,
+        "seasonal_window": 7,
+        "trend_window": null,
+        "max_periods": 2688
+      },
+      "overrides": {},
+      "datasets": {
+        "elexon_system_prices": "2026-10-24T14:10:00Z"
+      },
+      "range_start_utc": "2026-08-28T23:00:00Z",
+      "range_end_utc": "2026-10-23T23:00:00Z",
+      "cutoff_utc": null,
+      "finished_at_utc": "2026-10-25T09:20:00Z"
+    }
+  },
+  "run": {
+    "run_id": 32,
+    "algorithm_id": "price_decomposition",
+    "algorithm_version": "0.1.0",
+    "params": {
+      "period": 48,
+      "seasonal_window": 7,
+      "trend_window": null,
+      "max_periods": 2688
+    },
+    "overrides": {},
+    "datasets": {
+      "elexon_system_prices": "2026-10-24T14:10:00Z"
+    },
+    "range_start_utc": "2026-08-28T23:00:00Z",
+    "range_end_utc": "2026-10-23T23:00:00Z",
+    "cutoff_utc": null,
+    "finished_at_utc": "2026-10-25T09:20:00Z"
+  },
+  "from": "2026-10-22",
+  "to": "2026-10-22",
+  "resolution": "30m",
+  "t": [
+    "2026-10-22T15:00:00Z",
+    "2026-10-22T15:30:00Z",
+    "2026-10-22T16:00:00Z",
+    "2026-10-22T16:30:00Z",
+    "2026-10-22T17:00:00Z",
+    "2026-10-22T17:30:00Z"
+  ],
+  "indicators": {
+    "stl_trend": {
+      "label": "stl_trend",
+      "unit": "GBP/MWh",
+      "values": [
+        95.9,
+        96.8,
+        97.6,
+        98.6,
+        99.5,
+        100.5
+      ]
+    },
+    "stl_seasonal": {
+      "label": "stl_seasonal",
+      "unit": "GBP/MWh",
+      "values": [
+        -2.6,
+        11.7,
+        -3.0,
+        12.0,
+        53.6,
+        42.2
+      ]
+    },
+    "stl_remainder": {
+      "label": "stl_remainder",
+      "unit": "GBP/MWh",
+      "values": [
+        -10.1,
+        -18.6,
+        12.0,
+        4.9,
+        -11.8,
+        -38.6
+      ]
+    },
+    "classical_trend": {
+      "label": "classical_trend",
+      "unit": "GBP/MWh",
+      "values": [
+        91.7,
+        93.2,
+        94.6,
+        96.1,
+        97.8,
+        99.0
+      ]
+    },
+    "classical_seasonal": {
+      "label": "classical_seasonal",
+      "unit": "GBP/MWh",
+      "values": [
+        31.6,
+        31.3,
+        31.4,
+        39.0,
+        39.0,
+        36.8
+      ]
+    },
+    "classical_remainder": {
+      "label": "classical_remainder",
+      "unit": "GBP/MWh",
+      "values": [
+        -40.0,
+        -34.6,
+        -19.4,
+        -19.7,
+        4.5,
+        -31.8
+      ]
+    },
+    "price_median_9": {
+      "label": "price_median_9",
+      "unit": "GBP/MWh",
+      "values": [
+        106.6,
+        106.6,
+        104.1,
+        104.1,
+        90.5,
+        104.1
+      ]
+    },
+    "price_savgol_13": {
+      "label": "price_savgol_13",
+      "unit": "GBP/MWh",
+      "values": [
+        106.5,
+        109.6,
+        106.6,
+        100.0,
+        97.6,
+        100.6
+      ]
+    },
+    "price_lowess_49": {
+      "label": "price_lowess_49",
+      "unit": "GBP/MWh",
+      "values": [
+        101.3,
+        102.3,
+        103.2,
+        103.9,
+        104.4,
+        104.8
+      ]
+    }
+  },
+  "warnings": [],
+  "tables": [
+    "sample",
+    "seasonal_indices",
+    "strength",
+    "methods"
+  ]
+}
