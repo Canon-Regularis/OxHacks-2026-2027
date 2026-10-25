@@ -172,7 +172,7 @@ test('time display distinguishes repeated UK hours without changing settlement i
   await expect(
     page.getByRole('region', { name: 'Day at a glance' }),
   ).toContainText('BST');
-  await page.getByRole('link', { name: 'Status', exact: true }).click();
+  await page.goto('/status');
   await expect(
     page.getByRole('columnheader', { name: 'Coverage (UK local)' }),
   ).toBeVisible();
@@ -192,7 +192,7 @@ test('dark theme stays fixed and motion preferences survive navigation and reloa
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await expect(page.locator('html')).toHaveAttribute('data-motion', 'reduce');
   await close(page);
-  await page.getByRole('link', { name: 'Status', exact: true }).click();
+  await page.goto('/status');
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-motion', 'reduce');
   await open(page);

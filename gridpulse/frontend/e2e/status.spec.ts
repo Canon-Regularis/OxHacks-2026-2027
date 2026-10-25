@@ -66,8 +66,8 @@ test('status page shows health, stale data and out-of-date runs', async ({
   await expect(
     page
       .getByRole('navigation', { name: 'Primary navigation' })
-      .getByRole('link', { name: 'Status', exact: true }),
-  ).toHaveAttribute('aria-current', 'page');
+      .getByRole('link', { name: 'Terminal', exact: true }),
+  ).toBeVisible();
 });
 
 test('status page reports an unreachable API', async ({ page }) => {

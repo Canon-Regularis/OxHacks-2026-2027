@@ -3,6 +3,7 @@
   import '../styles/overview.css';
   import '../styles/settings.css';
   import { onMount, setContext } from 'svelte';
+  import { page } from '$app/state';
   import SiteHeader from '../components/layout/SiteHeader.svelte';
   import SiteFooter from '../components/layout/SiteFooter.svelte';
   import {
@@ -105,4 +106,8 @@
   });
 </script>
 
-<div class="app-frame"><SiteHeader />{@render children()}<SiteFooter /></div>
+<div class="app-frame">
+  <SiteHeader
+  />{@render children()}{#if page.url.pathname !== '/terminal' && !page.url.pathname.startsWith('/terminal/')}<SiteFooter
+    />{/if}
+</div>

@@ -545,6 +545,7 @@ select:focus-visible,
   margin: 0 -48px;
 }
 .about-pixel-section {
+  width: auto;
   min-height: 420px;
   border-bottom: 1px solid var(--border);
   margin: 0 -48px;

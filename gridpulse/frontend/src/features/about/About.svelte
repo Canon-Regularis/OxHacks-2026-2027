@@ -166,14 +166,14 @@
     <p class="eyebrow">WHAT COMES NEXT</p>
     <h2 id="about-roadmap-heading">More ways to investigate.</h2>
     <p>
-      Overview, Status and this About page are available today. Status shows
-      service health, data freshness and analysis-run availability. Explore and
-      Methods are planned for deeper data inspection and explanations of
-      analysis. The backend now computes statistical forecasts, backtests,
-      rolling signals and diagnostics in batch jobs; their results are available
-      through the API, with dedicated dashboard views still to come. Weather
-      analysis is available in the backend, while weather maps and a Gemini
-      investigation assistant remain future extensions.
+      Overview, Terminal and this About page are available today. Terminal is a
+      docked research workspace for source charts, stored algorithm results,
+      tables and comparisons. You can arrange linked tiles, inspect completed
+      runs and save workspaces. The backend computes statistical forecasts,
+      backtests, rolling signals and diagnostics in batch jobs; Terminal reads
+      their stored results. Methods remains planned. Weather analysis is
+      available in the backend, while weather maps and a Gemini investigation
+      assistant remain future extensions.
     </p>
   </section>
   <p class="about-limitations">
