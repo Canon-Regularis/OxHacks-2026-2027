@@ -240,7 +240,7 @@ Algorithms are computed in batch jobs on the server, never when a page loads. Ea
 
     Build the object with keys in the same order every time: the offline demo cache matches requests by their exact text.
   - by run: list the runs with `/api/analysis/runs?algorithm=…` and pass `run_id`.
-- **Not computed yet.** A setting nobody has run returns 404 `no_run`. Its message contains the command a backend developer runs to compute it. Show "not computed yet", not an error. The frontend cannot start a computation.
+- **Not computed yet.** A setting nobody has run returns 404 `no_run`. Its message contains the command a backend developer runs to compute it. Show "not computed yet", not an error. Manual chart controls cannot start a computation. The separate [AI endpoint](AI_AGENT.md) can request bounded execution after reuse/confirmation checks.
 - **Versions.** A changed algorithm gets a new `version`; runs of older versions are no longer served by default.
 - **Cutoff runs** (`cutoff_utc` set) use only data available at that instant. They are reachable only by `run_id` and come with a warning.
 
@@ -329,3 +329,9 @@ export async function get<T>(path: string, query: Record<string, string | number
 ```
 
 `URLSearchParams` encodes a `params` JSON string correctly, so pass `params: JSON.stringify(overrides)`.
+
+## Terminal AI streaming endpoint
+
+`POST /api/agent/turns/stream` is a same-origin, session-scoped SSE POST through the SvelteKit server. See [AI_AGENT.md](AI_AGENT.md) for UX, authentication, bounds and cancellation. Canonical request and decision schemas: [turn](../../gridpulse/contracts/agent/turn.schema.json), [decision](../../gridpulse/contracts/agent/decision.schema.json). Backend schemas live in `agent/schemas.py`; frontend types/compiler in `features/terminal/agent/`. Update both with contract changes.
+
+The request identifies turn, browser instance, conversation, workspace and opaque revision token, and includes bounded history/workspace metadata. Responses carry progress/evidence/answer/view/confirmation/completed/error events. Complete views are validated and committed locally, never applied from partial streamed JSON. A confirmation token must be explicitly accepted via Run analysis and is returned in the next turn's `approval` field. Provider errors preserve existing workspace content. HTTP 409 indicates duplicate/busy, 413 excessive context, 429 usage cap, and 503 disabled/misconfigured proxy or offline mode; errors after streaming starts arrive as error events.

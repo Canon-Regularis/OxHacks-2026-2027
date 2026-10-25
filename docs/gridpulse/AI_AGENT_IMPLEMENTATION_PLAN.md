@@ -77,7 +77,7 @@ Define versioned Pydantic schemas plus matching frontend types and fixtures in `
 
 - Turn/proposal IDs, schema and catalogue versions, destination workspace and base workspace revision/hash.
 - Bounded widget specifications with stable proposal-local keys, supported renderer, registered series/output/table references, run IDs, title and limited settings.
-- Relative layout tree: row, column or tab stack; proposed discrete proportions; linked-group membership and explicit date/range context.
+- Relative placement list: left/right/top/bottom/tab against a proposal key or existing widget, with optional snapped parent divider steps; linked-group membership and explicit date/range context.
 - Evidence references and a short user-facing reason for each analytical widget.
 
 The frontend compiler maps local keys to application IDs and existing action batches. Validate nesting depth, references, units/axes, widget count, bindings and layout legality before `applyActions`. A deterministic compiler can adjust proportions to minimum sizes; it must not silently drop requested content or replace evidence. If fitting fails, return a typed reason and offer a new workspace or fewer widgets. Keep partial JSON invisible to the action layer.
@@ -86,13 +86,11 @@ A successful proposal applies immediately and becomes one undo transaction. Fail
 
 ## Provider and transport
 
-See [provider research](AI_AGENT_PROVIDER_RESEARCH.md). The current candidate is CoreWeave Serverless at `https://api.inference.wandb.ai/v1`, model `moonshotai/Kimi-K2.6`. First-party Kimi uses different endpoint/model names. `CWAVE_API_KEY` alone does not identify its issuer. Confirm configuration before a live check; never silently swap to another provider or Gemini.
+See [provider research](AI_AGENT_PROVIDER_RESEARCH.md). The user confirmed CanopyWave: `https://inference.canopywave.io/v1`, model `moonshotai/kimi-k2.6`, backend `CWAVE_API_KEY`. Earlier CoreWeave assumptions are superseded. Do not silently switch to Minimax or Gemini. Keep explicit server-side base URL/model configuration and the async HTTP client in runtime dependencies.
 
-Add explicit backend settings for provider, base URL, model, key and optional project attribution. Keep placeholders in `.env.example`; keys never reach the browser. Add the chosen async HTTP client to runtime dependencies (currently `httpx` is development-only). Hide protocol details in one adapter so application code consumes typed messages/tool calls rather than provider objects.
+The first implementation uses schema-validated JSON decision envelopes over ordinary Chat Completions; malformed output fails closed. This does not depend on provider-native tool or structured-output extensions. The corrected credential passed a live JSON check and a read-only Tiger Data investigation. One schema-only repair per investigation handles malformed model decisions while preserving strict validation.
 
-Before relying on CoreWeave features, run a small opt-in compatibility test for model access, tool-call continuation, streaming and structured outputs. The reviewed CoreWeave docs do not establish all those features. Prefer native tools if validated. If unavailable, a bounded JSON-envelope mode may be implemented with the same validation and a single repair attempt; malformed output never executes. If neither is reliable, report the integration blocked rather than shipping unvalidated commands. Application progress events can still stream while provider responses arrive as complete messages.
-
-Add a dedicated agent POST route in SvelteKit: the existing catch-all proxy supports GET only and its 25-second timeout is unsuitable for an agent turn. Proposed backend endpoint: `POST /api/agent/turns/stream`, application SSE over a fetch response (not browser EventSource, which cannot POST). Versioned events: `started`, `progress`, `text_delta`, `evidence`, `view_proposal`, `completed`, `error`. Every event carries turn ID and sequence. Add a scoped authenticated apply-ack endpoint if retaining server conversation state. Define cancel propagation with AbortController and ASGI disconnect handling.
+The dedicated endpoint is `POST /api/agent/turns/stream`, application SSE over fetch. Events are `started`, `progress`, `evidence`, `answer`, `view`, `confirmation`, `completed`, `error`. Normal events carry version, turn ID and sequence; terminal errors may omit sequence. Provider answer tokens are not yet streamed incrementally. Layout application is acknowledged locally in the transcript only after successful compilation; no server transcript or apply-ack endpoint is retained in this version. AbortController propagates cancellation through the proxy and ASGI response.
 
 Exclude agent streams from response caching/recording and buffering middleware; review GZip, deployment proxy buffering and timeouts. Never log full prompts, secrets or provider bodies by default. Provider reasoning fields needed for continuation remain server-side; do not expose chain-of-thought as chat content.
 
@@ -114,9 +112,9 @@ Exclude agent streams from response caching/recording and buffering middleware; 
 | Malicious source text or user prompt | Treat retrieved strings as data; allowlisted tools and strict validation enforce capability limits independently of instructions |
 | Provider unavailable, rate-limited or out of credit | Clear recoverable chat error; manual Terminal remains functional; no fabricated fallback answer |
 
-Start with one active turn per conversation and no unattended background jobs. Proposed initial configurable budgets: 6 model rounds, 12 read-tool calls, 120-second turn deadline, 30-second individual tool timeout, bounded output tokens and at most 100 compiled actions (existing action limit). Tune using measured fixtures and provider latency. Reuse existing query point/range/timeout caps. No model calls on hover or drag.
+Use one active turn per workspace and no unattended background jobs. Initial budgets: 6 model rounds plus at most one schema-repair request, 12 tool calls, 180-second turn deadline, 30-second read timeout, 90-second killable job deadline, 5,000 output tokens per model response and at most 100 compiled actions (existing action limit). Tune using measured fixtures and provider latency. Reuse existing query point/range/timeout caps. No model calls on hover or drag.
 
-Store a bounded chat transcript in sessionStorage separately from the workspace document, with a schema version and clear/reset control. Do not duplicate credentials or raw fetched datasets in browser storage. Keep backend protocol continuation isolated by session, with bounded retention and expiry. If the deployment has no authentication, introduce session isolation and rate/cost controls before publicly exposing a paid inference endpoint; an unguessable conversation ID alone is not ownership. Check Origin/CSRF for cookie-backed mutation routes and validate the same limits on the server.
+Store a bounded chat transcript in sessionStorage separately from the workspace document, with a schema version and clear/reset control. Do not duplicate credentials or raw fetched datasets in browser storage. Backend protocol messages are turn-local; bounded sessionStorage history supplies subsequent context. Expiring computation approvals are isolated by session/conversation. If the deployment has no authentication, introduce session isolation and rate/cost controls before publicly exposing a paid inference endpoint; an unguessable conversation ID alone is not ownership. Check Origin/CSRF for cookie-backed mutation routes and validate the same limits on the server.
 
 ## Module boundaries
 
@@ -128,13 +126,12 @@ gridpulse/backend/src/gridpulse/agent/
   provider.py      # async model adapter and protocol capability handling
   service.py       # bounded orchestration and turn lifecycle
   tools.py         # catalogue/data services, no duplicated maths
-  sessions.py      # isolated bounded protocol history, ownership, expiry
-  prompts.py       # capability-aware policy and evidence requirements
+  # Protocol history is turn-local; policy and expiring approvals currently live in service.py.
   routes.py        # streaming transport, cancellation, acknowledgement
 
 gridpulse/frontend/src/features/terminal/agent/
   client.ts        # streaming parser, cancellation, reconnect policy
-  state.ts         # conversation lifecycle and bounded persistence
+  investigation.ts # bounded conversation history and evidence stream lifecycle
   view.ts          # proposal validation/compiler and apply acknowledgement
   Chat.svelte      # messages, progress, input, retry, evidence and undo
 
@@ -159,8 +156,10 @@ First usable milestone: “show price and wind with an available relevant algori
 ## Implementation checklist
 
 - [x] User-approved interaction, context and execution rules recorded.
-- [ ] Versioned agent contracts, capability discovery and proposal compiler.
-- [ ] Dockable session chat, empty prompt, context snapshots and undo.
-- [ ] Backend model adapter, bounded tools and same-origin streaming transport.
-- [ ] Missing-analysis execution, expensive-job confirmation and cancellation.
-- [ ] Integration tests, provider compatibility evidence and documentation.
+- [x] Versioned agent contracts, capability discovery and proposal compiler.
+- [x] Dockable session chat, empty prompt, context snapshots and undo.
+- [x] Backend model adapter, bounded tools and same-origin streaming transport.
+- [x] Missing-analysis execution, expensive-job confirmation and cancellation.
+- [x] Integration tests, provider compatibility evidence and documentation.
+
+Implementation details, limits, tests and remaining live verification are tracked in [AI_AGENT.md](AI_AGENT.md). Live Kimi price/wind retrieval and a real Fourier computation (stored run 49) succeeded. Deployed-stack streaming/cancellation verification remains a deployment check.

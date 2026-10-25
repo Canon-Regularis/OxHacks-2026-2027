@@ -150,3 +150,7 @@ docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.override.ym
 ```
 
 Then open <http://localhost:8080>. This skips the HTTPS proxy. `deploy/.env` is gitignored like `gridpulse/.env`.
+
+### Terminal AI
+
+Set server-only `CWAVE_API_KEY`, `AGENT_BASE_URL=https://inference.canopywave.io/v1`, `AGENT_MODEL=moonshotai/kimi-k2.6`, and a random `AGENT_ACCESS_TOKEN` in the deployment `.env`. Compose forwards the proxy token to the SvelteKit server; it does not forward the inference key. Keep `WEB_CONCURRENCY=1`: current rate limits, deduplication and approvals are process-local. See [agent setup and limits](../../docs/gridpulse/AI_AGENT.md). Do not use the legacy static Caddy frontend configuration for the Node adapter; the dedicated same-origin POST proxy must run.

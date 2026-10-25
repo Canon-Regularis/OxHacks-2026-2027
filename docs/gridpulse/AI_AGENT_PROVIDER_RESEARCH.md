@@ -1,52 +1,26 @@
 # AI agent provider research
 
-Research date: 25 October 2026. This is provider research for the Terminal agent plan, not an implemented integration. No credential values were read and no authenticated inference requests were made.
+Updated 25 October 2026. The user confirmed **CanopyWave** as the issuer of `CWAVE_API_KEY` and supplied the endpoint/model example below. The earlier CoreWeave interpretation of that variable name was incorrect and is superseded.
 
-## Confirmed provider facts
-
-CoreWeave Serverless Inference is a viable candidate for the requested Kimi K2.6 model. Its current catalogue lists `moonshotai/Kimi-K2.6` as generally available. This is the CoreWeave model identifier; it differs from the first-party Kimi identifier. [CoreWeave model catalogue](https://docs.coreweave.com/products/inference/serverless/models)
-
-CoreWeave documents the following connection settings:
-
-| Setting | Documented value |
+| Setting | Selected value |
 |---|---|
-| Base URL | `https://api.inference.wandb.ai/v1` |
-| Authentication | CoreWeave Forge API key; HTTP bearer authentication |
-| Account requirement | Forge account with Serverless Inference credits |
-| Optional attribution | `OpenAI-Project: team/project` |
+| Base URL | `https://inference.canopywave.io/v1` |
+| Endpoint | `POST /chat/completions` |
+| Model | `moonshotai/kimi-k2.6` |
+| Authentication | Bearer key, backend-only `CWAVE_API_KEY` |
 
-These settings belong to hosted Serverless Inference, rather than CoreWeave's separate infrastructure/deployment management API. [Serverless API reference](https://docs.coreweave.com/products/inference/serverless/api-reference)
+CanopyWave's own [Kimi K2.6 model page](https://canopywave.com/models/kimi-k2-6) documents that endpoint, identifier and ordinary Chat Completions request shape. The user's example agrees. Minimax was also offered by the user but is not selected and there is no automatic model fallback.
 
-The service documents OpenAI-compatible `POST /chat/completions`. Its published example covers ordinary messages and assistant text responses; compatibility does not establish that every OpenAI request parameter is supported. [Chat completions](https://docs.coreweave.com/products/inference/serverless/api-reference/chat-completions)
+## Implementation choice
 
-`GET /models` lists available model IDs and can confirm account access. The published catalogue alone does not confirm this project's account entitlement. No authenticated discovery was performed during this research. [List models](https://docs.coreweave.com/products/inference/serverless/api-reference/list-models)
+The adapter currently uses ordinary asynchronous Chat Completions with a bounded, schema-validated JSON decision envelope. Application SSE streams progress, evidence and complete answers/views; provider-native token streaming, function calling and JSON Schema response-format support are not assumed. This keeps execution behind the same local validation even if the model returns malformed instructions. Provider credentials, raw provider errors and private reasoning are never sent to the browser.
 
-## Features requiring endpoint validation
+## Verification evidence
 
-The reviewed CoreWeave Serverless reference and usage examples do not explicitly specify Kimi K2.6 support for function tools, streamed tool-call deltas, JSON Schema structured outputs, or thinking-mode controls. Treat these as **unverified for the chosen CoreWeave endpoint**, rather than unsupported. Before implementation depends on them, verify:
+After the user corrected the local credential, CanopyWave returned a valid Kimi decision. A real read-only investigation retrieved price and wind evidence from Tiger Data for 23 October 2026 and returned a chart view. That view is preserved as [a contract fixture](../../gridpulse/contracts/agent/view.example.json) and replayed through the frontend compiler test.
 
-- `tools`, `tool_choice`, tool-call IDs and continuation after tool results.
-- `stream: true`, SSE termination, usage chunks, cancellation and fragmented function arguments.
-- `response_format` with JSON Schema, schema restrictions and refusal/truncation handling.
-- Thinking defaults and any required preservation of provider-specific assistant fields.
+The first full prompt revealed a schema error: Kimi included a protected chat widget in an analytical view. A minimised regression test reproduces this; the adapter now allows one schema-only repair per investigation, without relaxing validation. The original real investigation succeeded after the fix. This validates ordinary Chat Completions/JSON-envelope behaviour, not provider-native function tools or token streaming.
 
-This distinction matters because model capabilities and a particular hosting API's exposed capabilities can differ. [CoreWeave API reference](https://docs.coreweave.com/products/inference/serverless/api-reference), [CoreWeave examples](https://docs.coreweave.com/products/inference/serverless/examples)
+The previous 401 responses were resolved by updating the credential; they are not a remaining blocker. No credential values or private reasoning were captured in fixtures.
 
-## First-party Kimi alternative and reference
-
-Kimi's own service documents Kimi K2.6 as `kimi-k2.6`, with thinking and non-thinking modes. This does not establish the identity or validity of the project's existing key. [Kimi model selection](https://www.kimi.ai/help/kimi-api/api-model-selection)
-
-The first-party Chat Completions reference uses `https://api.moonshot.ai/v1/chat/completions`. It documents function tools and matching `tool_call_id` results, SSE streaming, and `response_format` modes including JSON Schema. Tool continuation should retain the complete assistant message, including provider-specific reasoning fields. K2.6 supports `thinking.type`; K3 examples and reasoning controls must not be copied indiscriminately. These are **first-party Kimi API facts, not evidence of CoreWeave feature parity**. [Kimi Chat Completions reference](https://platform.kimi.ai/docs/api/chat)
-
-## Integration recommendations
-
-These are proposed application decisions:
-
-- Keep provider, base URL and model ID explicit server-side configuration. `CWAVE_API_KEY` is only a variable name; confirm the intended issuer/endpoint without exposing its value. Do not silently switch providers or fall back to Gemini.
-- Hide provider details behind one adapter that returns application events and typed tool calls. Never pass provider credentials to the browser.
-- Validate tool names, arguments, algorithm/run identifiers and workspace actions locally even when provider structured output is available. Apply a layout only after its complete action batch passes validation; partial streamed JSON must never mutate the workspace.
-- Keep protocol continuation fields server-side; stream user-facing answers and tool progress separately. Assemble streamed tool arguments completely before validation or execution.
-- Bound request duration, tool rounds, output tokens and concurrency. Handle rate limits, missing model access, disconnections and cancellation without duplicating layout changes.
-- Use mocked provider fixtures for routine tests. Make any live compatibility check a small, explicitly enabled integration check; record actual endpoint/model capabilities before selecting a fallback strategy.
-
-Provider/endpoint confirmation and a compatibility check remain implementation prerequisites. The research establishes a documented CoreWeave candidate, not a tested integration with the supplied credential.
+Routine tests use fake provider transcripts. Do not label mocked investigations as live-provider validation. No credentials are recorded in these documents or test fixtures.
