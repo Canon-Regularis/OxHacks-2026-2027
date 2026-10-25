@@ -43,7 +43,270 @@
   import Settings from './controls/Settings.svelte';
   import GroupPicker from './controls/GroupPicker.svelte';
   import { applyActions, type WorkspaceAction } from './model/actions';
+  import Chat from './agent/Chat.svelte';
+  import {
+    conversation,
+    type Conversation,
+    type Evidence,
+    type View,
+  } from './agent/types';
+  import { compileView, persistentDocument, chatCompanion } from './agent/view';
+  import { investigate } from './agent/investigation';
+  import { applyWithRepairs } from './agent/repair';
   import './terminal.css';
+  let chats = $state<Record<string, Conversation>>({});
+  let lastChat = $state<Record<string, string>>({});
+  let running = $state<Record<string, string>>({});
+  const controllers = new Map<string, AbortController>();
+  const blankChat = conversation();
+  const browserInstance = uid();
+  const SESSION_KEY = 'eisengrau:agent:v1';
+  const SESSION_LAYOUT = 'eisengrau:terminal:session:v1';
+  function chatState(id: string): Conversation {
+    return chats[id] ?? (chats[id] = conversation());
+  }
+  function cancelChat(id: string) {
+    controllers.get(id)?.abort();
+  }
+  function openAI(fresh = false): string | null {
+    if (!workspace || !doc) return null;
+    const previous = lastChat[workspace.id];
+    const found =
+      !fresh &&
+      (workspace.widgets[previous]?.type === 'chat'
+        ? previous
+        : Object.values(workspace.widgets).find((w) => w.type === 'chat')?.id);
+    if (found) {
+      activate(found);
+      return found;
+    }
+    if (Object.keys(chats).length >= 12) {
+      const used = new Set(
+        doc.workspaces.flatMap((ws) => Object.keys(ws.widgets)),
+      );
+      for (const id of Object.keys(chats))
+        if (!used.has(id)) {
+          delete chats[id];
+          break;
+        }
+      if (Object.keys(chats).length >= 12) {
+        notice =
+          'Maximum 12 open session conversations. Close an unused chat first.';
+        return null;
+      }
+    }
+    if (workspace.locked) {
+      notice = 'Unlock the layout before opening a new chat.';
+      return null;
+    }
+    const widget = createWidget('chat', range);
+    if (
+      !fresh &&
+      previous &&
+      chats[previous] &&
+      !doc.workspaces.some(
+        (ws) => ws.id !== workspace!.id && Object.hasOwn(ws.widgets, previous),
+      )
+    )
+      widget.id = previous;
+    const draft = `${workspace.id}-chat`;
+    if (!widgets.length) widget.id = draft;
+    widget.group = null;
+    const candidate = plain(workspace);
+    candidate.widgets[widget.id] = widget;
+    const size = {
+      width: canvasWidth < 850 ? 1200 : canvasWidth,
+      height: canvasWidth < 850 ? 700 : canvasHeight,
+    };
+    const suggestion = suggestPlacement(candidate, widget.id, size, focused);
+    const destination = findStack(
+      workspace.layout,
+      suggestion?.widget ?? focused ?? widgets[0]?.id ?? '',
+    );
+    dispatch(
+      [
+        {
+          type: 'widget.add',
+          widget,
+          target: destination ?? null,
+          position: suggestion?.position ?? 'tab',
+        },
+      ],
+      true,
+      size,
+    );
+    if (!workspace?.widgets[widget.id]) return null;
+    chatState(widget.id);
+    lastChat[workspace.id] = widget.id;
+    activate(widget.id);
+    return widget.id;
+  }
+  function openEvidence(item: Evidence) {
+    if (!workspace || !catalog) return;
+    const request = item.request;
+    const matching = Object.values(workspace.widgets).find((w) => {
+      const binding = w.binding ? workspace!.bindings[w.binding] : undefined;
+      const ctx = workspace!.groups[w.group ?? ''] ?? w.context;
+      if (ctx.from > request.from_date || ctx.to < request.to_date)
+        return false;
+      return request.algorithm
+        ? binding?.kind === 'algorithm' &&
+            binding.algorithm === request.algorithm &&
+            (!request.run_id || binding.runId === request.run_id)
+        : binding?.kind === 'source' &&
+            request.ids?.every((id) => binding.ids.includes(id));
+    });
+    if (matching) {
+      activate(matching.id);
+      return;
+    }
+    if (request.algorithm && !request.run_id) {
+      notice =
+        'This reference describes available runs. Ask AI to inspect a specific run before opening its results.';
+      return;
+    }
+    if (!request.algorithm && !request.ids?.length) {
+      notice = item.label;
+      return;
+    }
+    const chat =
+      lastChat[workspace.id] ??
+      Object.values(workspace.widgets).find((w) => w.type === 'chat')?.id ??
+      '';
+    const algo = catalog.algorithms.find((a) => a.id === request.algorithm);
+    const view: View = {
+      version: 1,
+      from_date: request.from_date,
+      to_date: request.to_date,
+      remove: [],
+      background_chat: false,
+      new_workspace: false,
+      name: 'Evidence',
+      widgets: [
+        {
+          key: 'evidence',
+          existing: null,
+          type: request.tool === 'tables' ? 'table' : 'chart',
+          title: item.label.slice(0, 100),
+          series: request.algorithm ? [] : (request.ids ?? []),
+          algorithm: request.algorithm ?? null,
+          run_id: request.run_id ?? null,
+          outputs: Object.keys(algo?.outputs ?? {}).slice(0, 2),
+          table: request.table ?? '',
+          group: null,
+          relative_to: chat || null,
+          position: 'tab',
+          notes: '',
+        },
+      ],
+    };
+    try {
+      const priorIds = new Set(Object.keys(workspace.widgets));
+      const next = compileView(plain(doc!), view, catalog, canvasSize(), chat);
+      history.record(plain(doc!), next);
+      historyTick++;
+      doc = next;
+      const added = Object.values(
+        next.workspaces.find((w) => w.id === next.active)!.widgets,
+      ).find((w) => !priorIds.has(w.id));
+      if (added) activate(added.id);
+    } catch (error) {
+      notice =
+        error instanceof Error ? error.message : 'Could not open evidence.';
+    }
+  }
+
+  async function askAI(id: string, message: string, approval?: string) {
+    if (!doc || !workspace || !catalog) return;
+    if (!workspace.widgets[id]) {
+      const promoted = openAI();
+      if (!promoted) return;
+      id = promoted;
+    }
+    const wsId = workspace.id;
+    if (running[wsId]) {
+      chatState(id).error =
+        'Another investigation is running in this workspace. Wait or cancel it first.';
+      return;
+    }
+    const chat = chatState(id);
+    const controller = new AbortController();
+    controllers.set(id, controller);
+    running[wsId] = id;
+    try {
+      await applyWithRepairs({
+        workspaceId: wsId,
+        signal: controller.signal,
+        current: () =>
+          doc
+            ? {
+                document: plain(doc),
+                size:
+                  canvasWidth < 850
+                    ? { width: 1200, height: 700 }
+                    : canvasSize(),
+              }
+            : null,
+        request: ({ workspace, size, retry, feedback }) =>
+          investigate({
+            chat,
+            id,
+            workspace,
+            browserInstance,
+            message,
+            approval: retry ? undefined : approval,
+            retry,
+            feedback,
+            size,
+            signal: controller.signal,
+          }),
+        compile: (document, view, size) =>
+          compileView(document, view, catalog!, size, id),
+        status: (message) => (chat.status = message),
+        complete: ({ document: next, before, view, answer }) => {
+          if (next && view) {
+            history.record(plain(doc!), next);
+            historyTick++;
+            doc = next;
+            chat.states = [...chat.states, before].slice(-3);
+            chat.messages.push(
+              answer
+                ? {
+                    ...answer,
+                    content:
+                      answer.content + '\n\nView updated. Use Go back to undo.',
+                  }
+                : {
+                    role: 'assistant',
+                    content: 'View updated. Use Go back to undo.',
+                  },
+            );
+            if (!view.background_chat && view.layout_mode !== 'separate')
+              activate(id);
+            else {
+              compactWidget = chatCompanion(
+                doc.workspaces.find((w) => w.id === doc!.active)!,
+                id,
+              );
+              focused = compactWidget;
+            }
+            lastChat[doc.active] = id;
+          } else if (answer) chat.messages.push(answer);
+        },
+      });
+    } catch (err) {
+      if (!controller.signal.aborted)
+        chat.error =
+          err instanceof Error ? err.message : 'Investigation failed.';
+    } finally {
+      chat.status = controller.signal.aborted
+        ? 'Cancelled. Completed results remain available.'
+        : '';
+      controllers.delete(id);
+      delete running[wsId];
+    }
+  }
+
   let doc = $state<TerminalDocument | null>(null),
     catalog = $state<Catalog | null>(null),
     health = $state<Health | null>(null);
@@ -74,7 +337,7 @@
     existingAlgorithm = $state(''),
     imported = $state<TerminalDocument | null>(null);
   const history = new History();
-  let mounted = false;
+  let mounted = $state(false);
   let saveTimer: ReturnType<typeof setTimeout>;
   let compactWidget = $state<string | null>(null);
   let workspace = $derived(
@@ -131,11 +394,15 @@
       notice = e instanceof Error ? e.message : 'Workspace action failed';
     }
   }
-  function dispatch(actions: WorkspaceAction[], record = true) {
+  function dispatch(
+    actions: WorkspaceAction[],
+    record = true,
+    size = canvasSize(),
+  ) {
     if (!doc) return;
     try {
       const before = plain(doc),
-        next = applyActions(before, actions, canvasSize());
+        next = applyActions(before, actions, size);
       if (record) {
         history.record(before, next);
         historyTick++;
@@ -157,6 +424,7 @@
   }
   function activate(id: string) {
     if (!workspace) return;
+    if (workspace.widgets[id]?.type === 'chat') lastChat[workspace.id] = id;
     if (maximised) maximised = id;
     if (compact) {
       focus(id);
@@ -169,6 +437,7 @@
     focus(id);
   }
   function close(id: string) {
+    cancelChat(id);
     dispatch([{ type: 'widget.close', id }]);
     if (focused === id) focused = null;
     if (maximised === id) maximised = null;
@@ -515,9 +784,12 @@
   }
   function exportDoc(value: TerminalDocument | null = doc) {
     if (!value) return;
-    const blob = new Blob([JSON.stringify(value, null, 2)], {
-      type: 'application/json',
-    });
+    const blob = new Blob(
+      [JSON.stringify(persistentDocument(plain(value)), null, 2)],
+      {
+        type: 'application/json',
+      },
+    );
     const href = URL.createObjectURL(blob),
       a = document.createElement('a');
     a.href = href;
@@ -553,7 +825,7 @@
   function save() {
     if (!doc || recovery || external) return;
     try {
-      const raw = JSON.stringify(doc),
+      const raw = JSON.stringify(persistentDocument(plain(doc))),
         previous = localStorage.getItem(STORAGE_KEY);
       if (previous) {
         try {
@@ -564,6 +836,10 @@
         }
       }
       localStorage.setItem(STORAGE_KEY, raw);
+      sessionStorage.setItem(
+        SESSION_LAYOUT,
+        JSON.stringify({ baseline: raw, document: doc }),
+      );
       saving = 'Saved locally';
     } catch {
       saving = 'Not saved · browser storage unavailable';
@@ -608,9 +884,63 @@
     mounted = true;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
+      try {
+        const saved = sessionStorage.getItem(SESSION_KEY);
+        if (saved && saved.length <= 600000) {
+          const value = JSON.parse(saved);
+          if (
+            value.version === 1 &&
+            value.chats &&
+            typeof value.chats === 'object'
+          ) {
+            for (const [id, candidate] of Object.entries(value.chats).slice(
+              0,
+              12,
+            )) {
+              const c = candidate as Conversation;
+              if (
+                Array.isArray(c.messages) &&
+                typeof c.summary === 'string' &&
+                Array.isArray(c.states) &&
+                c.states.length <= 3 &&
+                c.messages.length <= 42 &&
+                c.messages.every(
+                  (m) =>
+                    m &&
+                    ['user', 'assistant'].includes(m.role) &&
+                    typeof m.content === 'string' &&
+                    m.content.length <= 12000,
+                )
+              ) {
+                c.status = '';
+                c.error = '';
+                c.confirmation = null;
+                chats[id] = c;
+              }
+            }
+          }
+        }
+        const savedMeta = JSON.parse(
+          sessionStorage.getItem(SESSION_KEY) ?? 'null',
+        );
+        if (savedMeta?.lastChat && typeof savedMeta.lastChat === 'object') {
+          for (const [key, id] of Object.entries(savedMeta.lastChat).slice(
+            0,
+            16,
+          ))
+            if (typeof id === 'string' && chats[id]) lastChat[key] = id;
+        }
+        const session = JSON.parse(
+          sessionStorage.getItem(SESSION_LAYOUT) ?? 'null',
+        );
+        if (session?.baseline === raw)
+          doc = parseDocument(JSON.stringify(session.document));
+      } catch {
+        /* Session recovery must never prevent ordinary workspace loading. */
+      }
       if (raw) {
         try {
-          doc = parseDocument(raw);
+          if (!doc) doc = parseDocument(raw);
         } catch (e) {
           storedError = (e as Error).message;
           storedRaw = raw;
@@ -655,8 +985,35 @@
       window.removeEventListener('storage', storage);
       window.removeEventListener('keydown', key);
       window.removeEventListener('pagehide', flush);
+      for (const controller of controllers.values()) controller.abort();
       mounted = false;
     };
+  });
+
+  $effect(() => {
+    if (!mounted) return;
+    const raw = JSON.stringify({ version: 1, chats, lastChat });
+    try {
+      if (raw.length <= 600000) sessionStorage.setItem(SESSION_KEY, raw);
+    } catch {
+      /* Chat remains usable without storage. */
+    }
+  });
+  $effect(() => {
+    const ws = workspace;
+    if (ws)
+      untrack(() => {
+        const ids = Object.values(ws.widgets)
+          .filter((w) => w.type === 'chat')
+          .map((w) => w.id);
+        if (!Object.keys(ws.widgets).length) ids.push(`${ws.id}-chat`);
+        for (const id of ids) chatState(id);
+      });
+  });
+  $effect(() => {
+    const active = doc?.active;
+    for (const [workspaceId, chatId] of Object.entries(running))
+      if (workspaceId !== active) cancelChat(chatId);
   });
 </script>
 
@@ -670,7 +1027,7 @@
           try {
             const raw = localStorage.getItem(STORAGE_KEY + ':backup');
             if (!raw) throw new Error('No valid backup found');
-            doc = parseDocument(raw);
+            if (!doc) doc = parseDocument(raw);
             recovery = false;
             storedError = '';
           } catch (e) {
@@ -754,6 +1111,7 @@
             onchange={(e) => setRange('to', e.currentTarget.value)}
           />
         </div>
+        <button onclick={() => openAI()}>✦ AI</button>
         <button class="terminal-primary" onclick={() => (drawer = 'add')}
           >＋ Search / Add <kbd>⌘ K</kbd></button
         >
@@ -806,14 +1164,12 @@
       bind:clientWidth={canvasWidth}
       bind:clientHeight={canvasHeight}
     >
-      {#if !widgets.length}<div class="terminal-empty-workspace">
-          <h2>Build your research view.</h2>
-          <p>
-            Add source data, stored analysis or a preset. Every tile can be
-            rearranged and linked.
-          </p>
-          <button class="terminal-primary" onclick={() => (drawer = 'add')}
-            >Add your first widget</button
+      {#if !widgets.length}<div
+          class="terminal-empty-workspace terminal-empty-ai"
+        >
+          {@render renderChat(`${workspace.id}-chat`)}
+          <button onclick={() => (drawer = 'add')}
+            >Or add widgets manually</button
           >
         </div>
       {:else if activeId}
@@ -893,24 +1249,26 @@
         if (dev) console.error('Terminal renderer failed', error);
       }}
     >
-      <WidgetBody
-        widget={w}
-        binding={w.binding ? workspace.bindings[w.binding] : undefined}
-        {ctx}
-        {catalog}
-        onselect={(t) => select(w, t)}
-        onpin={(t) => select(w, t, true)}
-        inspection={(workspace.groups[w.group ?? ''] ?? w.context).selected}
-        onzoom={(z) => zoom(w, z)}
-        onrun={(runId) => pin(w, runId)}
-        onnotes={(notes) =>
-          updateWidget({
-            ...plain(w),
-            settings: { ...plain(w.settings), notes },
-          })}
-        {refresh}
-        onstatus={(status) => (widgetStatus[id] = status)}
-      />{#snippet failed(_error, reset)}<div class="terminal-widget-error">
+      {#if w.type === 'chat'}{@render renderChat(w.id)}{:else}<WidgetBody
+          widget={w}
+          binding={w.binding ? workspace.bindings[w.binding] : undefined}
+          {ctx}
+          {catalog}
+          onselect={(t) => select(w, t)}
+          onpin={(t) => select(w, t, true)}
+          inspection={(workspace.groups[w.group ?? ''] ?? w.context).selected}
+          onzoom={(z) => zoom(w, z)}
+          onrun={(runId) => pin(w, runId)}
+          onnotes={(notes) =>
+            updateWidget({
+              ...plain(w),
+              settings: { ...plain(w.settings), notes },
+            })}
+          {refresh}
+          onstatus={(status) => (widgetStatus[id] = status)}
+        />{/if}{#snippet failed(_error, reset)}<div
+          class="terminal-widget-error"
+        >
           <p>
             This widget could not render. Open settings to rebind or remove it.
           </p>
@@ -918,6 +1276,24 @@
         </div>{/snippet}
     </svelte:boundary>
   {/if}
+{/snippet}
+
+{#snippet renderChat(id: string)}
+  {@const chat = chats[id] ?? blankChat}
+  <Chat
+    {chat}
+    busy={!!running[workspace?.id ?? '']}
+    onsubmit={(message, approval) => askAI(id, message, approval)}
+    oncancel={() => cancelChat(running[workspace?.id ?? ''] ?? id)}
+    onundo={() => undo()}
+    canUndo={historyTick >= 0 && history.canUndo}
+    onnew={() => openAI(true)}
+    onreference={openEvidence}
+    onclear={() => {
+      delete chats[id];
+      chats[id] = conversation();
+    }}
+  />
 {/snippet}
 
 {#if drawer === 'add' && catalog}<Drawer
@@ -1055,7 +1431,11 @@
         mutate((ws, d) => {
           if ((d.presets?.length ?? 0) >= LIMITS.workspaces)
             throw new Error('Maximum 16 saved presets.');
-          const saved = duplicateWorkspace(ws);
+          const saved = duplicateWorkspace(
+            persistentDocument(plain(d)).workspaces.find(
+              (w) => w.id === ws.id,
+            )!,
+          );
           saved.name = ws.name;
           let suffix = 2;
           while (d.presets?.some((p) => p.name === saved.name))

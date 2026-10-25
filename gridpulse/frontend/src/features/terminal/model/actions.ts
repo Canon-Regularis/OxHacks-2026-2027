@@ -72,7 +72,8 @@ export function applyActions(
       identifiers.push(action.before);
     if ('widget' in action && typeof action.widget === 'object')
       identifiers.push(action.widget?.id);
-    if ('binding' in action) identifiers.push(action.binding?.id);
+    if ('binding' in action && action.binding !== undefined)
+      identifiers.push(action.binding?.id);
     if ('workspace' in action) identifiers.push(action.workspace?.id);
     if (
       'group' in action &&

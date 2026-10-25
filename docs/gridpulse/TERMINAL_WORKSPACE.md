@@ -1,6 +1,6 @@
 # Using and extending Terminal
 
-Terminal is Eisengrau's docked research workspace at `/terminal`. The old `/explore` route redirects there. It reads existing source data and stored algorithm results through [the shared API](FRONTEND_API.md); it cannot submit computations or run arbitrary parameter settings.
+Terminal is Eisengrau's docked research workspace at `/terminal`. The old `/explore` route redirects there. It reads existing source data and stored algorithm results through [the shared API](FRONTEND_API.md); manual data controls remain read-only. The [AI chat](AI_AGENT.md) can request bounded missing analyses, with explicit confirmation for expensive jobs.
 
 ## User workflow
 
@@ -52,7 +52,7 @@ To extend an algorithm, register it on the backend and preserve the shared schem
 
 To extend a widget, add its type, minimum size, validated configuration, supported link behaviour, renderer/settings and tests. Keep non-time axes independent of shared time zoom. Retain visible warnings/limitations and meaningful error states.
 
-Future agent tools should call `applyActions(document, actions, size)` rather than manipulating DOM or split trees. The function clones and validates a transaction, applies minimum-size/placement rules and returns the next document only when the entire transaction succeeds. No agent endpoint is exposed yet.
+Future agent tools should call `applyActions(document, actions, size)` rather than manipulating DOM or split trees. The function clones and validates a transaction, applies minimum-size/placement rules and returns the next document only when the entire transaction succeeds. The AI view compiler now uses this interface; see [AI_AGENT.md](AI_AGENT.md) for chat, streaming and execution boundaries.
 
 ## Data correctness
 
