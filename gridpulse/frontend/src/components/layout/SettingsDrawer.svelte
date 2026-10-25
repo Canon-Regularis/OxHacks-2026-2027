@@ -140,6 +140,5 @@
   </div>
   <div class="settings-reset">
     <button class="quiet-button" onclick={reset}>Reset settings</button>
-    <p>Restore defaults and clear saved view preferences.</p>
   </div>
 </dialog>

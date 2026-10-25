@@ -104,12 +104,6 @@ html:has(.settings-drawer[open]) {
   padding-top: 22px;
   border-top: 1px solid var(--border);
 }
-.settings-reset p {
-  font-size: 12px;
-  line-height: 1.7;
-  color: var(--muted-foreground);
-  margin-top: 10px;
-}
 html[data-motion='reduce'] *,
 html[data-motion='reduce'] *::before,
 html[data-motion='reduce'] *::after {
