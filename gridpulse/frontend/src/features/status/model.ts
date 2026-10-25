@@ -91,7 +91,7 @@ export function algorithmRow(
       finishedUtc: null,
       ageHours: null,
       level: 'bad',
-      note: 'No stored result is available to show',
+      note: 'This algorithm has not stored a result yet',
     };
   const loaded = new Map(datasets.map((d) => [d.dataset, d.loaded_at_utc]));
   const reloaded = Object.entries(run.datasets)
@@ -107,7 +107,7 @@ export function algorithmRow(
     ageHours: ageHours(run.finished_at_utc, now),
     level: reloaded.length ? 'warn' : 'ok',
     note: reloaded.length
-      ? `Calculated before newer data arrived (${reloaded.join(', ')} reloaded since). Re-run to refresh.`
+      ? `Calculated before ${reloaded.join(', ')} was reloaded`
       : '',
   };
 }
@@ -163,7 +163,7 @@ export function summarise(
         ? 'All systems operational'
         : level === 'unknown'
           ? 'Some checks unavailable'
-          : 'Working, but some data needs a look';
+          : 'Operational, with warnings';
   return {
     level,
     headline,
