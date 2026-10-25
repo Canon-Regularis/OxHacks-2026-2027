@@ -581,10 +581,6 @@ select:focus-visible,
   font-size: 13px;
 }
 .about-definition {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  align-items: center;
-  gap: 70px;
   padding: 64px 0;
 }
 .about-definition h2 {
@@ -597,12 +593,6 @@ select:focus-visible,
   line-height: 1.8;
   margin-bottom: 14px;
   max-width: 680px;
-}
-.about-decoration {
-  height: 250px;
-  width: 100%;
-  max-width: 300px;
-  justify-self: center;
 }
 .about-limitations {
   font-size: 11px;
@@ -870,7 +860,6 @@ select:focus-visible,
     padding-block: 70px;
   }
   .about-definition {
-    gap: 30px;
     padding: 44px 0;
   }
   .about-pixel-copy h2 {
@@ -1042,14 +1031,6 @@ select:focus-visible,
   }
   .about-pixel-copy > p:not(.eyebrow) {
     font-size: 16px;
-  }
-  .about-definition {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-  .about-decoration {
-    height: 200px;
-    max-width: 250px;
   }
   .about-limitations {
     font-size: 10px;

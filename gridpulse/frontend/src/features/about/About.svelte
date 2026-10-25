@@ -5,7 +5,6 @@
   import Hero from './Hero.svelte';
   import TextShimmer from '$lib/vendor/kcpc/text/text-shimmer/text-shimmer.svelte';
   import Card from '$lib/vendor/kcpc/primitives/card/card.svelte';
-  import EvervaultCard from '$lib/vendor/kcpc/cards/evervault-card/evervault-card.svelte';
   let Pixels = $state<
     | typeof import('$lib/vendor/kcpc/backgrounds/pixel-blast/pixel-blast.svelte').default
     | null
@@ -161,9 +160,6 @@
         rel="noreferrer"
         class="text-link">Read Elexon's explanation ↗</a
       >
-    </div>
-    <div class="about-decoration" aria-hidden="true">
-      <EvervaultCard text="CONTEXT" />
     </div>
   </section>
   <section class="about-roadmap" aria-labelledby="about-roadmap-heading">

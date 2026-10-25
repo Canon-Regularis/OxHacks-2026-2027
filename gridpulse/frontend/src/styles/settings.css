@@ -127,9 +127,6 @@ html[data-motion='reduce'] *::after {
   transition: none !important;
   scroll-behavior: auto !important;
 }
-html[data-motion='reduce'] .about-decoration .pointer-events-none {
-  display: none;
-}
 @media (max-width: 580px) {
   .site-header {
     gap: 8px;
