@@ -37,7 +37,7 @@ The [frontend design brief](docs/gridpulse/FRONTEND_DESIGN.md) records confirmed
 
 ## Repository layout
 
-**Confirmed frontend scope:** Overview, Explore and Methods are MVP pages. The immediate implementation focus is Overview only. Investigate/Gemini and the synoptic weather map remain extensions.
+**Confirmed frontend scope:** Overview, Terminal (formerly Explore) and Methods are MVP pages. Overview and Terminal are implemented; About holds the globe and animated explanations. Methods remains planned. Investigate/Gemini and the synoptic weather map remain extensions.
 
 
 - `gridpulse/frontend/`: dashboard, UI components, charts and API client.

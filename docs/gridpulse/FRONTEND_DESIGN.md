@@ -89,4 +89,4 @@ This is an extension, not an expansion of the 25-hour core acceptance criteria. 
 
 ## Scope boundary
 
-The existing overview mockup is a design exploration, not an approved page specification. Its illustrative values are not production data; confirmed behaviour is listed above. Overview, Explore and Methods are confirmed MVP pages; Investigate remains an extension. Extension navigation and exact Gemini frontend tools remain undecided; the synoptic-map source is still unselected.
+The existing overview mockup is a design exploration, not an approved page specification. Its illustrative values are not production data; confirmed behaviour is listed above. Overview, Terminal (formerly Explore) and Methods are confirmed MVP pages; Investigate remains an extension. Extension navigation and exact Gemini frontend tools remain undecided; the synoptic-map source is still unselected.
