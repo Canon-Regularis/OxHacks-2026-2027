@@ -29,19 +29,19 @@
       number: '01',
       title: 'Observe the market',
       description:
-        'Explore GB imbalance settlement prices alongside forecasts of wind and electricity demand. Select a day, then move across the timeline to inspect its settlement periods.',
+        'Choose a settlement day and compare imbalance price, forecast and actual wind, forecast and actual demand, residual demand and net imbalance volume. Select one to five properties, with up to two unit axes on a shared chart.',
     },
     {
       number: '02',
-      title: 'Put changes in context',
+      title: 'Scan every half-hour',
       description:
-        'Compare hourly temperature and pressure changes with price changes. Seven-day correlations show descriptive relationships, with source, sample counts and limitations available beside the numbers.',
+        'Hover, tap or use the keyboard to inspect a half-hour across the chart, summary cards and magnifying day scan. The scan follows your chosen property and supports 46, 48 and 50-period days. Your view preferences are remembered.',
     },
     {
       number: '03',
-      title: 'Keep the evidence visible',
+      title: 'See the whole day',
       description:
-        'Data comes through a backend connected to Tiger Data. Missing records remain missing, forecasts are labelled, and each chart keeps its units and timeframe explicit.',
+        'Day at a glance summarises the selected properties’ daily averages, price extremes, negative-price duration and peak forecast demand. These daily statistics stay fixed while you inspect individual periods; missing readings are excluded and price coverage is shown.',
     },
   ];
 </script>
@@ -52,14 +52,16 @@
     <p class="eyebrow">ABOUT GRIDPULSE</p>
     <h2>The bigger picture.<br /><span>Without losing the detail.</span></h2>
     <p>
-      GridPulse is an electricity-market investigation dashboard built for
-      OxHack 2026. It brings prices, generation forecasts and weather context
-      into one place so you can inspect changing conditions.
+      GridPulse is a dashboard for inspecting Great Britain’s electricity
+      market, built for OxHack 2026. Overview brings published forecasts,
+      available outturns and settlement prices into one daily view, so you can
+      compare what was forecast with what happened and inspect the underlying
+      numbers.
     </p>
   </section>
   <div class="about-cards">
     {#each sections as section}<Card class="about-card"
-        ><span class="eyebrow">{section.number} / THE APPROACH</span>
+        ><span class="eyebrow">{section.number} / IN OVERVIEW</span>
         <h3>{section.title}</h3>
         <p>{section.description}</p></Card
       >{/each}
@@ -76,7 +78,7 @@
   >
     <div class="absolute inset-0" aria-hidden="true">
       {#if Pixels && !reduced}<Pixels
-          color="#9f0100"
+          color="#e6b080"
           speed={1}
           edgeFade={0.7}
           rippleSpeed={0.2}
@@ -95,15 +97,53 @@
         />
       </h2>
       <p>
-        Electricity demand and generation forecasts change. Weather adds another
-        layer of context. GridPulse lets you explore these together—without
-        mistaking correlation for a cause.
+        Follow a price spike, a negative-price period or a change in wind and
+        demand. Keep the same half-hour in view across every selected property,
+        then step back to the day’s summary.
       </p>
       <div class="pointer-events-auto">
         <a class="about-cta" href="/">Open the overview <span>↗</span></a>
       </div>
     </section>
   </div>
+  <section class="about-data" aria-labelledby="about-data-heading">
+    <div>
+      <p class="eyebrow">PUBLIC MARKET DATA</p>
+      <h2 id="about-data-heading">
+        Published sources.<br /><span>Clear distinctions.</span>
+      </h2>
+    </div>
+    <div class="about-data-copy">
+      <p>
+        The market series use publicly available Elexon and NESO data, served
+        through GridPulse’s backend from Tiger Data. Wind and demand forecasts
+        are published source forecasts, with the latest version issued before
+        delivery selected for each period. They are separate from actual
+        generation and demand readings.
+      </p>
+      <p>
+        Prices are retrospective settlement values. Actual demand can arrive
+        later, and wind forecast and outturn coverage can differ. Missing
+        readings stay missing; units, source notes and data freshness help you
+        interpret what is available. This is an inspection view, not a claim
+        that every value was known at the time.
+      </p>
+      <div class="about-source-links">
+        <a
+          class="text-link"
+          href="https://bmrs.elexon.co.uk/"
+          target="_blank"
+          rel="noreferrer">Elexon Insights ↗</a
+        >
+        <a
+          class="text-link"
+          href="https://www.neso.energy/data-portal"
+          target="_blank"
+          rel="noreferrer">NESO Data Portal ↗</a
+        >
+      </div>
+    </div>
+  </section>
   <section class="about-definition">
     <div class="about-definition-copy">
       <p class="eyebrow">KNOW THE DIFFERENCE</p>
@@ -129,8 +169,20 @@
       <EvervaultCard text="CONTEXT" />
     </div>
   </section>
+  <section class="about-roadmap" aria-labelledby="about-roadmap-heading">
+    <p class="eyebrow">WHAT COMES NEXT</p>
+    <h2 id="about-roadmap-heading">More ways to investigate.</h2>
+    <p>
+      Overview and this About page are available today. Explore and Methods are
+      planned for deeper data inspection and explanations of analysis.
+      Statistical forecasting and diagnostics are being prepared for dashboard
+      integration; they are not currently displayed in Overview. Weather
+      analysis is available in the backend, while weather maps and a Gemini
+      investigation assistant remain future extensions.
+    </p>
+  </section>
   <p class="about-limitations">
-    Retrospective analysis · archived weather forecasts · descriptive
-    correlations · no trading advice.
+    Retrospective market analysis · missing data stays missing · comparisons do
+    not establish cause and effect.
   </p>
 </main>

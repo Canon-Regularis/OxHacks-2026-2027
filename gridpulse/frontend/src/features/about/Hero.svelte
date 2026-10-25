@@ -24,13 +24,13 @@
 
 <section class="hero">
   <div class="hero-copy">
-    <p class="eyebrow">ELECTRICITY MARKET INTELLIGENCE</p>
-    <h1>See the signals.<br /><span>Understand the shifts.</span></h1>
+    <p class="eyebrow">GB ELECTRICITY / MARKET EXPLORER</p>
+    <h1>Follow the market.<br /><span>Inspect the detail.</span></h1>
     <p class="hero-description">
-      Wind, demand and imbalance prices.<br />One connected view of Britain's
-      electricity market.
+      Published forecasts, actual readings and imbalance prices.<br />One
+      connected view of Britain’s electricity market.
     </p>
-    <a class="text-link" href="/">Explore today's signals <span>↓</span></a>
+    <a class="text-link" href="/">Open the overview <span>↗</span></a>
   </div>
   <div class="hero-globe" bind:clientWidth={globeWidth} aria-hidden="true">
     {#if Globe && ready}{#key `${Math.round(globeWidth)}-${reduced}`}<Globe
@@ -45,6 +45,6 @@
           coastColor="#fafafa"
           halftoneDotColor="#a1a1a1"
         />{/key}{/if}
-    <span class="globe-caption">GB ELECTRICITY / GLOBAL CONDITIONS</span>
+    <span class="globe-caption">GREAT BRITAIN / CONNECTED ENERGY</span>
   </div>
 </section>

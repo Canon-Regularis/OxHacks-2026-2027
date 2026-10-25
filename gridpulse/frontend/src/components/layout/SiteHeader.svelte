@@ -26,7 +26,4 @@
       >About</a
     >
   </nav>
-  <div class="header-status">
-    <span class="status-dot"></span>PUBLIC MARKET DATA
-  </div>
 </header>
