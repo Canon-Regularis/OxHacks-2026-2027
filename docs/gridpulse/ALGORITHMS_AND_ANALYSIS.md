@@ -132,7 +132,7 @@ Run `AutoETS`, `ARIMA`, `AutoARIMA` and backtests of fitted models in batch jobs
 
 ## P1 algorithms (issue #7)
 
-The P1 families follow the [P0 conventions](#conventions) and add Orchid's `state_space` module (SS), vendored at the same commit. `price_p1_backtest` backtests Theta, AR, the discount DLM, a local-level `StructuralForecaster` and an `Ensemble` of the first three through the P0 fold machinery, then compares each with a daily seasonal naive by `diebold_mariano` at chosen lead steps; see [displaying algorithm results](ALGORITHM_DISPLAY.md#price_p1_backtest-live). No registered algorithm calls the other P1 entry points yet.
+The P1 families follow the [P0 conventions](#conventions) and add Orchid's `state_space` module (SS), vendored at the same commit. `price_p1_backtest` backtests Theta, AR, the discount DLM, a local-level `StructuralForecaster` and an `Ensemble` of the first three through the P0 fold machinery, then compares each with a daily seasonal naive by `diebold_mariano` at chosen lead steps; see [displaying algorithm results](ALGORITHM_DISPLAY.md#price_p1_backtest-live). `price_decomposition` runs `stl_decomposition`, `classical_decomposition`, `component_strength` and the centred smoothers; `price_stationarity` runs `adf_test`, `kpss_test`, `difference_orders` and `ar_spectrum`. No registered algorithm calls the remaining P1 entry points (the structural filters and smoother, `discount_filter`, VAR and GARCH) yet.
 
 ### Additional conventions
 

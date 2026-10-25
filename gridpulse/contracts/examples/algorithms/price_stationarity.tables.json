@@ -1,0 +1,341 @@
+{
+  "_fixture": "Synthetic example for UI development; not real data. spectrum truncated to frequency 0, the weekly, daily and 12-hour harmonics and 0.5; real tables have nfft / 2 + 1 rows.",
+  "run": {
+    "run_id": 33,
+    "algorithm_id": "price_stationarity",
+    "algorithm_version": "0.1.0",
+    "params": {
+      "season_length": 48,
+      "adf_lags": 48,
+      "kpss_lags": 48,
+      "regressions": [
+        "c",
+        "ct"
+      ],
+      "spectrum_order": 48,
+      "nfft": 1344,
+      "max_periods": 2688
+    },
+    "overrides": {},
+    "datasets": {
+      "elexon_system_prices": "2026-10-24T14:10:00Z"
+    },
+    "range_start_utc": "2026-08-28T23:00:00Z",
+    "range_end_utc": "2026-10-23T23:00:00Z",
+    "cutoff_utc": null,
+    "finished_at_utc": "2026-10-25T09:20:00Z"
+  },
+  "tables": {
+    "sample": {
+      "description": "The gap-free stretch tested: its first and last period, its length and how many periods of the range were left out",
+      "columns": [
+        "first_utc",
+        "last_utc",
+        "periods",
+        "excluded_periods"
+      ],
+      "rows": [
+        [
+          "2026-08-28T23:00:00Z",
+          "2026-10-23T22:30:00Z",
+          2688,
+          0
+        ]
+      ]
+    },
+    "unit_root": {
+      "description": "ADF (null: unit root) and KPSS (null: stationary) per series and deterministic term: statistic, critical values at 1%, 2.5% (KPSS only), 5% and 10%, the levels at which the null is rejected, lags and observations",
+      "columns": [
+        "series",
+        "test",
+        "regression",
+        "null_hypothesis",
+        "statistic",
+        "critical_1",
+        "critical_2_5",
+        "critical_5",
+        "critical_10",
+        "rejected_at",
+        "lags",
+        "n",
+        "status",
+        "message"
+      ],
+      "rows": [
+        [
+          "price",
+          "adf",
+          "c",
+          "unit root",
+          -5.49,
+          -3.43,
+          null,
+          -2.86,
+          -2.57,
+          "1%, 5%, 10%",
+          48,
+          2639,
+          "ok",
+          null
+        ],
+        [
+          "price",
+          "kpss",
+          "c",
+          "level stationary",
+          0.725,
+          0.739,
+          0.574,
+          0.463,
+          0.347,
+          "2.5%, 5%, 10%",
+          48,
+          2688,
+          "ok",
+          null
+        ],
+        [
+          "price",
+          "adf",
+          "ct",
+          "unit root",
+          -5.76,
+          -3.96,
+          null,
+          -3.41,
+          -3.12,
+          "1%, 5%, 10%",
+          48,
+          2639,
+          "ok",
+          null
+        ],
+        [
+          "price",
+          "kpss",
+          "ct",
+          "trend stationary",
+          0.0681,
+          0.216,
+          0.176,
+          0.146,
+          0.119,
+          "none",
+          48,
+          2688,
+          "ok",
+          null
+        ],
+        [
+          "price_change_1",
+          "adf",
+          "c",
+          "unit root",
+          -15.0,
+          -3.43,
+          null,
+          -2.86,
+          -2.57,
+          "1%, 5%, 10%",
+          48,
+          2638,
+          "ok",
+          null
+        ],
+        [
+          "price_change_1",
+          "kpss",
+          "c",
+          "level stationary",
+          0.0323,
+          0.739,
+          0.574,
+          0.463,
+          0.347,
+          "none",
+          48,
+          2687,
+          "ok",
+          null
+        ],
+        [
+          "price_change_1",
+          "adf",
+          "ct",
+          "unit root",
+          -15.0,
+          -3.96,
+          null,
+          -3.41,
+          -3.12,
+          "1%, 5%, 10%",
+          48,
+          2638,
+          "ok",
+          null
+        ],
+        [
+          "price_change_1",
+          "kpss",
+          "ct",
+          "trend stationary",
+          0.0194,
+          0.216,
+          0.176,
+          0.146,
+          0.119,
+          "none",
+          48,
+          2687,
+          "ok",
+          null
+        ],
+        [
+          "price_change_48",
+          "adf",
+          "c",
+          "unit root",
+          -9.33,
+          -3.43,
+          null,
+          -2.86,
+          -2.57,
+          "1%, 5%, 10%",
+          48,
+          2591,
+          "ok",
+          null
+        ],
+        [
+          "price_change_48",
+          "kpss",
+          "c",
+          "level stationary",
+          0.0202,
+          0.739,
+          0.574,
+          0.463,
+          0.347,
+          "none",
+          48,
+          2640,
+          "ok",
+          null
+        ],
+        [
+          "price_change_48",
+          "adf",
+          "ct",
+          "unit root",
+          -9.33,
+          -3.96,
+          null,
+          -3.41,
+          -3.12,
+          "1%, 5%, 10%",
+          48,
+          2591,
+          "ok",
+          null
+        ],
+        [
+          "price_change_48",
+          "kpss",
+          "ct",
+          "trend stationary",
+          0.0202,
+          0.216,
+          0.176,
+          0.146,
+          0.119,
+          "none",
+          48,
+          2640,
+          "ok",
+          null
+        ]
+      ]
+    },
+    "difference_orders": {
+      "description": "Seasonal and regular differences (0 or 1) AutoARIMA would apply, with the seasonal difference tested and with it fixed at 1",
+      "columns": [
+        "season_length",
+        "seasonal_choice",
+        "seasonal",
+        "regular",
+        "status",
+        "message"
+      ],
+      "rows": [
+        [
+          48,
+          "tested",
+          0,
+          1,
+          "ok",
+          null
+        ],
+        [
+          48,
+          "fixed",
+          1,
+          0,
+          "ok",
+          null
+        ]
+      ]
+    },
+    "spectrum": {
+      "description": "AR spectral density in (GBP/MWh)^2 per cycle per half-hour, by frequency in cycles per half-hour, with the matching period in hours",
+      "columns": [
+        "frequency",
+        "period_hours",
+        "density"
+      ],
+      "rows": [
+        [
+          0.0,
+          null,
+          25900.0
+        ],
+        [
+          0.00298,
+          168.0,
+          38200.0
+        ],
+        [
+          0.0208,
+          24.0,
+          237000.0
+        ],
+        [
+          0.0417,
+          12.0,
+          15700.0
+        ],
+        [
+          0.5,
+          1.0,
+          217.0
+        ]
+      ]
+    },
+    "spectrum_fit": {
+      "description": "The Burg AR order and innovation variance behind the spectrum, or why it could not be computed",
+      "columns": [
+        "order",
+        "innovation_variance",
+        "status",
+        "message"
+      ],
+      "rows": [
+        [
+          48,
+          613.0,
+          "ok",
+          null
+        ]
+      ]
+    }
+  }
+}

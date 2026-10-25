@@ -31,6 +31,8 @@ WINDOWS: dict[str, tuple[int, int]] = {
     "price_rolling_signals": (120, 0),
     "price_driver_correlograms": (56, 0),
     "price_residual_diagnostics": (56, 0),
+    "price_decomposition": (56, 0),
+    "price_stationarity": (56, 0),
     "calendar_fourier_terms": (56, 7),  # from the clock, so it can run ahead of the data
 }
 
