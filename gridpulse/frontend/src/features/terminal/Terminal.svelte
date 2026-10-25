@@ -66,6 +66,7 @@
     historyTick = $state(0),
     cursor = $state<Record<string, string>>({});
   let widgetStatus = $state<Record<string, string>>({});
+  let widgetExports = $state<Record<string, () => void>>({});
   let placementNote = $state('');
   let presetSearch = $state('');
   let pending = $state<{ widget: Widget; binding?: Binding } | null>(null),
@@ -909,6 +910,10 @@
             settings: { ...plain(w.settings), notes },
           })}
         {refresh}
+        onexport={(exportCsv) => {
+          if (exportCsv) widgetExports[id] = exportCsv;
+          else delete widgetExports[id];
+        }}
         onstatus={(status) => (widgetStatus[id] = status)}
       />{#snippet failed(_error, reset)}<div class="terminal-widget-error">
           <p>
@@ -930,6 +935,7 @@
     onclose={() => (drawer = null)}
     ><Settings
       widget={selectedWidget}
+      exportCsv={widgetExports[selectedWidget.id]}
       {workspace}
       {catalog}
       onchange={updateWidget}

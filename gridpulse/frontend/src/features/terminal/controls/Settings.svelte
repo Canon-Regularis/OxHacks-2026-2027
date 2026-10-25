@@ -11,6 +11,7 @@
   import { runs, pool } from '../data/client';
   let {
     widget,
+    exportCsv,
     workspace,
     catalog,
     onchange,
@@ -22,6 +23,7 @@
     onclose,
   }: {
     widget: Widget;
+    exportCsv?: () => void;
     workspace: Workspace;
     catalog: Catalog;
     onchange: (widget: Widget) => void;
@@ -345,6 +347,23 @@
         >{/each}</select
     ></label
   >{/if}
+{#if widget.type === 'chart' || widget.type === 'table' || widget.type === 'comparison'}
+  <fieldset>
+    <legend>Data export</legend>
+    <button disabled={!exportCsv} onclick={() => exportCsv?.()}
+      >{widget.type === 'chart'
+        ? 'Export chart CSV'
+        : 'Export table CSV'}</button
+    >
+    <p class="terminal-hint">
+      {exportCsv
+        ? widget.type === 'chart'
+          ? 'Export the loaded chart data with UTC timestamps and units.'
+          : 'Export all rows of the selected whole-run table.'
+        : 'CSV export is available when this widget has loaded data.'}
+    </p>
+  </fieldset>
+{/if}
 <fieldset>
   <legend>Move without dragging</legend><label
     >Destination widget<select

@@ -137,6 +137,15 @@ test('Terminal renders linked data, keeps hover local and saves the workspace', 
   await expect(
     page.getByRole('tab', { name: 'Market investigation', exact: true }),
   ).toBeVisible();
+  await expect(
+    page
+      .locator('.terminal-widget-content')
+      .getByRole('button', { name: 'Export chart CSV', exact: true }),
+  ).toHaveCount(0);
+  await page
+    .getByRole('button', { name: 'Settings for Time series', exact: true })
+    .click();
+  const exportRequests = requests.length;
   const csvDownload = page.waitForEvent('download');
   await page
     .getByRole('button', { name: 'Export chart CSV', exact: true })
@@ -149,6 +158,8 @@ test('Terminal renders linked data, keeps hover local and saves the workspace', 
   const contents = Buffer.concat(chunks).toString('utf8');
   expect(contents).toContain('"timestamp_utc"');
   expect(contents).toContain('"price (GBP/MWh)"');
+  expect(requests.length).toBe(exportRequests);
+  await page.getByRole('button', { name: 'Close drawer' }).click();
   const before = requests.length;
   const plot = page.getByRole('slider', { name: 'Chart selected period' });
   await plot.hover({ position: { x: 300, y: 100 } });
@@ -204,6 +215,30 @@ test('catalogue opens an algorithm workspace with a consistent pinned chart/tabl
   await expect(
     page.getByRole('button', { name: /Run computation/ }),
   ).toHaveCount(0);
+  await expect(
+    page
+      .locator('.terminal-widget-content')
+      .getByRole('button', { name: 'Export table CSV', exact: true }),
+  ).toHaveCount(0);
+  await page
+    .getByRole('button', { name: 'Settings for Results table', exact: true })
+    .click();
+  const tableDownload = page.waitForEvent('download');
+  await page
+    .getByRole('dialog', { name: 'Widget settings', exact: true })
+    .getByRole('button', { name: 'Export table CSV', exact: true })
+    .click();
+  const exportedTable = await tableDownload;
+  expect(exportedTable.suggestedFilename()).toBe(
+    'eisengrau-metrics-run-12.csv',
+  );
+  const tableStream = await exportedTable.createReadStream();
+  const tableChunks = [];
+  for await (const chunk of tableStream!) tableChunks.push(chunk);
+  expect(Buffer.concat(tableChunks).toString('utf8')).toContain(
+    'seasonal_naive_forecast',
+  );
+  await page.getByRole('button', { name: 'Close drawer' }).click();
   await page.screenshot({
     path: test.info().outputPath('terminal-algorithm.png'),
   });
