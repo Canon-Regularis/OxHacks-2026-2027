@@ -13,7 +13,7 @@ import {
 } from '../model/types';
 import { findStack, fits, mapNode } from '../layout/engine';
 import type { View } from './types';
-import { researchLayout } from './layout';
+import { researchLayout, separateLayout } from './layout';
 
 export const revision = (workspace: Workspace) => JSON.stringify(workspace);
 /** Send metadata, not full notes, style maps or fetched data, to the model. */
@@ -356,7 +356,14 @@ export function compileView(
         : node,
     );
   }
-  if (research)
+  if (view.layout_mode === 'separate')
+    ws.layout = separateLayout(
+      ws,
+      size,
+      view.widgets.map((spec) => keys.get(spec.key)!),
+      chat,
+    );
+  else if (research)
     ws.layout = researchLayout(
       ws,
       size,

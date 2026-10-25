@@ -78,6 +78,8 @@ export async function investigate({
             research:
               'Wide chart-first layout with a compact chat area and supporting tabs',
             preserve: 'Explicit user-requested placement and resizing',
+            separate:
+              'Show every existing analytical widget in its own panel; keep AI as a background tab. No data or link-group changes needed.',
           },
           horizontal_steps: 24,
           vertical_steps: 16,

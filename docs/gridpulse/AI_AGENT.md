@@ -24,7 +24,7 @@ Requests allow at most 366 days, bounded schema-declared parameter values, six m
 
 Normal views use `layout_mode=research`: a trusted frontend planner supplies a wide chart-first layout, a compact chat sidebar (about 340 px) or bottom dock (about 300 px), and supporting tabs. Primary charts come first in the proposal. Charts prefer at least 260 px height; at most three analytical rows are foregrounded, and crowded content stays accessible as tabs. Empty inspectors/unbound placeholders are not promoted into useful panels. Chart colours reuse the Overview metric catalogue and remain stable across source ordering.
 
-`layout_mode=preserve` retains explicit relative placement and snapped resizing for requests such as moving a table below an existing chart. Both modes use the layout engine's minimum sizes/reflow and document validation, commit once, and remain undoable. Manual docking remains available.
+`layout_mode=preserve` retains explicit relative placement and snapped resizing for requests such as moving a table below an existing chart. `layout_mode=separate` places each analytical widget in its own visible panel and keeps AI as a background tab in the first panel. Layout-only requests preserve bindings and data-link groups; separating docked panels does not unlink their dates or cursors. If readable minimum sizes cannot fit, the planner reports the constraint rather than silently stacking analytics. All modes use the layout engine's minimum sizes/reflow and document validation, commit once, and remain undoable. Manual docking remains available.
 
 Source tables project existing `/series` responses into virtualised rows with UTC timestamps, units, null gaps and linked zoom; they do not require an algorithm. Algorithm tables require a real named table. Comparisons require an inspected numeric algorithm table/metric/category and cannot stand in for raw wind/demand data. No additional data-table backend or per-hover requests are introduced.
 
@@ -57,3 +57,5 @@ Final local checks: backend agent/API suite **69 passed**; frontend unit suite *
 Current model selection and February–March chart/table verification: [provider and model note](AI_AGENT_PROVIDER_RESEARCH.md). Earlier Kimi/Fourier smoke tests above record the initial implementation; they do not identify the current default model.
 
 Layout-repair live check: an injected `Minimum widget size reached.` failure was sent to the real OpenRouter agent. One correction request applied successfully, with no premature success claim or browser error. Separate browser coverage verifies the two-repair cutoff and preservation of the existing chart.
+
+Evidence IDs are scoped to the current turn. Pure layout requests need no data reads and return `evidence=[]`. A stale or invented citation receives one bounded model correction; unsupported numerical claims remain rejected if the correction fails.

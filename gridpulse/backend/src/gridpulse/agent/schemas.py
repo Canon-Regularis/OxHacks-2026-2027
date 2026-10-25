@@ -49,7 +49,7 @@ class ViewWidget(Strict):
 
 
 class View(Dates):
-    layout_mode: Literal["research", "preserve"] = "research"
+    layout_mode: Literal["research", "preserve", "separate"] = "research"
     version: Literal[1] = 1
     widgets: list[ViewWidget] = Field(max_length=12)
     remove: list[str] = Field(default_factory=list, max_length=12)

@@ -1514,3 +1514,69 @@ test('AI stops after two failed layout repairs and keeps the previous workspace'
     page.locator('path[data-terminal-series="price"]'),
   ).toBeVisible();
 });
+
+test('AI separates five analytical panels while leaving its chat behind a tab', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1600, height: 1100 });
+  let turns = 0;
+  await page.route('**/api/agent/turns/stream', async (route) => {
+    const turn = route.request().postDataJSON();
+    turns++;
+    const view = failedTableProposal();
+    view.layout_mode = turns === 1 ? 'research' : 'separate';
+    view.new_workspace = turns === 1;
+    view.background_chat = turns !== 1;
+    view.widgets =
+      turns === 1
+        ? Array.from({ length: 5 }, (_, i) => ({
+            ...view.widgets[0],
+            key: `panel${i}`,
+            title: `Test panel ${i}`,
+            type: i < 3 ? 'chart' : 'table',
+            size_step: 8,
+          }))
+        : [];
+    const events = [
+      { type: 'answer', text: 'Panels prepared.', references: [] },
+      {
+        type: 'view',
+        workspace_id: turn.workspace_id,
+        revision: turn.revision,
+        view,
+      },
+      { type: 'completed' },
+    ];
+    await route.fulfill({
+      contentType: 'text/event-stream',
+      body: events
+        .map(
+          (event, i) =>
+            `data: ${JSON.stringify({ version: 1, turn_id: turn.turn_id, sequence: i + 1, ...event })}\n\n`,
+        )
+        .join(''),
+    });
+  });
+  await page.goto('/terminal');
+  await page.getByRole('button', { name: '✦ AI', exact: true }).click();
+  await page
+    .getByRole('textbox', { name: 'Message AI' })
+    .fill('Create three graphs and two numerical views');
+  await page.getByRole('button', { name: 'Send ↗', exact: true }).click();
+  await expect(
+    page.getByText('Panels prepared.', { exact: false }),
+  ).toBeVisible();
+  await page
+    .getByRole('textbox', { name: 'Message AI' })
+    .fill('Separate all current tabs except your tab');
+  await page.getByRole('button', { name: 'Send ↗', exact: true }).click();
+  await expect(page.locator('.terminal-tile')).toHaveCount(5);
+  for (let i = 0; i < 5; i++)
+    await expect(
+      page.getByRole('tab', { name: `Test panel ${i}`, exact: true }),
+    ).toBeVisible();
+  expect(turns).toBe(2);
+  await page.getByRole('button', { name: '✦ AI', exact: true }).click();
+  await page.getByRole('button', { name: '↶ Go back', exact: true }).click();
+  await expect(page.locator('.terminal-tile')).not.toHaveCount(5);
+});

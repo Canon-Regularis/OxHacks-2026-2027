@@ -7,7 +7,7 @@ import {
   type Workspace,
 } from '../model/types';
 import { fits } from '../layout/engine';
-import { researchLayout } from './layout';
+import { researchLayout, separateLayout } from './layout';
 const range = { from: '2026-02-01', to: '2026-03-31' };
 function frames(node: Layout, size: Size): { id: string; size: Size }[] {
   if (node.kind === 'stack') return [{ id: node.active, size }];
@@ -90,4 +90,40 @@ it('keeps crowded content accessible as tabs and never foregrounds an empty insp
   expect(frames(tree, size).some((frame) => frame.id === inspector.id)).toBe(
     false,
   );
+});
+
+it('shows three charts and two tables in separate tiles, with chat as the only secondary tab', () => {
+  const { ws, charts, chat } = setup(3),
+    size = { width: 1400, height: 850 };
+  const tables = [createWidget('table', range), createWidget('table', range)];
+  for (const table of tables) ws.widgets[table.id] = table;
+  const tree = separateLayout(ws, size, [], chat.id)!;
+  const stacks: Extract<Layout, { kind: 'stack' }>[] = [];
+  const visit = (node: Layout) => {
+    if (node.kind === 'stack') stacks.push(node);
+    else node.children.forEach(visit);
+  };
+  visit(tree);
+  expect(stacks).toHaveLength(5);
+  expect(
+    stacks.every(
+      (stack) =>
+        stack.widgets.filter((id) => ws.widgets[id].type !== 'chat').length ===
+        1,
+    ),
+  ).toBe(true);
+  const primary = stacks.find((stack) => stack.widgets.includes(chat.id))!;
+  expect(primary.widgets[1]).toBe(chat.id);
+  expect(primary.active).not.toBe(chat.id);
+  expect(fits(tree, ws, size)).toBe(true);
+  for (const chart of charts) {
+    const frame = frames(tree, size).find((f) => f.id === chart.id)!;
+    expect(frame.size.width / frame.size.height).toBeGreaterThan(1.6);
+  }
+});
+it('fails explicitly when separate panels cannot fit instead of silently stacking them', () => {
+  const { ws, chat } = setup(5);
+  expect(() =>
+    separateLayout(ws, { width: 600, height: 400 }, [], chat.id),
+  ).toThrow(/Cannot show all 5/);
 });

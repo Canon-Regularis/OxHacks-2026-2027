@@ -281,7 +281,8 @@
                     content: 'View updated. Use Go back to undo.',
                   },
             );
-            if (!view.background_chat) activate(id);
+            if (!view.background_chat && view.layout_mode !== 'separate')
+              activate(id);
             else {
               compactWidget = chatCompanion(
                 doc.workspaces.find((w) => w.id === doc!.active)!,

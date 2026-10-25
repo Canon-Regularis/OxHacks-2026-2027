@@ -18,7 +18,7 @@ export interface ViewWidget {
   notes: string;
 }
 export interface View {
-  layout_mode?: 'research' | 'preserve';
+  layout_mode?: 'research' | 'preserve' | 'separate';
   version: 1;
   from_date: string;
   to_date: string;

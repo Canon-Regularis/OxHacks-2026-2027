@@ -183,3 +183,36 @@ def test_layout_feedback_cannot_approve_jobs_or_exceed_two_repairs():
     body={'turn_id':'layout-repair','conversation':'chat','workspace_id':'ws','revision':'v','message':'Add a table','snapshot':{},'layout_feedback':{'attempt':1,'error':'Minimum widget size reached.','failed_view':{'from_date':'2026-02-01','to_date':'2026-03-31','widgets':[]}}}
     with pytest.raises(ValidationError): Turn.model_validate({**body,'approval':'token'})
     with pytest.raises(ValidationError): Turn.model_validate({**body,'layout_feedback':{**body['layout_feedback'],'attempt':3}})
+
+
+def test_layout_only_request_recovers_stale_evidence_without_reading_data(monkeypatch):
+    class Fake:
+        calls=0
+        async def decide(self,messages):
+            self.calls+=1
+            if self.calls==1:
+                return Decision.model_validate({'answer':'Prepared separate panels.','evidence':['e1'],'view':{'from_date':'2026-02-01','to_date':'2026-03-31','layout_mode':'preserve','widgets':[]}})
+            assert 'evidence' in messages[-1]['content'].lower()
+            return Decision.model_validate({'answer':'Prepared separate panels without changing their data.','view':{'from_date':'2026-02-01','to_date':'2026-03-31','layout_mode':'preserve','widgets':[]}})
+    monkeypatch.setattr(tools,'read',lambda *_: (_ for _ in ()).throw(AssertionError('Layout-only request fetched data')))
+    turn=Turn(turn_id='separate',conversation='chat',workspace_id='ws',revision='v',message='Separate the current tabs except AI',snapshot={})
+    provider=Fake()
+    async def run(): return [event async for event in service.investigate(turn,None,SimpleNamespace(max_range_days=3660),'session',provider)]
+    events=asyncio.run(run())
+    assert provider.calls==2
+    assert next(e for e in events if e['type']=='answer')['references']==[]
+    assert events[-1]['type']=='completed'
+
+
+def test_unretrieved_numerical_evidence_is_still_rejected_after_correction():
+    class Fake:
+        calls=0
+        async def decide(self,messages):
+            self.calls+=1
+            return Decision(answer='The price was 999.',evidence=['invented'])
+    turn=Turn(turn_id='invalid-evidence',conversation='chat',workspace_id='ws',revision='v',message='What was the price?',snapshot={})
+    provider=Fake()
+    async def run(): return [e async for e in service.investigate(turn,None,SimpleNamespace(max_range_days=3660),'session',provider)]
+    with pytest.raises(ValueError,match='evidence'):
+        asyncio.run(run())
+    assert provider.calls==2

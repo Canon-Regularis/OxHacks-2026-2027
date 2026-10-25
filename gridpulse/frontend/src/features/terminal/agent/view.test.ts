@@ -311,3 +311,24 @@ it('compiles the captured OpenRouter research view including an unbound explanat
     ),
   ).toBe(true);
 });
+
+it('rearranges existing panels without rewriting bindings or data-link groups', () => {
+  const doc = createDocument(range),
+    ws = doc.workspaces[0];
+  const before = JSON.stringify({
+    widgets: ws.widgets,
+    bindings: ws.bindings,
+    groups: ws.groups,
+  });
+  const view = intent();
+  view.layout_mode = 'separate';
+  view.widgets = [];
+  const result = compileView(doc, view, catalog, size, 'chat');
+  expect(
+    JSON.stringify({
+      widgets: result.workspaces[0].widgets,
+      bindings: result.workspaces[0].bindings,
+      groups: result.workspaces[0].groups,
+    }),
+  ).toBe(before);
+});

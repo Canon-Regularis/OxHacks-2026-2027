@@ -35,7 +35,7 @@ async def investigate(turn, pool, settings, session, provider=None):
         evidence.append(item)
         yield event("evidence", evidence=item)
 
-    context = {"layout_feedback": turn.layout_feedback.model_dump(mode="json") if turn.layout_feedback else None, "capabilities": tools.capabilities(), "workspace": turn.snapshot,
+    context = {"evidence_scope": {"initial_ids": [e["id"] for e in evidence], "history_ids_are_not_current_evidence": True}, "layout_feedback": turn.layout_feedback.model_dump(mode="json") if turn.layout_feedback else None, "capabilities": tools.capabilities(), "workspace": turn.snapshot,
                "recent_states": turn.recent_states, "older_conversation_summary": turn.summary,
                "schema": Decision.model_json_schema()}
     messages = [{"role": "system", "content": POLICY + "\n" + json.dumps(context)}]
@@ -51,6 +51,8 @@ async def investigate(turn, pool, settings, session, provider=None):
         if not decision.reads:
             try:
                 tools.validate_view(decision.view, evidence)
+                if any(ref not in {e["id"] for e in evidence} for ref in decision.evidence):
+                    raise ValueError("Answer referenced evidence that was not retrieved in this turn. Available IDs: " + json.dumps([e["id"] for e in evidence]) + ". Pure layout changes need evidence=[] and no data reads; numerical claims require freshly retrieved evidence.")
                 if not decision.answer.strip():
                     raise ValueError("The final answer must briefly explain the prepared view or findings; it cannot be empty. Do not claim application before client acknowledgement.")
             except ValueError as exc:
@@ -59,12 +61,10 @@ async def investigate(turn, pool, settings, session, provider=None):
                 presentation_repairs -= 1
                 messages.extend([
                     {"role": "assistant", "content": decision.model_dump_json()},
-                    {"role": "user", "content": "Application widget validation rejected this view: " + str(exc) + ". Correct the widget type/binding, or read the needed table evidence. Return a corrected Decision; do not repeat unsupported widgets."},
+                    {"role": "user", "content": "Application widget validation rejected this view: " + str(exc) + ". Correct the configuration or evidence references. For layout-only requests use evidence=[] without unnecessary data reads. For analytical claims retrieve the required evidence. Return a corrected Decision."},
                 ])
                 yield event("progress", message="Checking widget compatibility and refining the view")
                 continue
-            if any(ref not in {e["id"] for e in evidence} for ref in decision.evidence):
-                raise ValueError("Answer referenced evidence that was not retrieved.")
             yield event("answer", text=decision.answer, details=decision.details, references=decision.evidence)
             if decision.view:
                 yield event("view", view=decision.view.model_dump(mode="json"), workspace_id=turn.workspace_id, revision=turn.revision)

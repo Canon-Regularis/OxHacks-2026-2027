@@ -68,7 +68,8 @@
           "default": "research",
           "enum": [
             "research",
-            "preserve"
+            "preserve",
+            "separate"
           ],
           "title": "Layout Mode",
           "type": "string"

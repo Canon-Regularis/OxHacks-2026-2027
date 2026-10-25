@@ -142,3 +142,106 @@ export function researchLayout(
     );
   return fitted;
 }
+
+/** Explicit all-panels mode: no analytical tab fallback; only conversations share the primary tile. */
+export function separateLayout(
+  workspace: Workspace,
+  size: Size,
+  preferred: string[],
+  chat: string,
+): Layout | null {
+  const all = Object.keys(workspace.widgets);
+  if (!all.length) return null;
+  const order = [...new Set([...preferred, ...all])].filter((id) =>
+    Object.hasOwn(workspace.widgets, id),
+  );
+  const chats = [
+    ...new Set([
+      chat,
+      ...all.filter((id) => workspace.widgets[id].type === 'chat'),
+    ]),
+  ].filter((id) => workspace.widgets[id]?.type === 'chat');
+  const analytical = order.filter(
+    (id) => workspace.widgets[id].type !== 'chat',
+  );
+  if (!analytical.length) return tabs(chats);
+  const leaves = analytical.map((id, i) =>
+    tabs(i === 0 ? [id, ...chats] : [id]),
+  );
+  function columns(nodes: Layout[]): Layout {
+    return nodes.length === 1
+      ? nodes[0]
+      : split(
+          'horizontal',
+          Math.max(1, Math.round(24 / nodes.length)),
+          nodes[0],
+          columns(nodes.slice(1)),
+        );
+  }
+  function quality(
+    node: Layout,
+    area: Size,
+  ): { score: number; areas: number[] } {
+    if (node.kind === 'stack') {
+      const widget = workspace.widgets[node.active];
+      const score =
+        widget.type === 'chart'
+          ? Math.min(area.width / area.height, 2.5) * 3 +
+            Math.min(area.height / 260, 1)
+          : Math.min(area.width / 420, 1);
+      return { score, areas: [area.width * area.height] };
+    }
+    const horizontal = node.axis === 'horizontal',
+      total = (horizontal ? area.width : area.height) - GAP;
+    const first = (total * node.step) / (horizontal ? 24 : 16);
+    const children = node.children.map((child, i) =>
+      quality(
+        child,
+        horizontal
+          ? { width: i === 0 ? first : total - first, height: area.height }
+          : { width: area.width, height: i === 0 ? first : total - first },
+      ),
+    );
+    return {
+      score: children[0].score + children[1].score,
+      areas: children.flatMap((child) => child.areas),
+    };
+  }
+  let best: Layout | null = null,
+    bestScore = -Infinity;
+  // Search balanced rows AND columns. At most 24 candidates for the 12-widget limit.
+  for (let count = 1; count <= leaves.length; count++) {
+    const groups: Layout[][] = [];
+    let offset = 0;
+    for (let i = 0; i < count; i++) {
+      const length =
+        Math.floor(leaves.length / count) + (i < leaves.length % count ? 1 : 0);
+      groups.push(leaves.slice(offset, offset + length));
+      offset += length;
+    }
+    for (const candidate of [
+      rows(groups.map(columns)),
+      columns(groups.map(rows)),
+    ]) {
+      const fitted = reflow(candidate, workspace, size);
+      if (!fitted) continue;
+      const measured = quality(fitted, size);
+      const mean =
+        measured.areas.reduce((a, b) => a + b, 0) / measured.areas.length;
+      const imbalance = measured.areas.reduce(
+        (sum, area) => sum + (area / mean - 1) ** 2,
+        0,
+      );
+      const score = measured.score - imbalance * 0.1;
+      if (score > bestScore) {
+        best = fitted;
+        bestScore = score;
+      }
+    }
+  }
+  if (!best)
+    throw new Error(
+      `Cannot show all ${analytical.length} analytical panels separately at readable minimum sizes. Use a larger viewport, fewer panels, or allow tabs.`,
+    );
+  return best;
+}
