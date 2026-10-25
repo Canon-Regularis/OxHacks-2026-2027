@@ -73,7 +73,44 @@
       algorithmRow(a, catalog?.datasets ?? [], now),
     ),
   );
-  type Issue = { level: Level; tag: string; title: string; text: string };
+  type Issue = {
+    level: Level;
+    tag: string;
+    title: string;
+    text: string;
+    names?: string[];
+  };
+
+  /** Merge rows that share a state and explanation, so nine identical datasets read as one issue. */
+  function grouped(
+    rows: { name: string; level: Level; text: string }[],
+    noun: string,
+    words: Record<Level, string>,
+  ): Issue[] {
+    const groups = new Map<string, Issue>();
+    for (const r of rows) {
+      const key = `${r.level}|${r.text}`;
+      const g = groups.get(key);
+      if (g) g.names!.push(r.name);
+      else
+        groups.set(key, {
+          level: r.level,
+          tag: words[r.level],
+          title: '',
+          text: r.text,
+          names: [r.name],
+        });
+    }
+    return [...groups.values()].map((g) => ({
+      ...g,
+      title:
+        g.names!.length === 1
+          ? `${noun[0].toUpperCase()}${noun.slice(1)} ${g.names![0]}.`
+          : `${g.names!.length} ${noun}s.`,
+      names: g.names!.length === 1 ? undefined : g.names,
+    }));
+  }
+
   const issues = $derived<Issue[]>([
     ...(apiError
       ? [
@@ -95,22 +132,24 @@
           },
         ]
       : []),
-    ...datasets
-      .filter((d) => d.level === 'bad' || d.level === 'warn')
-      .map((d) => ({
-        level: d.level,
-        tag: DATA_WORDS[d.level],
-        title: `Dataset ${d.dataset}.`,
-        text: d.note || `Last loaded ${ageLabel(d.loadedAgeHours)}.`,
-      })),
-    ...algorithms
-      .filter((a) => a.level !== 'ok')
-      .map((a) => ({
-        level: a.level,
-        tag: RUN_WORDS[a.level],
-        title: `Algorithm ${a.id}.`,
-        text: a.note,
-      })),
+    ...grouped(
+      datasets
+        .filter((d) => d.level === 'bad' || d.level === 'warn')
+        .map((d) => ({
+          name: d.dataset,
+          level: d.level,
+          text: d.note || `Last loaded ${ageLabel(d.loadedAgeHours)}.`,
+        })),
+      'dataset',
+      DATA_WORDS,
+    ),
+    ...grouped(
+      algorithms
+        .filter((a) => a.level !== 'ok')
+        .map((a) => ({ name: a.id, level: a.level, text: a.note })),
+      'algorithm',
+      RUN_WORDS,
+    ),
   ]);
 
   const timestampLabel = (iso: string | null) =>
@@ -198,7 +237,11 @@
         {#each issues as item, i (i)}
           <li data-level={item.level}>
             <span class="pill" data-level={item.level}>{item.tag}</span>
-            <span><strong>{item.title}</strong> {item.text}</span>
+            <span
+              ><strong>{item.title}</strong>
+              {item.text}{#if item.names}<small>{item.names.join(', ')}</small
+                >{/if}</span
+            >
           </li>
         {/each}
       </ul>
@@ -228,7 +271,13 @@
         />
       </h3>
       <p class="status-value">
-        {health ? health.database.replace('_', ' ') : 'unknown'}
+        {!health
+          ? 'Unknown'
+          : health.database === 'ok'
+            ? 'Connected'
+            : health.database === 'not_used'
+              ? 'Not used'
+              : 'Unavailable'}
       </p>
       <p class="status-meta">
         {health?.mode === 'replay'
@@ -243,10 +292,11 @@
           text={`Time since the loader last wrote data. Up to ${AGEING_HOURS} h is OK, up to ${STALE_HOURS} h is ageing, beyond that is stale. These thresholds are a heuristic, not a source guarantee.`}
         />
       </h3>
-      <p class="status-value">{ageLabel(summary.dataUpdatedHours)}</p>
+      <p class="status-value">
+        Loaded {ageLabel(summary.dataUpdatedHours)}
+      </p>
       <p class="status-meta">
-        Newest load · {summary.datasetsCurrent} of {summary.datasetsTotal} datasets
-        up to date
+        {summary.datasetsCurrent} of {summary.datasetsTotal} datasets up to date
       </p>
     </article>
     <article class="status-card" data-level={summary.algorithms}>
@@ -334,7 +384,7 @@
                   >{#if a.note}<small>{a.note}</small>{/if}</td
                 >
                 <td title={timestampLabel(a.finishedUtc)}
-                  >{ageLabel(a.ageHours)}</td
+                  >{a.finishedUtc ? ageLabel(a.ageHours) : 'Never'}</td
                 >
               </tr>
             {/each}

@@ -163,7 +163,9 @@ export function summarise(
         ? 'All systems operational'
         : level === 'unknown'
           ? 'Some checks unavailable'
-          : 'Working, but some data needs a look';
+          : level === 'warn'
+            ? 'Running, but some data is getting old'
+            : 'Running, but some figures are missing or out of date';
   return {
     level,
     headline,

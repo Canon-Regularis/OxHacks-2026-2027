@@ -1765,7 +1765,6 @@ select:focus-visible,
 .status-value {
   margin: 8px 0 2px;
   font-size: 22px;
-  text-transform: capitalize;
 }
 .status-meta {
   font-size: 12px;
@@ -1819,6 +1818,7 @@ select:focus-visible,
 }
 .pill {
   display: inline-block;
+  white-space: nowrap;
   padding: 1px 8px;
   border: 1px solid var(--lvl);
   border-radius: 99px;
@@ -1851,6 +1851,14 @@ select:focus-visible,
 }
 .status-issues li .pill {
   flex: none;
+}
+.status-issues li small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted-foreground);
+  font:
+    11px 'DM Mono',
+    monospace;
 }
 .status-intro {
   margin-bottom: 8px;
