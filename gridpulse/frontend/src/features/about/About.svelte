@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { useSettings, reducedMotion } from '$lib/state/settings.svelte';
+  const settings = useSettings();
   import Hero from './Hero.svelte';
   import TextShimmer from '$lib/vendor/kcpc/text/text-shimmer/text-shimmer.svelte';
   import Card from '$lib/vendor/kcpc/primitives/card/card.svelte';
@@ -8,12 +10,8 @@
     | typeof import('$lib/vendor/kcpc/backgrounds/pixel-blast/pixel-blast.svelte').default
     | null
   >(null);
-  let reduced = $state(true);
+  let reduced = $derived(reducedMotion(settings));
   onMount(() => {
-    const mq = matchMedia('(prefers-reduced-motion: reduce)');
-    reduced = mq.matches;
-    const update = () => (reduced = mq.matches);
-    mq.addEventListener('change', update);
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl2');
     if (gl) {
@@ -22,7 +20,6 @@
         .then((m) => (Pixels = m.default))
         .catch(() => {});
     }
-    return () => mq.removeEventListener('change', update);
   });
   const sections = [
     {

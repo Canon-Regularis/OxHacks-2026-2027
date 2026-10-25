@@ -1,24 +1,27 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { useSettings, reducedMotion } from '$lib/state/settings.svelte';
+  const settings = useSettings();
   let Globe = $state<
     | typeof import('$lib/vendor/kcpc/animations/rotating-earth/rotating-earth.svelte').default
     | null
   >(null);
-  let reduced = $state(false);
+  let reduced = $derived(reducedMotion(settings));
   let globeWidth = $state(360);
   let ready = $state(false);
+  const globeColor = $derived(
+    settings.appearance === 'light' ||
+      (settings.appearance === 'system' && !settings.systemDark)
+      ? '#514b45'
+      : '#fafafa',
+  );
   onMount(() => {
-    const mq = matchMedia('(prefers-reduced-motion: reduce)');
-    reduced = mq.matches;
-    const listener = () => (reduced = mq.matches);
-    mq.addEventListener('change', listener);
     import('$lib/vendor/kcpc/animations/rotating-earth/rotating-earth.svelte')
       .then((m) => {
         Globe = m.default;
         ready = true;
       })
       .catch(() => {});
-    return () => mq.removeEventListener('change', listener);
   });
 </script>
 
@@ -33,16 +36,16 @@
     <a class="text-link" href="/">Open the overview <span>↗</span></a>
   </div>
   <div class="hero-globe" bind:clientWidth={globeWidth} aria-hidden="true">
-    {#if Globe && ready}{#key `${Math.round(globeWidth)}-${reduced}`}<Globe
+    {#if Globe && ready}{#key `${Math.round(globeWidth)}-${reduced}-${globeColor}`}<Globe
           width={Math.max(240, Math.round(globeWidth))}
           height={310}
           scale={125}
           rotationSpeed={reduced ? 0 : 0.2}
           autoRotate={!reduced}
           scrollable={false}
-          landOutlineColor="#fafafa"
+          landOutlineColor={globeColor}
           graticuleColor="#a1a1a1"
-          coastColor="#fafafa"
+          coastColor={globeColor}
           halftoneDotColor="#a1a1a1"
         />{/key}{/if}
     <span class="globe-caption">GREAT BRITAIN / CONNECTED ENERGY</span>

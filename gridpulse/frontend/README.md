@@ -65,3 +65,11 @@ The catalogue offers seven electricity series: price, forecast/actual wind, fore
 `DaySummary.svelte` sits below the content-sized selector. It uses the selected day’s preloaded records for averages of selected properties, price extremes and their first UTC timestamps, negative-price periods/duration, and peak forecast demand. It remains fixed during hover. Missing records are excluded, and price coverage is shown so incomplete days remain identifiable. Each settlement period contributes 30 minutes, including 46/50-period clock-change days.
 
 Start with the [API reference](../../docs/gridpulse/FRONTEND_API.md) and [algorithm display guide](../../docs/gridpulse/ALGORITHM_DISPLAY.md) for future Explore integration; additional response types are in `src/lib/types.ts`. Deployment uses the SvelteKit Node server; see [deployment setup](../deploy/README.md).
+
+## Workspace settings
+
+The navbar gear opens a keyboard-accessible modal drawer on every page. Preferences apply immediately and persist in `gridpulse:settings:v1`: dark/light/system appearance, UTC or UK local time, device/reduced motion, chart gridlines, standard/bold chart lines, and whether to remember the current view. UK time labels include BST/GMT, including the repeated clock-change hour; settlement dates and API requests retain their original meaning.
+
+The root layout owns settings and saved-view persistence for all routes, with storage events synchronising tabs. Turning off **Remember my view** removes the saved view while keeping the current session's selection; reloading starts with the latest day and default properties. **Reset settings** restores all settings and view defaults. Browser storage failures leave the current session usable. Market values are never saved as preferences.
+
+`src/lib/state/settings.ts` holds validated defaults and timestamp formatting; `settings.svelte.ts` provides per-layout reactive state. `SettingsDrawer.svelte` uses a native modal dialog with focus wrapping, Escape/backdrop dismissal and focus restoration. Presentation styles live in `src/styles/settings.css`. On narrow screens, disabled planned navigation items yield space to active pages and the gear. Automated checks cover storage corruption/denial, reloads, cross-tab updates, clock changes, chart behavior, keyboard focus, and mobile layouts.

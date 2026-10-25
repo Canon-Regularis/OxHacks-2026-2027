@@ -1,5 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state';
+  import SettingsDrawer from './SettingsDrawer.svelte';
 </script>
 
 <header class="site-header">
@@ -30,4 +31,5 @@
       >About</a
     >
   </nav>
+  <SettingsDrawer />
 </header>
