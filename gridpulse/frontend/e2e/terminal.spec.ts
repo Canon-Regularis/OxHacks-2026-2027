@@ -868,3 +868,52 @@ test('widget group badges switch groups without opening settings', async ({
     .click();
   await expect(compactBadge).toContainText('B');
 });
+
+test('AI opens a dockable conversation, applies a view and can undo it', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.route('**/api/agent/turns/stream', async route => {
+    const turn = route.request().postDataJSON();
+    const messages = [
+      { type: 'started' },
+      { type: 'answer', text: 'Here is your price view.', references: [] },
+      { type: 'view', workspace_id: turn.workspace_id, revision: turn.revision, view: {
+        version: 1, from_date: date, to_date: date, widgets: [{ key: 'price', existing: null, type: 'chart', title: 'AI price evidence', series: ['price'], algorithm: null, run_id: null, outputs: [], table: '', group: 'A', relative_to: null, position: 'tab', notes: '' }], remove: [], background_chat: true, new_workspace: false, name: 'AI view',
+      } },
+      { type: 'completed' },
+    ];
+    await route.fulfill({ contentType: 'text/event-stream', body: messages.map((event, i) => `data: ${JSON.stringify({ version: 1, turn_id: turn.turn_id, sequence: i+1, ...event })}\n\n`).join('') });
+  });
+  await page.goto('/terminal');
+  await page.getByRole('button', { name: '✦ AI', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Message AI' }).fill('Set up a price workspace');
+  await page.getByRole('button', { name: 'Send ↗', exact: true }).click();
+  await expect(page.getByRole('tab', { name: 'AI price evidence', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: '✦ AI', exact: true }).click();
+  await expect(page.getByText('View updated. Use Go back to undo.', { exact: false })).toBeVisible();
+  await page.getByRole('button', { name: '↶ Go back', exact: true }).click();
+  await expect(page.getByRole('tab', { name: 'AI price evidence', exact: true })).toHaveCount(0);
+  await page.reload();
+  await page.getByRole('button', { name: '✦ AI', exact: true }).click();
+  await expect(page.getByText('Set up a price workspace', { exact: true })).toBeVisible();
+  const persistent = await page.evaluate(() => localStorage.getItem('eisengrau:terminal:v1'));
+  expect(persistent).not.toContain('"type":"chat"');
+  expect(errors).toEqual([]);
+});
+
+test('empty workspace starts with chat and promotes it after submission', async ({ page }) => {
+  await page.route('**/api/agent/turns/stream', async route => {
+    const turn = route.request().postDataJSON();
+    await route.fulfill({ contentType: 'text/event-stream', body: [
+      { type: 'answer', text: 'Which wind series would you like?', references: [] }, { type: 'completed' },
+    ].map((event, i) => `data: ${JSON.stringify({ version: 1, turn_id: turn.turn_id, sequence: i+1, ...event })}\n\n`).join('') });
+  });
+  await page.goto('/terminal');
+  await page.getByRole('button', { name: 'New blank workspace', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'What would you like to investigate?' })).toBeVisible();
+  await page.getByRole('textbox', { name: 'Message AI' }).fill('Show wind');
+  await page.getByRole('button', { name: 'Send ↗', exact: true }).click();
+  await expect(page.getByRole('tab', { name: 'AI chat', exact: true })).toBeVisible();
+  await expect(page.getByText('Which wind series would you like?', { exact: true })).toBeVisible();
+});

@@ -15,6 +15,7 @@ from psycopg.errors import QueryCanceled
 from psycopg_pool import PoolTimeout
 
 from gridpulse import __version__
+from gridpulse.agent import routes as agent
 from gridpulse.api import analysis, market, system, weather
 from gridpulse.api.demo_cache import DemoCacheMiddleware
 from gridpulse.config import get_settings
@@ -51,7 +52,7 @@ def create_app() -> FastAPI:
     )
     app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-    for module in (system, market, analysis, weather):
+    for module in (system, market, analysis, weather, agent):
         app.include_router(module.router, prefix="/api")
 
     @app.exception_handler(PoolTimeout)

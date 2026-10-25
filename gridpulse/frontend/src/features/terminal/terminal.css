@@ -1015,3 +1015,127 @@
   padding: 6px 7px;
   line-height: 1.5;
 }
+
+/* Session chat shares the docking tree and the Terminal's existing theme. */
+.terminal-chat {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  text-align: left;
+}
+.terminal-chat-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+}
+.terminal-chat-controls span {
+  margin-right: auto;
+  color: var(--muted-foreground);
+}
+.terminal-chat-messages {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  overscroll-behavior: contain;
+}
+.terminal-chat-messages article {
+  margin: 0 0 14px;
+  padding: 10px;
+  border-left: 2px solid #a2c7b8;
+  background: color-mix(in srgb, #a2c7b8 5%, transparent);
+}
+.terminal-chat-messages article.user {
+  border-color: #e6b080;
+  background: color-mix(in srgb, #e6b080 5%, transparent);
+}
+.terminal-chat-messages p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 6px 0;
+}
+.terminal-chat-messages strong {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.terminal-chat-welcome {
+  margin: auto;
+  max-width: 460px;
+  padding: 20px 6px;
+}
+.terminal-chat-welcome h2 {
+  font-size: 22px;
+  line-height: 1.2;
+  margin-bottom: 12px;
+}
+.terminal-chat form {
+  border-top: 1px solid var(--border);
+  padding: 10px;
+}
+.terminal-chat textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 64px;
+  max-height: 160px;
+  background: transparent;
+  border: 1px solid var(--border);
+  padding: 8px;
+  font: inherit;
+  font-size: 13px;
+}
+.terminal-chat form > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 7px;
+}
+.terminal-chat small {
+  font-size: 10px;
+  opacity: 0.65;
+}
+.terminal-evidence {
+  display: block;
+  text-align: left;
+  margin-top: 5px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.terminal-chat-confirm pre {
+  max-height: 160px;
+  overflow: auto;
+  font-size: 10px;
+}
+.terminal-empty-ai {
+  width: min(680px, 100%);
+  height: min(520px, 100%);
+  margin: auto;
+  padding: 16px;
+}
+.terminal-empty-ai > .terminal-chat {
+  flex: 1;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .terminal-chat-messages article {
+    animation: chat-arrive 0.18s ease-out;
+  }
+  @keyframes chat-arrive {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

@@ -37,7 +37,17 @@ class Settings(BaseSettings):
     max_range_days: int = 3660
     query_timeout_seconds: int = 15
 
-    # Optional extensions; unused until the agent is implemented.
+    # Terminal agent. Provider credentials and proxy token never leave the server.
+    cwave_api_key: str = ""
+    agent_access_token: str = ""
+    agent_base_url: str = "https://api.inference.wandb.ai/v1"
+    agent_model: str = "moonshotai/Kimi-K2.6"
+    agent_max_tokens: int = 5000
+    agent_turn_timeout_seconds: int = 180
+    agent_job_timeout_seconds: int = 90
+    agent_hourly_limit: int = 60
+
+    # Older optional provider fields retained for compatibility.
     gemini_api_key: str = ""
     gemini_model: str = ""
 
