@@ -199,3 +199,53 @@ it('retains source overlays when the agent selects specific algorithm outputs', 
   )!;
   expect(widget.settings.outputs).toEqual(['prediction', 'source:price']);
 });
+
+it('places multiple new charts relative to one another in one atomic AI view', () => {
+  const doc = createDocument(range);
+  const sources: Catalog = {
+    ...catalog,
+    series: [
+      ...catalog.series,
+      { id: 'wind', label: 'Wind', unit: 'MW', kind: 'forecast', datasets: [] },
+    ],
+  };
+  const view = intent();
+  view.widgets.push({
+    ...view.widgets[0],
+    key: 'wind',
+    title: 'Wind evidence',
+    series: ['wind'],
+    relative_to: 'price',
+    position: 'bottom',
+  });
+  const before = JSON.stringify(doc);
+  const result = compileView(
+    doc,
+    view,
+    sources,
+    { width: 1800, height: 1200 },
+    'chat',
+  );
+  expect(
+    Object.values(result.workspaces[0].widgets).filter((w) =>
+      ['Price evidence', 'Wind evidence'].includes(w.title),
+    ),
+  ).toHaveLength(2);
+  expect(JSON.stringify(doc)).toBe(before);
+});
+
+it('preserves the original workspace if a later chart in an AI batch fails', () => {
+  const doc = createDocument(range),
+    before = JSON.stringify(doc),
+    view = intent();
+  view.widgets.push({
+    ...view.widgets[0],
+    key: 'second',
+    series: ['unknown'],
+    relative_to: 'price',
+  });
+  expect(() =>
+    compileView(doc, view, catalog, { width: 1800, height: 1200 }, 'chat'),
+  ).toThrow(/unavailable data/);
+  expect(JSON.stringify(doc)).toBe(before);
+});

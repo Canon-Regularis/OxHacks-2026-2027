@@ -216,8 +216,11 @@ export function compileView(
     const reference = spec.relative_to
       ? (keys.get(spec.relative_to) ?? spec.relative_to)
       : target;
-    const current = applyActions(next, commands, size);
-    const live = current.workspaces.find((w) => w.id === current.active)!;
+    // Advance one private draft instead of replaying prior placement commands.
+    // Splits allocate fresh node IDs: replay would invalidate subsequent targets.
+    next = applyActions(next, commands, size);
+    commands.length = 0;
+    const live = next.workspaces.find((w) => w.id === next.active)!;
     const destination = reference ? findStack(live.layout, reference) : null;
     if (reference && !destination)
       throw new Error('AI layout references an unavailable placement target.');

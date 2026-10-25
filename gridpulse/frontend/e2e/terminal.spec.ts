@@ -1172,3 +1172,117 @@ test('AI chat opens in compact mode without discarding the desktop tree', async 
     page.locator('path[data-terminal-series="price"]'),
   ).toBeVisible();
 });
+
+test('AI renders a February–March investigation with charts placed relative to newly created charts', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.route('**/api/agent/turns/stream', async (route) => {
+    const turn = route.request().postDataJSON();
+    const base = {
+      existing: null,
+      type: 'chart',
+      series: ['price'],
+      algorithm: null,
+      run_id: null,
+      outputs: [],
+      table: '',
+      group: 'A',
+      relative_to: null,
+      position: 'right',
+      notes: '',
+    };
+    const events = [
+      {
+        type: 'answer',
+        text: 'Here are the February–March views.',
+        references: [],
+      },
+      {
+        type: 'view',
+        workspace_id: turn.workspace_id,
+        revision: turn.revision,
+        view: {
+          version: 1,
+          from_date: '2026-02-01',
+          to_date: '2026-03-31',
+          widgets: [
+            { ...base, key: 'price', title: 'February–March prices' },
+            {
+              ...base,
+              key: 'wind',
+              title: 'February–March wind',
+              series: ['wind'],
+              relative_to: 'price',
+              position: 'bottom',
+            },
+            {
+              ...base,
+              key: 'demand',
+              title: 'February–March demand',
+              series: ['demand'],
+              relative_to: 'wind',
+              position: 'tab',
+            },
+          ],
+          remove: [],
+          background_chat: false,
+          new_workspace: false,
+          name: 'Market relationships',
+        },
+      },
+      { type: 'completed' },
+    ];
+    await route.fulfill({
+      contentType: 'text/event-stream',
+      body: events
+        .map(
+          (event, i) =>
+            `data: ${JSON.stringify({ version: 1, turn_id: turn.turn_id, sequence: i + 1, ...event })}\n\n`,
+        )
+        .join(''),
+    });
+  });
+  await page.goto('/terminal');
+  await page
+    .getByRole('button', { name: 'New blank workspace', exact: true })
+    .click();
+  await page
+    .getByRole('textbox', { name: 'Message AI' })
+    .fill('Visualise prices, wind and demand from February to March 2026');
+  await page.getByRole('button', { name: 'Send ↗', exact: true }).click();
+  for (const title of [
+    'February–March prices',
+    'February–March wind',
+    'February–March demand',
+  ])
+    await expect(
+      page.getByRole('tab', { name: title, exact: true }),
+    ).toBeVisible();
+  await expect(
+    page.getByText('View updated. Use Go back to undo.', { exact: false }),
+  ).toBeVisible();
+  await expect(page.locator('.terminal-chat [role="alert"]')).toHaveCount(0);
+  await expect
+    .poll(() =>
+      requests.some(
+        (url) =>
+          url.includes('/api/series?') &&
+          url.includes('from=2026-02-01') &&
+          url.includes('to=2026-03-31'),
+      ),
+    )
+    .toBe(true);
+  await page.getByRole('button', { name: '↶ Go back', exact: true }).click();
+  for (const title of [
+    'February–March prices',
+    'February–March wind',
+    'February–March demand',
+  ])
+    await expect(
+      page.getByRole('tab', { name: title, exact: true }),
+    ).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
