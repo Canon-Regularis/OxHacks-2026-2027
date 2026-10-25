@@ -195,7 +195,7 @@
     <section class="status-issues" aria-labelledby="issues-h">
       <h2 id="issues-h">What needs looking at</h2>
       <ul>
-        {#each issues as item (item.text)}
+        {#each issues as item, i (i)}
           <li data-level={item.level}>
             <span class="pill" data-level={item.level}>{item.tag}</span>
             <span><strong>{item.title}</strong> {item.text}</span>
