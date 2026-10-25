@@ -629,3 +629,14 @@
   line-height: 1.8;
   margin-bottom: 24px;
 }
+
+@media (max-width: 700px) {
+  .site-header .brand-name,
+  .site-header .brand-beta,
+  .site-header .nav-long {
+    display: none;
+  }
+  .site-header .nav-short {
+    display: inline;
+  }
+}

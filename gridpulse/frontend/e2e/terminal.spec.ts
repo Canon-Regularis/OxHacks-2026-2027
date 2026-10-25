@@ -935,42 +935,52 @@ test('widget group badges switch groups without opening settings', async ({
   await expect(compactBadge).toContainText('B');
 });
 
-test('keyboard reference is accessible in settings and modal shortcuts cannot change the workspace behind it', async ({
+test('keyboard panel has its own navbar button, traps focus and blocks workspace shortcuts behind it', async ({
   page,
 }) => {
   await page.goto('/terminal');
   await expect(
     page.locator('path[data-terminal-series="price"]'),
   ).toBeVisible();
-  await page
-    .getByRole('button', { name: 'Open settings', exact: true })
-    .click();
-  const settings = page.getByRole('dialog', { name: 'Settings', exact: true });
-  const help = settings.getByRole('button', {
+  const keyboard = page.getByRole('button', {
+    name: 'Open keyboard shortcuts',
+    exact: true,
+  });
+  const gear = page.getByRole('button', { name: 'Open settings', exact: true });
+  const keyboardBox = await keyboard.boundingBox();
+  const gearBox = await gear.boundingBox();
+  expect(keyboardBox!.x + keyboardBox!.width).toBeLessThanOrEqual(gearBox!.x);
+  await keyboard.click();
+  const shortcuts = page.getByRole('dialog', {
     name: 'Keyboard shortcuts',
     exact: true,
   });
-  await help.click();
-  await expect(help).toHaveAttribute('aria-expanded', 'true');
+  await expect(shortcuts).toBeVisible();
   await expect(
-    settings.getByRole('heading', {
-      name: 'Terminal keyboard shortcuts',
-      exact: true,
-    }),
-  ).toBeVisible();
-  await expect(
-    settings.getByRole('table', { name: 'Charts', exact: true }),
+    shortcuts.getByRole('table', { name: 'Charts', exact: true }),
   ).toContainText('Home / End');
+  await expect(shortcuts.getByRole('radio')).toHaveCount(0);
+  const close = shortcuts.getByRole('button', {
+    name: 'Close keyboard shortcuts',
+    exact: true,
+  });
+  await close.focus();
+  await page.keyboard.press('Tab');
+  await expect(close).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(close).toBeFocused();
   await page.keyboard.press('Control+k');
-  await expect(settings).toBeVisible();
+  await expect(shortcuts).toBeVisible();
   await expect(
     page.getByRole('dialog', { name: 'Search / Add', exact: true }),
   ).toHaveCount(0);
   await page.keyboard.press('Escape');
-  await expect(settings).not.toBeVisible();
-  await expect(
-    page.getByRole('button', { name: 'Open settings', exact: true }),
-  ).toBeFocused();
+  await expect(shortcuts).not.toBeVisible();
+  await expect(keyboard).toBeFocused();
+  await gear.click();
+  const settings = page.getByRole('dialog', { name: 'Settings', exact: true });
+  await expect(settings.getByRole('table')).toHaveCount(0);
+  await page.keyboard.press('Escape');
   await page.keyboard.press('Control+k');
   await expect(
     page.getByRole('dialog', { name: 'Search / Add', exact: true }),

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import SettingsDrawer from './SettingsDrawer.svelte';
+  import ShortcutsDrawer from './ShortcutsDrawer.svelte';
 </script>
 
 <header class="site-header">
@@ -42,5 +43,5 @@
       >About</a
     >
   </nav>
-  <SettingsDrawer />
+  <div class="header-tools"><ShortcutsDrawer /><SettingsDrawer /></div>
 </header>

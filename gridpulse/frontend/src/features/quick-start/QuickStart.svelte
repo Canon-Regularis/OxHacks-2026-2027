@@ -278,8 +278,8 @@
         <p class="learn-eyebrow">KEYBOARD REFERENCE</p>
         <h2 id="quick-shortcuts-heading">Keep the keys close.</h2>
         <p>
-          Find this reference any time in Settings → Keyboard shortcuts. These
-          controls apply while Terminal is open.
+          Open this reference any time with the keyboard icon beside Settings.
+          These controls apply while Terminal is open.
         </p>
         <TerminalShortcuts />
       </section>

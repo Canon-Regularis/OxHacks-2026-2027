@@ -16,7 +16,6 @@
 }
 .settings-trigger {
   border: 0;
-  margin-left: auto;
 }
 .settings-trigger:hover,
 .settings-close:hover {
@@ -208,21 +207,20 @@ html[data-motion='reduce'] *::after {
   flex: none;
 }
 
-.settings-help {
-  padding-top: 22px;
+.header-tools {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 4px;
+  margin-left: auto;
+}
+.settings-dropdowns {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
   border-top: 1px solid var(--border);
-  margin-bottom: 22px;
+  padding-top: 22px;
 }
-.settings-shortcuts {
-  margin-top: 22px;
-}
-.settings-shortcuts h3 {
-  font-size: 16px;
-  margin-bottom: 10px;
-}
-.settings-shortcuts > p {
-  font-size: 12px;
-  line-height: 1.8;
-  color: var(--muted-foreground);
-  margin-bottom: 20px;
+.shortcuts-panel-content {
+  margin-top: 28px;
 }

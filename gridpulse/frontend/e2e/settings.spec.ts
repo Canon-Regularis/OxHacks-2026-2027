@@ -400,6 +400,22 @@ test('navbar and drawer remain usable on narrow and short screens', async ({
       page.getByRole('button', { name: 'Reset settings', exact: true }),
     ).toBeInViewport();
     await close(page);
+    await page
+      .getByRole('button', { name: 'Open keyboard shortcuts', exact: true })
+      .click();
+    const shortcuts = page.getByRole('dialog', {
+      name: 'Keyboard shortcuts',
+      exact: true,
+    });
+    const shortcutBox = await shortcuts.boundingBox();
+    expect(shortcutBox!.x).toBeGreaterThanOrEqual(0);
+    expect(shortcutBox!.x + shortcutBox!.width).toBeLessThanOrEqual(width + 1);
+    expect(
+      await shortcuts.evaluate(
+        (element) => element.scrollWidth <= element.clientWidth,
+      ),
+    ).toBe(true);
+    await page.keyboard.press('Escape');
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,

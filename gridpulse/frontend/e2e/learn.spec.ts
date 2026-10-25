@@ -190,6 +190,12 @@ test('new pages and navigation fit narrow screens while the dataset table scroll
       await expect(
         page.getByRole('button', { name: 'Open settings' }),
       ).toBeInViewport();
+      await expect(
+        page.getByRole('button', {
+          name: 'Open keyboard shortcuts',
+          exact: true,
+        }),
+      ).toBeInViewport();
       expect(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth,
