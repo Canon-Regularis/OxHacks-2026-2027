@@ -342,3 +342,25 @@ test('daily summary fits all text at five selections on desktop', async ({
     );
   }
 });
+
+test('shared frame, navigation and page backgrounds span a wide viewport', async ({
+  page,
+}) => {
+  for (const width of [1920, 2560, 390]) {
+    await page.setViewportSize({ width, height: 1080 });
+    for (const path of ['/', '/about']) {
+      await page.goto(path);
+      for (const selector of [
+        '.app-frame',
+        '.site-header',
+        path === '/' ? '.overview-page' : '.about-page',
+        '.site-footer',
+        ...(path === '/about' ? ['.about-pixel-section'] : []),
+      ]) {
+        const box = (await page.locator(selector).boundingBox())!;
+        expect(box.x, `${path} ${selector} left edge`).toBeCloseTo(0, 0);
+        expect(box.width, `${path} ${selector} width`).toBeCloseTo(width, 0);
+      }
+    }
+  }
+});

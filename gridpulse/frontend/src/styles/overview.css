@@ -541,6 +541,7 @@ select:focus-visible,
   margin: 0 -48px;
 }
 .about-pixel-section {
+  width: auto;
   min-height: 420px;
   border-bottom: 1px solid var(--border);
   margin: 0 -48px;
@@ -1598,5 +1599,13 @@ select:focus-visible,
   }
   .day-coverage {
     font-size: 9px;
+  }
+}
+
+/* Keep the About effect full-bleed when the shared wide-screen gutter grows. */
+@media (min-width: 1500px) {
+  .about-spacer,
+  .about-pixel-section {
+    margin-inline: -58px;
   }
 }
