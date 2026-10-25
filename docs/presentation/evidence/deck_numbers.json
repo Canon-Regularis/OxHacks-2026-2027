@@ -1,0 +1,344 @@
+{
+ "frame": [
+  "2026-08-03 23:00:00+00:00",
+  "2026-10-23 22:30:00+00:00",
+  3888
+ ],
+ "metrics": [
+  {
+   "model": "seasonal_naive",
+   "n_ok_folds": 53,
+   "mae_gbp_mwh": 65.024,
+   "mase": 1.104,
+   "coverage_80": 0.778,
+   "coverage_95": 0.915,
+   "interval_score_80": 315.504
+  },
+  {
+   "model": "ets",
+   "n_ok_folds": 53,
+   "mae_gbp_mwh": 49.45,
+   "mase": 0.843,
+   "coverage_80": 0.943,
+   "coverage_95": 0.992,
+   "interval_score_80": 275.497
+  },
+  {
+   "model": "arima",
+   "n_ok_folds": 53,
+   "mae_gbp_mwh": 61.93,
+   "mase": 1.052,
+   "coverage_80": 0.794,
+   "coverage_95": 0.913,
+   "interval_score_80": 297.637
+  },
+  {
+   "model": "naive",
+   "n_ok_folds": 53,
+   "mae_gbp_mwh": 55.057,
+   "mase": 0.937,
+   "coverage_80": 0.992,
+   "coverage_95": 0.998,
+   "interval_score_80": 508.22
+  },
+  {
+   "model": "seasonal_naive_day",
+   "n_ok_folds": 53,
+   "mae_gbp_mwh": 65.024,
+   "mase": 1.104,
+   "coverage_80": 0.778,
+   "coverage_95": 0.915,
+   "interval_score_80": 315.504
+  },
+  {
+   "model": "seasonal_naive_week",
+   "n_ok_folds": 53,
+   "mae_gbp_mwh": 72.569,
+   "mase": 1.22,
+   "coverage_80": 0.78,
+   "coverage_95": 0.923,
+   "interval_score_80": 343.36
+  },
+  {
+   "model": "naive2",
+   "n_ok_folds": 53,
+   "mae_gbp_mwh": 52.15,
+   "mase": 0.887,
+   "coverage_80": 0.991,
+   "coverage_95": 0.998,
+   "interval_score_80": 491.725
+  },
+  {
+   "model": "drift",
+   "n_ok_folds": 53,
+   "mae_gbp_mwh": 55.44,
+   "mase": 0.943,
+   "coverage_80": 0.992,
+   "coverage_95": 0.998,
+   "interval_score_80": 508.233
+  },
+  {
+   "model": "mean",
+   "n_ok_folds": 53,
+   "mae_gbp_mwh": 57.69,
+   "mase": 0.981,
+   "coverage_80": 0.758,
+   "coverage_95": 0.927,
+   "interval_score_80": 260.228
+  },
+  {
+   "model": "moving_average",
+   "n_ok_folds": 53,
+   "mae_gbp_mwh": 57.708,
+   "mase": 0.98,
+   "coverage_80": 0.995,
+   "coverage_95": 0.999,
+   "interval_score_80": 748.03
+  },
+  {
+   "model": "weighted_moving_average",
+   "n_ok_folds": 53,
+   "mae_gbp_mwh": 52.915,
+   "mase": 0.905,
+   "coverage_80": 0.993,
+   "coverage_95": 0.999,
+   "interval_score_80": 503.891
+  }
+ ],
+ "check": {
+  "naive_30min": 19.23580948972429,
+  "mean_24h": 39.40022297665511,
+  "ets_30min": 23.201663817014094,
+  "ets_24h": 51.07365275041766
+ },
+ "mean_beats_naive_first_step": 19,
+ "mean_beats_naive_steps": [
+  19,
+  24,
+  25,
+  31,
+  34,
+  36,
+  37,
+  38,
+  39,
+  40,
+  41,
+  42,
+  43,
+  44,
+  45,
+  46,
+  47,
+  48
+ ],
+ "dm": {
+  "n": 53,
+  "mean_mase_ets": 0.8426508654718262,
+  "mean_mase_naive2": 0.8866929073121663,
+  "h1": [
+   -2.406277811153842,
+   0.019705088820537453
+  ],
+  "h2": [
+   -2.2365596202451132,
+   0.02962968994761095,
+   []
+  ],
+  "raw_mae_h1": [
+   -2.4200383299120016,
+   0.01904915894108883
+  ],
+  "d_lag1_acf": 0.05692265403839691,
+  "days_ets_better": "32"
+ },
+ "acf": [
+  0.8118,
+  0.7266,
+  0.6577,
+  0.5911,
+  0.5211,
+  0.4631,
+  0.4085,
+  0.3573,
+  0.3252,
+  0.2875,
+  0.2469,
+  0.2176,
+  0.2059,
+  0.1951,
+  0.1943,
+  0.1988,
+  0.2007,
+  0.2225,
+  0.2434,
+  0.2592,
+  0.2695,
+  0.2826,
+  0.2785,
+  0.2839,
+  0.2732,
+  0.2476,
+  0.2307,
+  0.2131,
+  0.1924,
+  0.1728,
+  0.1569,
+  0.1306,
+  0.1185,
+  0.1076,
+  0.1035,
+  0.0949,
+  0.0989,
+  0.1018,
+  0.1119,
+  0.1377,
+  0.1551,
+  0.1812,
+  0.2181,
+  0.2516,
+  0.2773,
+  0.302,
+  0.3127,
+  0.3085
+ ],
+ "acf_first_below_half": 6,
+ "residual_tests": [
+  {
+   "model": "ets",
+   "test": "durbin_watson",
+   "statistic": 1.8882,
+   "p_value": NaN,
+   "notes": "Near 2 means little lag-1 autocorrelation"
+  },
+  {
+   "model": "ets",
+   "test": "jarque_bera",
+   "statistic": 4733.1086,
+   "p_value": 0.0,
+   "notes": "skew 0.30, excess kurtosis 6.66"
+  },
+  {
+   "model": "ets",
+   "test": "arch_lm",
+   "statistic": 195.5474,
+   "p_value": 0.0,
+   "notes": "12 lags"
+  },
+  {
+   "model": "arima",
+   "test": "durbin_watson",
+   "statistic": 1.9938,
+   "p_value": NaN,
+   "notes": "Near 2 means little lag-1 autocorrelation"
+  },
+  {
+   "model": "arima",
+   "test": "jarque_bera",
+   "statistic": 946.2821,
+   "p_value": 0.0,
+   "notes": "skew -0.00, excess kurtosis 3.02"
+  },
+  {
+   "model": "arima",
+   "test": "arch_lm",
+   "statistic": 170.4383,
+   "p_value": 0.0,
+   "notes": "12 lags"
+  }
+ ],
+ "garch_raw": {
+  "arch_lm": 195.54744728296632,
+  "excess_kurtosis": 6.6555381475533775,
+  "alpha1": 0.11257227889822896,
+  "beta1": 0.7359117959467213,
+  "persistence": 0.8484840748449503,
+  "half_life_periods": 4.218688140929493,
+  "warnings": []
+ },
+ "garch_slot_scaled": {
+  "arch_lm": 219.16400662549245,
+  "excess_kurtosis": 2.416299676500702,
+  "alpha1": 0.14482765706615058,
+  "beta1": 0.6250309708392676,
+  "persistence": 0.7698586279054183,
+  "half_life_periods": 2.6501681165380186,
+  "warnings": []
+ },
+ "kalman": {
+  "seconds": 100,
+  "variances": {
+   "level": 503.8585261763508,
+   "seasonal_48": 0.02109491214731348,
+   "irregular": 761.7317530977326
+  },
+  "share_abs_z_gt_3": 0.013221153846153846,
+  "n_z": 2496,
+  "spikes_abs_gt_3": 20,
+  "shifts_abs_gt_3": 40,
+  "top_spikes": [
+   [
+    "2026-09-22 20:00:00+00:00",
+    12.51,
+    594.0
+   ],
+   [
+    "2026-09-08 12:30:00+00:00",
+    -4.68,
+    -11.96
+   ],
+   [
+    "2026-09-15 11:30:00+00:00",
+    4.36,
+    206.5
+   ],
+   [
+    "2026-09-27 07:30:00+00:00",
+    4.31,
+    184.0
+   ],
+   [
+    "2026-09-22 20:30:00+00:00",
+    -4.18,
+    127.35
+   ],
+   [
+    "2026-10-03 01:00:00+00:00",
+    -4.03,
+    0.0
+   ]
+  ],
+  "top_shifts": [
+   [
+    "2026-09-22 20:30:00+00:00",
+    -6.9,
+    127.35
+   ],
+   [
+    "2026-09-22 20:00:00+00:00",
+    6.25,
+    594.0
+   ],
+   [
+    "2026-09-17 07:30:00+00:00",
+    -4.9,
+    24.98
+   ],
+   [
+    "2026-09-12 15:30:00+00:00",
+    4.84,
+    186.41
+   ],
+   [
+    "2026-09-05 16:00:00+00:00",
+    4.81,
+    220.0
+   ],
+   [
+    "2026-10-22 12:00:00+00:00",
+    -4.65,
+    24.89
+   ]
+  ]
+ }
+}
