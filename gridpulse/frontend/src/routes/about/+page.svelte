@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head
-  ><title>About — Eisengrau</title><meta
+  ><title>About - Eisengrau</title><meta
     name="description"
     content="Analyse Great Britain’s electricity data with forecasting algorithms, backtests, rolling signals and diagnostics. Explore linked charts, tables and stored results in Eisengrau Terminal."
   /></svelte:head

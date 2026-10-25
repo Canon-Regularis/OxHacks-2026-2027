@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head
-  ><title>Status — Eisengrau</title><meta
+  ><title>Status - Eisengrau</title><meta
     name="description"
     content="Live health of the Eisengrau API, database, datasets and analysis runs."
   /></svelte:head
