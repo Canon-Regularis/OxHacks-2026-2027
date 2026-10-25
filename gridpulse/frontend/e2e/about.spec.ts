@@ -6,7 +6,7 @@ test('About, its decorative bands, header and footer fill the viewport', async (
   await page.goto('/about');
   await expect(
     page.getByRole('heading', {
-      name: 'Published sources. Clear distinctions.',
+      name: 'What is imbalance?',
     }),
   ).toBeVisible();
   await expect(

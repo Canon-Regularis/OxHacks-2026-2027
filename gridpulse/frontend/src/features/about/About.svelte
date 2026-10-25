@@ -44,17 +44,6 @@
 
 <main class="page-shell about-page" id="about-main">
   <Hero />
-  <section class="about-intro">
-    <p class="eyebrow">ABOUT EISENGRAU</p>
-    <h2>The bigger picture.<br /><span>Without losing the detail.</span></h2>
-    <p>
-      Eisengrau is a dashboard for inspecting Great Britain’s electricity
-      market, built for OxHack 2026. Overview brings published forecasts,
-      available outturns and settlement prices into one daily view, so you can
-      compare what was forecast with what happened and inspect the underlying
-      numbers.
-    </p>
-  </section>
   <div class="about-cards">
     {#each sections as section}<Card class="about-card"
         ><span class="eyebrow">{section.number} / IN OVERVIEW</span>
@@ -102,12 +91,31 @@
       </div>
     </section>
   </div>
-  <section class="about-data" aria-labelledby="about-data-heading">
+  <section class="about-definition">
+    <div class="about-definition-copy">
+      <p class="eyebrow">KNOW THE DIFFERENCE</p>
+      <h2>What is imbalance?</h2>
+      <p>
+        A participant's imbalance is the difference between the electricity it
+        contracted to generate or use and what it actually generated or used,
+        after settlement adjustments. The imbalance price is used to settle that
+        surplus or shortfall.
+      </p>
+      <p>
+        Residual demand is a different metric: our forecast demand minus
+        forecast wind. It is not a measure of system imbalance.
+      </p>
+      <a
+        href="https://www.elexon.co.uk/bsc/settlement/imbalance-pricing/"
+        target="_blank"
+        rel="noreferrer"
+        class="text-link">Read Elexon's explanation ↗</a
+      >
+    </div>
+  </section>
+  <section class="about-data" aria-label="Public market data">
     <div>
       <p class="eyebrow">PUBLIC MARKET DATA</p>
-      <h2 id="about-data-heading">
-        Published sources.<br /><span>Clear distinctions.</span>
-      </h2>
     </div>
     <div class="about-data-copy">
       <p>
@@ -140,44 +148,4 @@
       </div>
     </div>
   </section>
-  <section class="about-definition">
-    <div class="about-definition-copy">
-      <p class="eyebrow">KNOW THE DIFFERENCE</p>
-      <h2>What is imbalance?</h2>
-      <p>
-        A participant's imbalance is the difference between the electricity it
-        contracted to generate or use and what it actually generated or used,
-        after settlement adjustments. The imbalance price is used to settle that
-        surplus or shortfall.
-      </p>
-      <p>
-        Residual demand is a different metric: our forecast demand minus
-        forecast wind. It is not a measure of system imbalance.
-      </p>
-      <a
-        href="https://www.elexon.co.uk/bsc/settlement/imbalance-pricing/"
-        target="_blank"
-        rel="noreferrer"
-        class="text-link">Read Elexon's explanation ↗</a
-      >
-    </div>
-  </section>
-  <section class="about-roadmap" aria-labelledby="about-roadmap-heading">
-    <p class="eyebrow">WHAT COMES NEXT</p>
-    <h2 id="about-roadmap-heading">More ways to investigate.</h2>
-    <p>
-      Overview, Terminal and this About page are available today. Terminal is a
-      docked research workspace for source charts, stored algorithm results,
-      tables and comparisons. You can arrange linked tiles, inspect completed
-      runs and save workspaces. The backend computes statistical forecasts,
-      backtests, rolling signals and diagnostics in batch jobs; Terminal reads
-      their stored results. Methods remains planned. Weather analysis is
-      available in the backend, while weather maps and a Gemini investigation
-      assistant remain future extensions.
-    </p>
-  </section>
-  <p class="about-limitations">
-    Retrospective market analysis · missing data stays missing · comparisons do
-    not establish cause and effect.
-  </p>
 </main>

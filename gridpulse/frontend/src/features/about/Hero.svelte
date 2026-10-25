@@ -22,11 +22,12 @@
 
 <section class="hero">
   <div class="hero-copy">
-    <p class="eyebrow">GB ELECTRICITY / MARKET EXPLORER</p>
+    <p class="eyebrow">GB ELECTRICITY / AI-POWERED ANALYSIS</p>
     <h1>Follow the market.<br /><span>Inspect the detail.</span></h1>
     <p class="hero-description">
-      Published forecasts, actual readings and imbalance prices.<br />One
-      connected view of Britain’s electricity market.
+      AI-powered investigation of Britain’s electricity market. An AI agent
+      helps you choose the right algorithms and visualise the data you need,
+      from wind and demand to imbalance prices.
     </p>
     <a class="text-link" href="/">Open the overview <span>↗</span></a>
   </div>
