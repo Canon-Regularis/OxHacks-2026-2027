@@ -8,7 +8,7 @@ test('About, its decorative bands, header and footer fill the viewport', async (
   await page.goto('/about');
   await expect(
     page.getByRole('heading', {
-      name: 'What is imbalance?',
+      name: 'Put every model to the test.',
     }),
   ).toBeVisible();
   await expect(
@@ -44,6 +44,25 @@ test('About, its decorative bands, header and footer fill the viewport', async (
       return { width: style.borderBottomWidth, style: style.borderBottomStyle };
     });
     expect(divider).toEqual({ width: '1px', style: 'solid' });
+    const firstRow = await page
+      .locator('.about-story')
+      .first()
+      .locator('p:not(.eyebrow)')
+      .first()
+      .boundingBox();
+    const finalRow = await page
+      .locator('.about-story')
+      .last()
+      .locator('p:not(.eyebrow)')
+      .first()
+      .boundingBox();
+    const middleRow = await page.locator('.about-data-copy').boundingBox();
+    expect(firstRow).not.toBeNull();
+    expect(finalRow).not.toBeNull();
+    expect(Math.abs(firstRow!.x - finalRow!.x)).toBeLessThan(1);
+    if (width >= 1024)
+      expect(middleRow!.x).toBeGreaterThan(finalRow!.x + width / 3);
+
     if (width === 1440 || width === 390) {
       await page.screenshot({
         path: test.info().outputPath(`about-${width}.png`),

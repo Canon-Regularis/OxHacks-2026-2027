@@ -82,4 +82,4 @@ Terminal retains its own workspace and per-widget chart preferences. The navbar 
 
 ## About page narrative
 
-About introduces Eisengrau as a workspace for algorithmic analysis of GB electricity data. Terminal is the primary destination for forecasts, backtests, rolling signals, correlations and diagnostics; Overview is the daily starting point. About describes stored results, linked views and CSV exports, and labels AI assistance as in development while the agent remains a placeholder. Keep that status aligned with the deployed implementation.
+About introduces Eisengrau as a workspace for algorithmic analysis of GB electricity data. Terminal is the primary destination for forecasts, backtests, rolling signals, correlations and diagnostics; Overview is the daily starting point. About is presentation copy for the finished project, including the AI agent in the present tense at the user’s request. It describes algorithm comparison, linked views, saved investigations and CSV/JSON exports. This copy does not establish the implementation status of the agent; refer to the agent code and technical docs for that.

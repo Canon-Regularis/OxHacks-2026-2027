@@ -37,10 +37,10 @@
     },
     {
       number: '03',
-      label: 'AI ASSISTANCE · IN DEVELOPMENT',
+      label: 'THE AI AGENT',
       title: 'From questions to evidence',
       description:
-        'An AI agent is being added to help you choose suitable algorithms and assemble the visualisations for your question. Its role is to guide investigations using the app’s data and analysis tools, with the supporting results kept in view.',
+        'Ask a question in plain language. The AI agent helps you choose suitable algorithms and builds the charts and comparisons you need, using the app’s data and analysis tools to keep the supporting evidence in view.',
     },
   ];
 </script>
@@ -96,28 +96,23 @@
       </div>
     </section>
   </div>
-  <section class="about-definition">
-    <div class="about-definition-copy">
-      <p class="eyebrow">UNDERSTAND THE MARKET</p>
-      <h2>What is imbalance?</h2>
+  <section class="about-story" aria-labelledby="about-models-heading">
+    <div>
+      <p class="eyebrow">LOOK BEYOND THE FORECAST</p>
+      <h2 id="about-models-heading">Put every model to the test.</h2>
       <p>
-        Electricity participants contract to generate or use energy. Their
-        imbalance is the difference between that contracted position and what
-        they actually generate or use, after settlement adjustments. The
-        imbalance price settles the resulting surplus or shortfall.
+        A forecast is more useful when you can see how it performs. Compare
+        statistical models with simple baselines, explore their errors at
+        different lead times and find the periods where their predictions
+        diverge from actual prices.
       </p>
       <p>
-        Eisengrau lets you analyse that price alongside wind, demand and net
-        imbalance volume. Residual demand is shown separately as forecast demand
-        minus forecast wind, so you can investigate changing conditions without
-        confusing it with a participant’s imbalance.
+        Rolling signals reveal changing levels and volatility. Correlation
+        analysis explores how wind, demand and price move together, while
+        residual diagnostics show the patterns a model leaves unexplained. Use
+        these perspectives together to decide which methods suit your question.
       </p>
-      <a
-        href="https://www.elexon.co.uk/bsc/settlement/imbalance-pricing/"
-        target="_blank"
-        rel="noreferrer"
-        class="text-link">Explore imbalance pricing ↗</a
-      >
+      <a class="text-link" href="/terminal">Compare the algorithms ↗</a>
     </div>
   </section>
   <section class="about-data" aria-label="Data behind the analysis">
@@ -158,6 +153,24 @@
           rel="noreferrer">NESO electricity data ↗</a
         >
       </div>
+    </div>
+  </section>
+  <section class="about-story" aria-labelledby="about-workspace-heading">
+    <div>
+      <p class="eyebrow">CONTINUE THE INVESTIGATION</p>
+      <h2 id="about-workspace-heading">Pick up where you left off.</h2>
+      <p>
+        Keep the charts, comparisons and notes that make an investigation yours.
+        Save named workspaces, reuse a useful layout as a preset and return to
+        the same linked views when a new question comes up. Work independently
+        or ask the AI agent to help you take the next step.
+      </p>
+      <p>
+        Export chart data and result tables as CSV for further analysis, or save
+        your workspace configuration as JSON to restore your setup. Your
+        findings stay connected to the methods and data behind them.
+      </p>
+      <a class="text-link" href="/terminal">Build your workspace ↗</a>
     </div>
   </section>
 </main>
