@@ -115,11 +115,10 @@
       <a class="text-link" href="/terminal">Compare the algorithms ↗</a>
     </div>
   </section>
-  <section class="about-data" aria-label="Data behind the analysis">
-    <div>
-      <p class="eyebrow">DATA BEHIND THE ANALYSIS</p>
-    </div>
+  <section class="about-data about-story" aria-labelledby="about-data-heading">
     <div class="about-data-copy">
+      <p class="eyebrow">DATA BEHIND THE ANALYSIS</p>
+      <h2 id="about-data-heading">Trace every result to its source.</h2>
       <p>
         Elexon and NESO provide the GB electricity series used in Eisengrau:
         imbalance prices, wind and demand forecasts, available actual readings
