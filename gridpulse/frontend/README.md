@@ -26,6 +26,12 @@ node build
 
 The production Node server defaults to port 3000; configure `HOST`, `PORT`, and `ORIGIN` for deployment. The backend must remain separately running. Browser tests use intercepted, clearly synthetic API responses and check 50-period days, hover without refetching, keyboard selection, date persistence, mobile layout and connection errors.
 
+## Stable local presentation
+
+For a local presentation, run `npm run build` followed by `npm run serve:local`, then open <http://localhost:5174>. This serves a temporary snapshot of the production build with the existing backend on port 8000. It has no Vite hot reload, and subsequent checks/builds do not alter the files being served. Stop and restart it after rebuilding to show new changes. `HOST`, `PORT`, `ORIGIN` and `API_PROXY_TARGET` can be set when starting it.
+
+Running `npm run check` or `npm run build` alongside `npm run dev` regenerates SvelteKit files watched by Vite. This can reload the entire page, briefly removing and recreating both About animation canvases. Use the stable server when inspecting continuous animation or presenting; development hot reload remains available through `npm run dev`. With the stable server running, `npm run test:preview` opens About in a test browser, runs checks and a fresh build, and verifies that neither the document nor its animation canvases are replaced.
+
 ## Working areas
 
 - `src/routes/`: SvelteKit entry points, per-request view context and server-only API proxy.
