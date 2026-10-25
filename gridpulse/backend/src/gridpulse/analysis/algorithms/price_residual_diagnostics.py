@@ -10,7 +10,7 @@ from typing import Any
 
 import pandas as pd
 
-from gridpulse.analysis.algorithms import diagnostics
+from gridpulse.analysis.algorithms import _parallel, diagnostics
 from gridpulse.analysis.algorithms._backtest import build
 from gridpulse.analysis.algorithms._checks import require_int
 from gridpulse.analysis.algorithms._frames import half_hourly, longest_complete
@@ -43,11 +43,13 @@ def run(
     tests: list[list[object]] = []
     if len(used):
         history = half_hourly(used["price_gbp_mwh"])
-        for name, forecaster in forecasters.items():
+        fits = _parallel.forecast_all(list(forecasters.values()), history, 1)
+        for name, fit in zip(forecasters, fits, strict=True):
             try:
-                residuals = forecaster.forecast(history, 1).residuals
+                if isinstance(fit, AlgorithmError):
+                    raise fit
                 result = diagnostics.residual_diagnostics(
-                    residuals,
+                    fit.residuals,
                     ljung_box_lags=ljung_box_lags,
                     model_df=model_df[name],
                     arch_lags=arch_lags,

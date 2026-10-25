@@ -51,6 +51,28 @@ These are decisions made while wiring Matthew's methods into the API. Each is re
 | AutoARIMA with the daily difference fixed (`seasonal_differencing: 1`) | `price_day_ahead_forecast.py` | Matthew's notes advise fixing it when the cycle is known | **Contradicted by finding 3**; left to its own test, AutoARIMA drops it and picks ARIMA(0,1,1) |
 | Seasonal lags count elapsed half-hours | all seasonal models | Orchid works on a regular grid | On and after a clock change, such as **25 October 2026, this weekend**, origins shift by an hour of local time and seasonal lags point an hour off; fits carry a warning |
 
+## Batch runtime
+
+Almost all compute is Orchid's pure-Python fitting, repeated at every backtest origin: ARIMA's conditional sum of squares, and Nelder–Mead for ETS. Each (model, origin) fit is independent and seeded, so `_parallel.run_all` spreads them over a process pool. The backtests use it, and so do the model fits of `price_day_ahead_forecast` and `price_residual_diagnostics`. `GRIDPULSE_WORKERS` sets the pool size; the default is the CPUs available, at most 4, and 1 runs everything in-process. Workers start from a fork server, or spawn where none exists, so a script that runs algorithms needs an `if __name__ == "__main__":` guard. The `gridpulse` command already has one. Two exact trims also help the cheap models:
+
+- Each fold window is cut once and shared by every model. `HalfHourlySeries.window` no longer re-validates values that were already checked.
+- Folds call `evaluation.backtest_folds`, which skips the pooled report that `_backtest` discarded.
+
+Outputs are unchanged, so no algorithm versions moved. On the refresh windows to 23 October 2026 (56 days, inputs from Tiger dev), every series and table was `DataFrame.equals` to the previous code at 1, 2 and 4 workers. These are seconds of `algorithm.run` on a 12-core laptop:
+
+| Algorithm | Before | 1 worker | 2 workers | 4 workers |
+|---|---|---|---|---|
+| `price_forecast_backtest` | 109.4 | 113.0 | 57.1 | 30.9 |
+| `price_regression_backtest` | 35.6 | 30.9 | 16.3 | 10.5 |
+| `price_day_ahead_forecast` | 13.7 | 13.8 | 8.0 | 7.9 |
+| `price_baseline_backtest` | 6.3 | 4.2 | 2.7 | 1.9 |
+| `price_residual_diagnostics` | 3.5 | 3.9 | 2.9 | 2.7 |
+
+The pool only helps with more than one vCPU. A 1-vCPU VPS keeps only the in-process trims, which save about 7 s. Rejected options:
+
+- **Warm-starting each fold from the previous fold's parameters.** `ARIMA.fit` takes no start values; only the lower-level `css_estimate` does. `ETSForecaster` has none. Either change would alter results and need version bumps.
+- **Caching folds across refreshes.** After one new day, 55 of 56 folds are unchanged, so a cache would save the most. The algorithm contract forbids file access, though, so a cache would have to live in `service`/`refresh`.
+
 ## Open questions and next steps
 
 1. **ETS gamma (Matthew).** Is a zero seasonal weight real or an Orchid artefact? See finding 4.
