@@ -1,6 +1,6 @@
 # GridPulse frontend
 
-The Overview is implemented in SvelteKit 2 / Svelte 5 with Tailwind 4 and selected KCPC source components. Terminal is implemented at `/terminal`; Methods remains visibly disabled; About is a read-only explanation page. Gemini and weather mapping remain extensions.
+The Overview is implemented in SvelteKit 2 / Svelte 5 with Tailwind 4 and selected KCPC source components. Terminal is implemented at `/terminal`; Methods is omitted from navigation; About is a read-only explanation page. Gemini and weather mapping remain extensions.
 
 ## Local development
 
@@ -76,7 +76,7 @@ The app uses a dark theme. The navbar gear opens a keyboard-accessible modal dra
 
 The root layout owns settings and saved-view persistence for all routes, with storage events synchronising tabs. Turning off **Remember my view** removes the saved view while keeping the current session's selection; reloading starts with the latest day and default properties. **Reset settings** restores all settings and view defaults. Browser storage failures leave the current session usable. Market values are never saved as preferences.
 
-`src/lib/state/settings.ts` holds validated defaults and timestamp formatting; `settings.svelte.ts` provides per-layout reactive state. `SettingsDrawer.svelte` uses a native modal dialog with focus wrapping, Escape/backdrop dismissal and focus restoration. Presentation styles live in `src/styles/settings.css`. On narrow screens, disabled planned navigation items yield space to active pages and the gear. Automated checks cover storage corruption/denial, reloads, cross-tab updates, clock changes, chart behavior, keyboard focus, and mobile layouts.
+`src/lib/state/settings.ts` holds validated defaults and timestamp formatting; `settings.svelte.ts` provides per-layout reactive state. `SettingsDrawer.svelte` uses a native modal dialog with focus wrapping, Escape/backdrop dismissal and focus restoration. Presentation styles live in `src/styles/settings.css`. Navigation shows Overview, Terminal and About alongside the settings gear. Automated checks cover storage corruption/denial, reloads, cross-tab updates, clock changes, chart behavior, keyboard focus, and mobile layouts.
 
 Terminal retains its own workspace and per-widget chart preferences. The navbar time display applies to Overview and Status; Terminal time labels follow its existing workspace settings.
 

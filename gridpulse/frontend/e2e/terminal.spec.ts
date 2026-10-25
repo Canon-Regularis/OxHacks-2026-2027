@@ -789,6 +789,10 @@ test('Search Add has only content categories and Workspaces owns preset loading'
 }) => {
   await page.goto('/terminal');
   await expect(
+    page.getByRole('navigation', { name: 'Primary navigation' }),
+  ).not.toContainText('Methods');
+
+  await expect(
     page.locator('path[data-terminal-series="price"]'),
   ).toBeVisible();
   await expect(
@@ -811,6 +815,21 @@ test('Search Add has only content categories and Workspaces owns preset loading'
   ).toHaveCount(0);
   await page.getByRole('button', { name: 'Close drawer' }).click();
   await page.getByRole('button', { name: 'Workspaces', exact: true }).click();
+  const manager = page.getByRole('dialog', { name: 'Workspaces', exact: true });
+  await expect(
+    manager.getByRole('button', {
+      name: 'Reset to market preset',
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    manager.getByRole('button', {
+      name: 'Close current workspace',
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(manager.locator('summary')).toHaveCount(0);
+
   await expect(
     page.getByRole('button', { name: 'Market preset', exact: true }),
   ).toBeVisible();
