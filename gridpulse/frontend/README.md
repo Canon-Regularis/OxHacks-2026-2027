@@ -33,6 +33,7 @@ The production Node server defaults to port 3000; configure `HOST`, `PORT`, and 
 - `src/components/charts/`: unit-aware SVG chart with up to two axes with keyboard/pointer selection.
 - `src/components/ui/InfoTooltip.svelte`: shared progressive-disclosure behaviour.
 - `src/components/layout/`: shared header/footer.
+- `src/features/status/`: Status page (`/status`); `model.ts` holds the pure health/freshness rules (thresholds are heuristics: 6 h ageing, 24 h stale since the loader last wrote).
 - `src/features/about/`: globe, PixelBlast/TextShimmer explainer and read-only context.
 - `src/lib/api.ts`: typed API boundary; no direct SQL or credentials.
 - `src/lib/state/view.svelte.ts`: versioned browser preferences, shared through root layout context; never shared between server requests.

@@ -1600,3 +1600,147 @@ select:focus-visible,
     font-size: 9px;
   }
 }
+
+/* Health & status page */
+.status-page {
+  padding-bottom: 40px;
+}
+.status-checked {
+  font:
+    10px 'DM Mono',
+    monospace;
+  color: var(--muted-foreground);
+}
+.status-page {
+  --lvl-ok: var(--wind);
+  --lvl-warn: var(--orange);
+  --lvl-bad: #e08a80;
+  --lvl-unknown: var(--muted-foreground);
+}
+[data-level='ok'] {
+  --lvl: var(--lvl-ok);
+}
+[data-level='warn'] {
+  --lvl: var(--lvl-warn);
+}
+[data-level='bad'] {
+  --lvl: var(--lvl-bad);
+}
+[data-level='unknown'] {
+  --lvl: var(--lvl-unknown);
+}
+.status-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  border: 1px solid var(--lvl);
+  border-radius: 6px;
+}
+.status-banner h2 {
+  font-size: 20px;
+  font-weight: 500;
+}
+.status-banner p {
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+.status-lamp {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--lvl);
+  box-shadow: 0 0 10px var(--lvl);
+}
+.status-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.status-card {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--lvl);
+  border-radius: 6px;
+}
+.status-card h3 {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font:
+    10px 'DM Mono',
+    monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+.status-value {
+  margin: 8px 0 2px;
+  font-size: 22px;
+  text-transform: capitalize;
+}
+.status-meta {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.status-section {
+  margin-bottom: 24px;
+}
+.status-section h2 {
+  font-size: 15px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.status-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.status-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.status-table th,
+.status-table td {
+  padding: 9px 12px;
+  text-align: left;
+  font-weight: 400;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.status-table thead th {
+  font:
+    10px 'DM Mono',
+    monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+.status-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+.status-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.status-table small {
+  display: block;
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+.pill {
+  display: inline-block;
+  padding: 1px 8px;
+  border: 1px solid var(--lvl);
+  border-radius: 99px;
+  font-size: 11px;
+}
+@media (max-width: 760px) {
+  .status-page {
+    padding: 0 16px 32px;
+  }
+}

@@ -21,6 +21,10 @@
     ><button disabled title="Methods is planned for the MVP"
       >Methods <span>Soon</span></button
     ><a
+      href="/status"
+      aria-current={page.url.pathname === '/status' ? 'page' : undefined}
+      >Status</a
+    ><a
       href="/about"
       aria-current={page.url.pathname === '/about' ? 'page' : undefined}
       >About</a
