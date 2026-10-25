@@ -1,6 +1,7 @@
-"""Inputs shared by the analysis tests: half-hourly series and algorithm input frames."""
+"""Inputs shared by the analysis tests, and the RUNSLOW gate on slow upstream tests."""
 
 import math
+import os
 import random
 from collections.abc import Callable
 from datetime import UTC, date, datetime, timedelta
@@ -13,6 +14,23 @@ from gridpulse.analysis.algorithms.series import HALF_HOUR, LONDON, HalfHourlySe
 from gridpulse.analysis.features import input_frame_from_rows
 
 START = datetime(2026, 9, 1, tzinfo=UTC)
+
+# Upstream state_space tests that take several seconds each, one over ten; they run with
+# RUNSLOW=1, as the ported smoothing suite's slow tests do.
+_SLOW_STATE_SPACE_TESTS = (
+    "test_state_space.py::TestSmoother::test_smoothed_cov_nonnegative_multistate",
+    "test_state_space.py::TestComponents::test_seasonal_recovers_pattern",
+    "test_state_space.py::TestComponents::test_cycle_recovers_frequency",
+)
+
+
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    if os.environ.get("RUNSLOW", "").strip().lower() not in {"", "0", "false", "no", "off"}:
+        return
+    skip = pytest.mark.skip(reason="slow test -- set RUNSLOW=1 to run it")
+    for item in items:
+        if item.nodeid.endswith(_SLOW_STATE_SPACE_TESTS):
+            item.add_marker(skip)
 
 
 def _settlement_day_starts(day: date) -> list[datetime]:
