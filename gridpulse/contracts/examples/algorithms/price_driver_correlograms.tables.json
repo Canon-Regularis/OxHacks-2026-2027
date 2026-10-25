@@ -20,6 +20,23 @@
     "finished_at_utc": "2026-10-24T20:43:00Z"
   },
   "tables": {
+    "sample": {
+      "description": "The gap-free stretch of the range the correlations use: its first and last period, its length and how many periods were left out",
+      "columns": [
+        "first_utc",
+        "last_utc",
+        "periods",
+        "excluded_periods"
+      ],
+      "rows": [
+        [
+          "2026-08-31T23:00:00Z",
+          "2026-10-23T22:30:00Z",
+          2544,
+          0
+        ]
+      ]
+    },
     "acf_price": {
       "description": "Price autocorrelation at lags 1..K with a Bartlett band",
       "columns": [

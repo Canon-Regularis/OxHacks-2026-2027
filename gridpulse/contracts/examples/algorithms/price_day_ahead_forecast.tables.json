@@ -1,16 +1,11 @@
 {
-  "_fixture": "Synthetic example for UI development; not real data. Complete for this synthetic run.",
+  "_fixture": "Synthetic example for UI development; not real data. selected_models truncated: real runs list every setting and coefficient.",
   "run": {
     "run_id": 26,
     "algorithm_id": "price_day_ahead_forecast",
     "algorithm_version": "0.1.0",
     "params": {
       "history_periods": 1344,
-      "horizon": 48,
-      "levels": [
-        0.8,
-        0.95
-      ],
       "models": {
         "seasonal_naive": {
           "season_length": 48
@@ -20,7 +15,7 @@
         },
         "auto_arima": {
           "season_length": 48,
-          "seasonal_differencing": null,
+          "seasonal_differencing": 1,
           "max_p": 3,
           "max_q": 2
         }
@@ -36,6 +31,27 @@
     "finished_at_utc": "2026-10-24T21:05:00Z"
   },
   "tables": {
+    "forecast_day": {
+      "description": "The settlement day forecast, its first and last period, how many periods it has (46, 48 or 50) and the history used",
+      "columns": [
+        "settlement_date",
+        "first_utc",
+        "last_utc",
+        "periods",
+        "history_first_utc",
+        "history_last_utc"
+      ],
+      "rows": [
+        [
+          "2026-10-25",
+          "2026-10-24T23:00:00Z",
+          "2026-10-25T23:30:00Z",
+          50,
+          "2026-09-26T23:00:00Z",
+          "2026-10-24T22:30:00Z"
+        ]
+      ]
+    },
     "selected_models": {
       "description": "Each model's selected specification and fitted parameters, one row per parameter",
       "columns": [
@@ -62,6 +78,12 @@
           "forecasting_baseline.auto_ets",
           "gamma",
           0.14
+        ],
+        [
+          "auto_arima",
+          "autoregressive.auto_arima",
+          "seasonal_differencing",
+          1
         ],
         [
           "auto_arima",
@@ -96,19 +118,23 @@
       ]
     },
     "fit_warnings": {
-      "description": "Conditions flagged while fitting, such as history spanning a clock change",
+      "description": "Conditions flagged while fitting, and models that could not forecast",
       "columns": [
         "model",
         "warning"
       ],
       "rows": [
         [
+          "seasonal_naive",
+          "seasonal model spans a GB clock change: seasonal lags count UTC half-hours"
+        ],
+        [
           "auto_ets",
-          "forecast horizon spans the 2026-10-25 clock change"
+          "seasonal model spans a GB clock change: seasonal lags count UTC half-hours"
         ],
         [
           "auto_arima",
-          "forecast horizon spans the 2026-10-25 clock change"
+          "seasonal model spans a GB clock change: seasonal lags count UTC half-hours"
         ]
       ]
     }

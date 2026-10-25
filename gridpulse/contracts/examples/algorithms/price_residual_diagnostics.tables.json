@@ -7,21 +7,26 @@
     "params": {
       "models": {
         "ets": {
+          "trend": null,
+          "damped": false,
           "seasonal": "additive",
-          "season_length": 48,
-          "model_df": 0
+          "season_length": 48
         },
         "arima": {
           "p": 2,
           "d": 0,
           "q": 1,
           "seasonal_differencing": 1,
-          "season_length": 48,
-          "model_df": 3
+          "season_length": 48
         }
       },
+      "model_df": {
+        "ets": 0,
+        "arima": 3
+      },
       "ljung_box_lags": 48,
-      "arch_lags": 12
+      "arch_lags": 12,
+      "max_periods": 2688
     },
     "overrides": {},
     "datasets": {
@@ -33,6 +38,23 @@
     "finished_at_utc": "2026-10-24T20:46:00Z"
   },
   "tables": {
+    "sample": {
+      "description": "The gap-free stretch the models were fitted to: its first and last period, its length and how many periods of the range were left out",
+      "columns": [
+        "first_utc",
+        "last_utc",
+        "periods",
+        "excluded_periods"
+      ],
+      "rows": [
+        [
+          "2026-08-31T23:00:00Z",
+          "2026-10-23T22:30:00Z",
+          2544,
+          0
+        ]
+      ]
+    },
     "ljung_box": {
       "description": "Ljung-Box Q statistic, degrees of freedom and p-value per model at lags 1..K",
       "columns": [
@@ -102,7 +124,7 @@
       ]
     },
     "tests": {
-      "description": "Durbin-Watson, Jarque-Bera and ARCH-LM statistics with p-values per model",
+      "description": "Durbin-Watson, Jarque-Bera and ARCH-LM statistics with p-values per model; a not_computed row explains a model that could not be tested",
       "columns": [
         "model",
         "test",
@@ -123,7 +145,7 @@
           "jarque_bera",
           15420.0,
           0.0,
-          "skew 2.9, excess kurtosis 21.4"
+          "skew 2.90, excess kurtosis 21.40"
         ],
         [
           "ets",
@@ -144,7 +166,7 @@
           "jarque_bera",
           14980.0,
           0.0,
-          "skew 2.8, excess kurtosis 21.0"
+          "skew 2.80, excess kurtosis 21.00"
         ],
         [
           "arima",

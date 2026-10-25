@@ -3,6 +3,7 @@
     gridpulse migrate
     gridpulse analyse wind_price_correlation --from 2026-09-01 --to 2026-10-23
     gridpulse algorithms
+    gridpulse refresh                     rerun whatever is stale, up to the latest settled day
 """
 
 import argparse
@@ -11,6 +12,7 @@ import sys
 from datetime import date, datetime
 
 from gridpulse.analysis.algorithms import ALGORITHMS
+from gridpulse.analysis.refresh import refresh
 from gridpulse.analysis.service import run_algorithm
 from gridpulse.catalog import datasets_for
 from gridpulse.config import MIGRATIONS_DIR, get_settings
@@ -53,8 +55,14 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--to", dest="to_date", type=date.fromisoformat, required=True)
     p.add_argument("--cutoff", type=_aware, help="use only data available at this instant")
     p.add_argument("--param", type=_param, action="append", default=[], help="override a parameter: name=value")
+    p.add_argument("--no-memo", action="store_true", help="refit everything instead of reusing stored backtest folds")
 
     commands.add_parser("algorithms", help="list registered algorithms")
+
+    p = commands.add_parser("refresh", help="rerun algorithms whose results are missing or stale")
+    p.add_argument("algorithms", nargs="*", metavar="ALGORITHM", help="algorithm ids (default: all)")
+    p.add_argument("--through", type=date.fromisoformat, help="last settlement day (default: latest complete)")
+    p.add_argument("--force", action="store_true", help="rerun even if up to date, refitting everything")
 
     args = parser.parse_args(argv)
 
@@ -71,8 +79,23 @@ def main(argv: list[str] | None = None) -> None:
     elif args.command == "analyse":
         start, end = range_utc(args.from_date, args.to_date)
         with _connect() as conn:
-            run_id = run_algorithm(conn, ALGORITHMS[args.algorithm], start, end, dict(args.param), args.cutoff)
+            run_id = run_algorithm(
+                conn, ALGORITHMS[args.algorithm], start, end, dict(args.param), args.cutoff, reuse=not args.no_memo
+            )
         print(f"run {run_id} succeeded")
+
+    elif args.command == "refresh":
+        unknown = sorted(set(args.algorithms) - set(ALGORITHMS))
+        if unknown:
+            parser.error(f"unknown algorithms {unknown}; choose from {list(ALGORITHMS)}")
+        chosen = [ALGORITHMS[a] for a in args.algorithms] or list(ALGORITHMS.values())
+        with _connect() as conn:
+            outcomes = refresh(conn, chosen, args.through, args.force)
+        for o in outcomes:
+            run = f"run {o.run_id}" if o.run_id else ""
+            print(f"{o.algorithm_id:28} {o.from_date}..{o.to_date}  {o.status:9} {run:8} {o.seconds:6.1f}s  {o.detail}")
+        if any(o.status == "failed" for o in outcomes):
+            sys.exit(1)
 
 
 if __name__ == "__main__":

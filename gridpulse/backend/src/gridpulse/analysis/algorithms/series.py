@@ -55,7 +55,12 @@ class HalfHourlySeries:
             raise InvalidInputError(
                 f"window [{start}, {stop}) lies outside a series of length {len(self.values)}"
             )
-        return HalfHourlySeries(self.timestamp(start), self.values[start:stop])
+        # This series' values and start are already checked, so skip __post_init__: checking
+        # every window again dominated the cheap backtests.
+        window = object.__new__(HalfHourlySeries)
+        object.__setattr__(window, "start", self.timestamp(start))
+        object.__setattr__(window, "values", self.values[start:stop])
+        return window
 
     def complete_values(self) -> list[float]:
         """All values; ``MissingDataError`` if any period is missing."""
