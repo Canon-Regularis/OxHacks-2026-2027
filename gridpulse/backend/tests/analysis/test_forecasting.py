@@ -3,10 +3,12 @@ import random
 import sys
 from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
-from statistics import NormalDist
+from itertools import pairwise
+from statistics import NormalDist, linear_regression
 
 import pytest
 
+from gridpulse.analysis.algorithms.combination import Ensemble
 from gridpulse.analysis.algorithms.errors import (
     CalculationError,
     DegenerateDataError,
@@ -15,6 +17,7 @@ from gridpulse.analysis.algorithms.errors import (
     MissingDataError,
 )
 from gridpulse.analysis.algorithms.forecasting import (
+    AR,
     ARIMA,
     ETS,
     AutoARIMA,
@@ -29,12 +32,20 @@ from gridpulse.analysis.algorithms.forecasting import (
     Naive2,
     SeasonalDummyRegression,
     SeasonalNaive,
+    Theta,
     TrendRegression,
     WeightedMovingAverage,
 )
+from gridpulse.analysis.algorithms.multivariate import VAR
 from gridpulse.analysis.algorithms.orchid import autoregressive as ar
 from gridpulse.analysis.algorithms.orchid import forecasting_baseline as fb
 from gridpulse.analysis.algorithms.series import HALF_HOUR, LONDON, HalfHourlySeries
+from gridpulse.analysis.algorithms.state_space import (
+    DiscountForecaster,
+    StructuralForecaster,
+    StructuralModel,
+    StructuralParameters,
+)
 
 START = datetime(2026, 9, 1, tzinfo=UTC)
 CLOCK_CHANGE_DAY = datetime(2026, 10, 25, tzinfo=UTC)  # clocks go back at 01:00 UTC
@@ -42,7 +53,15 @@ CLOCK_CHANGE = "seasonal model spans a GB clock change: seasonal lags count UTC 
 NOT_ADJUSTED = "seasonal adjustment not applied: no significant seasonality detected"
 MakeSeries = Callable[..., HalfHourlySeries]
 
-FB, AR = "forecasting_baseline", "autoregressive"
+
+def _white_noise(n: int, *, seed: int) -> list[float]:
+    rng = random.Random(seed)
+    return [rng.gauss(0.0, 1.0) for _ in range(n)]
+
+
+# A VAR driver covering every history the tests build, independent of their seed-0 noise.
+WIND = HalfHourlySeries(START, _white_noise(400, seed=1))
+FB, AUTOREG = "forecasting_baseline", "autoregressive"
 # Every forecaster with the shortest history it accepts, its Orchid source and interval method.
 CASES: list[tuple[Forecaster, int, str, str]] = [
     (Naive(), 2, f"{FB}.Naive", "random-walk"),
@@ -60,14 +79,17 @@ CASES: list[tuple[Forecaster, int, str, str]] = [
         "analytic",
     ),
     (AutoETS(season_length=48), 96, f"{FB}.auto_ets", "analytic"),
-    (ARIMA(2, 0, 1), 100, f"{AR}.ARIMA", "analytic"),
+    (Theta(), 3, f"{FB}.Theta", "analytic"),
+    (Theta(season_length=48), 96, f"{FB}.Theta", "analytic"),
+    (ARIMA(2, 0, 1), 100, f"{AUTOREG}.ARIMA", "analytic"),
     (
         ARIMA(1, 1, 1, seasonal_differencing=1, season_length=48),
         149,
-        f"{AR}.ARIMA",
+        f"{AUTOREG}.ARIMA",
         "analytic",
     ),
-    (AutoARIMA(season_length=48, max_p=1, max_q=1), 288, f"{AR}.auto_arima", "analytic"),
+    (AutoARIMA(season_length=48, max_p=1, max_q=1), 288, f"{AUTOREG}.auto_arima", "analytic"),
+    (AR(3), 8, f"{FB}.ARForecaster", "analytic"),
     (TrendRegression(degree=2), 4, f"{FB}.TrendForecaster", "sqrt-horizon"),
     (SeasonalDummyRegression(48), 50, f"{FB}.SeasonalDummyForecaster", "sqrt-horizon"),
     (FourierRegression(48, 3), 48, f"{FB}.FourierForecaster", "sqrt-horizon"),
@@ -76,6 +98,24 @@ CASES: list[tuple[Forecaster, int, str, str]] = [
         336,
         f"{FB}.LinearRegressionForecaster",
         "sqrt-horizon",
+    ),
+    (DiscountForecaster(), 49, "state_space.DiscountDLM", "student-t"),
+    (StructuralForecaster(StructuralModel()), 4, "state_space.forecast", "analytic"),
+    (
+        StructuralForecaster(
+            StructuralModel(),
+            parameters=StructuralParameters(StructuralModel(), {"level": 0.01, "irregular": 1.0}),
+        ),
+        2,
+        "state_space.forecast",
+        "analytic",
+    ),
+    (VAR({"wind": WIND}, 2), 9, f"{AUTOREG}.VAR", "analytic"),
+    (
+        Ensemble((Naive(), SeasonalNaive(48), Drift())),
+        49,
+        f"{FB}.combine_mean",
+        "quantile-averaging",
     ),
 ]
 SHORTEST = [(forecaster, minimum) for forecaster, minimum, _, _ in CASES]
@@ -90,9 +130,15 @@ SHORT = HalfHourlySeries(START, [1.0, 2.0, 0.0, 3.0])
 CONSTANT = HalfHourlySeries(START, [42.0] * 200)
 LINE = HalfHourlySeries(START, [float(t) for t in range(200)])
 DAILY_REPEAT = HalfHourlySeries(START, [float(t % 48) for t in range(300)])
+NEGATIVE_ONCE = HalfHourlySeries(START, [-5.0 if t == 100 else 50.0 + t % 48 for t in range(240)])
 
 
-@pytest.mark.parametrize(("forecaster", "minimum", "source", "method"), CASES, ids=repr)
+def _case_id(value: object) -> str:
+    """``repr(value)``, except for a VAR, whose repr would list every value of its drivers."""
+    return f"VAR(lags={value.lags})" if isinstance(value, VAR) else repr(value)
+
+
+@pytest.mark.parametrize(("forecaster", "minimum", "source", "method"), CASES, ids=_case_id)
 def test_forecast_contract_on_negative_prices(
     make_series: MakeSeries, forecaster: Forecaster, minimum: int, source: str, method: str
 ) -> None:
@@ -113,7 +159,7 @@ def test_forecast_contract_on_negative_prices(
     assert all(math.isfinite(value) for value in result.residuals)
 
 
-@pytest.mark.parametrize("forecaster", FORECASTERS, ids=repr)
+@pytest.mark.parametrize("forecaster", FORECASTERS, ids=_case_id)
 def test_missing_value_is_reported(
     synthetic_values: Callable[..., list[float]], forecaster: Forecaster
 ) -> None:
@@ -123,7 +169,7 @@ def test_missing_value_is_reported(
         forecaster.forecast(HalfHourlySeries(START, values), 4)
 
 
-@pytest.mark.parametrize(("forecaster", "minimum"), SHORTEST, ids=repr)
+@pytest.mark.parametrize(("forecaster", "minimum"), SHORTEST, ids=_case_id)
 def test_min_history_is_exact(
     make_series: MakeSeries, forecaster: Forecaster, minimum: int
 ) -> None:
@@ -197,6 +243,31 @@ def test_interval_sigma_excludes_warm_up_residuals(
             lambda: ETS(seasonal="additive"), InvalidInputError, id="season without length"
         ),
         pytest.param(lambda: AutoETS(season_length=1), InvalidInputError, id="season_length=1"),
+        pytest.param(lambda: Theta(theta=0.5), InvalidInputError, id="theta=0.5"),
+        pytest.param(lambda: Theta(theta=math.nan), InvalidInputError, id="theta=NaN"),
+        pytest.param(lambda: Theta(theta=math.inf), InvalidInputError, id="theta=inf"),
+        pytest.param(lambda: Theta(theta=True), InvalidInputError, id="theta=True"),
+        pytest.param(
+            lambda: Theta(theta="2"),  # type: ignore[arg-type]
+            InvalidInputError,
+            id="theta='2'",
+        ),
+        pytest.param(lambda: Theta(season_length=1), InvalidInputError, id="Theta season_length=1"),
+        pytest.param(
+            lambda: Theta(season_length=48.0),  # type: ignore[arg-type]
+            InvalidInputError,
+            id="Theta season_length=48.0",
+        ),
+        pytest.param(
+            lambda: Theta(season_length=48, seasonal_model="mul"),  # type: ignore[arg-type]
+            InvalidInputError,
+            id="Theta seasonal_model='mul'",
+        ),
+        pytest.param(
+            lambda: Theta(seasonal_model="multiplicative"),
+            InvalidInputError,
+            id="multiplicative Theta without a season",
+        ),
         pytest.param(lambda: ARIMA(4, 0, 0), InvalidInputError, id="p=4"),
         pytest.param(lambda: ARIMA(0, 2, 0), InvalidInputError, id="d=2"),
         pytest.param(
@@ -212,6 +283,14 @@ def test_interval_sigma_excludes_warm_up_residuals(
         pytest.param(lambda: AutoARIMA(max_q=3), InvalidInputError, id="max_q=3"),
         pytest.param(
             lambda: AutoARIMA(season_length=2), InvalidInputError, id="seasonal test at length 2"
+        ),
+        pytest.param(lambda: AR(0), InvalidInputError, id="AR p=0"),
+        pytest.param(lambda: AR(49), InvalidInputError, id="AR p=49"),
+        pytest.param(lambda: AR(True), InvalidInputError, id="AR p=True"),
+        pytest.param(
+            lambda: AR(1.5),  # type: ignore[arg-type]
+            InvalidInputError,
+            id="AR p=1.5",
         ),
         pytest.param(lambda: TrendRegression(degree=3), InvalidInputError, id="degree=3"),
         pytest.param(lambda: SeasonalDummyRegression(336), InvalidInputError, id="336 dummies"),
@@ -231,6 +310,25 @@ def test_interval_sigma_excludes_warm_up_residuals(
             lambda: ETS(seasonal="multiplicative", season_length=2).forecast(SHORT, 1),
             InvalidInputError,
             id="multiplicative season on a zero",
+        ),
+        pytest.param(
+            lambda: Theta(season_length=2, seasonal_model="multiplicative").forecast(SHORT, 1),
+            InvalidInputError,
+            id="multiplicative Theta season on a zero",
+        ),
+        pytest.param(  # Orchid keeps this season: every seasonal index stays positive
+            lambda: Theta(season_length=48, seasonal_model="multiplicative").forecast(
+                NEGATIVE_ONCE, 1
+            ),
+            InvalidInputError,
+            id="multiplicative Theta season on one negative value",
+        ),
+        pytest.param(  # positive, but the second phase's index is about 2e-12
+            lambda: Theta(season_length=2, seasonal_model="multiplicative").forecast(
+                HalfHourlySeries(START, [1.0, 1e-12] * 4), 1
+            ),
+            InvalidInputError,
+            id="multiplicative Theta season that Orchid would drop",
         ),
         pytest.param(lambda: ARIMA(1, 0, 0).forecast(CONSTANT, 1), DegenerateDataError, id="ARIMA"),
         pytest.param(
@@ -291,6 +389,8 @@ def test_additive_naive2_matches_closed_form(make_series: MakeSeries) -> None:
         (SeasonalNaive(48), 192, 1, ()),
         (CalendarRegression(2), 192, 48, ()),
         (Naive2(48), 192, 48, (CLOCK_CHANGE,)),
+        (Theta(season_length=48), 192, 48, (CLOCK_CHANGE,)),
+        (Theta(), 192, 48, ()),
     ],
     ids=repr,
 )
@@ -313,7 +413,7 @@ def test_naive2_without_seasonality_is_naive_with_a_warning(make_series: MakeSer
     assert result.mean == Naive().forecast(noise, 48).mean
 
 
-@pytest.mark.parametrize("forecaster", [Naive(), *REGRESSIONS], ids=repr)
+@pytest.mark.parametrize("forecaster", [Naive(), Theta(), AR(3), *REGRESSIONS], ids=repr)
 def test_zero_width_intervals_are_flagged(forecaster: Forecaster) -> None:
     # Least squares leaves rounding-level widths, which must still count as zero.
     result = forecaster.forecast(HalfHourlySeries(START, [42.0] * 336), 3)
@@ -512,3 +612,91 @@ def test_calendar_regression_keeps_local_clock_phase_across_clock_change() -> No
     history = HalfHourlySeries(start, [price(start + i * HALF_HOUR) for i in range(192)])
     result = CalendarRegression(2).forecast(history, 96)
     assert result.mean == pytest.approx([price(period) for period in result.timestamps()], abs=1e-6)
+
+
+@pytest.mark.parametrize(
+    ("forecaster", "orchid"),
+    [
+        pytest.param(Theta(), lambda: fb.Theta(1, 2.0, seasonal=False), id="non-seasonal"),
+        pytest.param(
+            Theta(season_length=48, theta=3.0),
+            lambda: fb.Theta(48, 3.0, seasonal=True, seasonal_model="additive"),
+            id="additive",
+        ),
+        pytest.param(
+            Theta(season_length=48, seasonal_model="multiplicative"),
+            lambda: fb.Theta(48, 2.0, seasonal=True, seasonal_model="multiplicative"),
+            id="multiplicative",
+        ),
+    ],
+)
+def test_theta_matches_orchid(
+    make_series: MakeSeries, forecaster: Theta, orchid: Callable[[], fb.Theta]
+) -> None:
+    history = make_series(240)  # positive, as a multiplicative season needs
+    model = orchid()
+    model.fit(history.complete_values())
+    lower, upper = model.predict_interval(60, 0.8)
+    result = forecaster.forecast(history, 60, levels=(0.8,))
+    assert result.mean == tuple(model.predict(60))
+    assert (result.intervals[0].lower, result.intervals[0].upper) == (tuple(lower), tuple(upper))
+    assert result.residuals == tuple(model.resid())
+    assert result.params["alpha"] == model.alpha_
+
+
+@pytest.mark.parametrize("theta", [1.0, 2.0, 4.0])
+def test_theta_drifts_by_its_share_of_the_least_squares_slope(
+    make_series: MakeSeries, theta: float
+) -> None:
+    history = make_series(240)
+    values = history.complete_values()
+    drift = (theta - 1) / theta * linear_regression(range(len(values)), values).slope
+    result = Theta(theta=theta).forecast(history, 3)
+    assert _number(result.params, "drift") == pytest.approx(drift, abs=1e-12)
+    steps = [later - earlier for earlier, later in pairwise(result.mean)]
+    assert steps == pytest.approx([drift, drift], abs=1e-12)
+
+
+def test_ar_matches_orchid_after_its_placeholder_residuals(make_series: MakeSeries) -> None:
+    history = make_series(150, level=0.0)
+    model = fb.ARForecaster(3, method="yule_walker")
+    model.fit(history.complete_values())
+    lower, upper = model.predict_interval(5, 0.95)
+    result = AR(3).forecast(history, 5, levels=(0.95,))
+    assert result.mean == tuple(model.predict(5))
+    # The bands are Orchid's own: its sigma2 never included the placeholder residuals.
+    assert (result.intervals[0].lower, result.intervals[0].upper) == (tuple(lower), tuple(upper))
+    assert model.resid()[:3] == [0.0] * 3
+    assert result.residuals == tuple(model.resid()[3:])
+    assert result.params == {
+        "p": 3,
+        "coefficients": tuple(model.phi_),
+        "intercept": model.c_,
+        "sigma2": model.sigma2_,
+    }
+
+
+def test_ar_reverts_to_the_mean_where_least_squares_would_extend_a_trend() -> None:
+    # Least squares fits this line exactly with a unit root, so it would forecast 200, 201, ...
+    mean = AR(1).forecast(LINE, 3).mean
+    assert 199.0 > mean[0] > mean[1] > mean[2] > 99.5  # the line's mean
+
+
+@pytest.mark.parametrize(
+    "forecaster",
+    [Theta(season_length=48), Theta(season_length=48, seasonal_model="multiplicative"), AR(3)],
+    ids=repr,
+)
+def test_theta_and_ar_scale_with_the_data_without_rescaling(
+    make_series: MakeSeries, forecaster: Forecaster
+) -> None:
+    # Unlike ARIMA's, these fits have no absolute floors in the data's units, bar the
+    # multiplicative decomposition's: it ignores trend values within 1e-12 of zero. Theta's
+    # search for alpha stops within 1e-8, so rounding at each scale moves it by about that much.
+    values = make_series(240).complete_values()
+    base = forecaster.forecast(HalfHourlySeries(START, values), 4)
+    for scale in (1e-7, 1e3):
+        scaled = forecaster.forecast(HalfHourlySeries(START, [v * scale for v in values]), 4)
+        assert scaled.mean == pytest.approx([v * scale for v in base.mean], rel=1e-6)
+        for band, base_band in zip(scaled.intervals, base.intervals, strict=True):
+            assert band.upper == pytest.approx([v * scale for v in base_band.upper], rel=1e-6)

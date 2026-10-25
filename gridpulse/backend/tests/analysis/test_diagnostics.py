@@ -1,16 +1,25 @@
+import cmath
 import math
 import random
 import statistics
 from collections.abc import Callable
+from dataclasses import replace
 from datetime import UTC, datetime
+from typing import Literal
 
 import pytest
 
 from gridpulse.analysis.algorithms.diagnostics import (
     Correlogram,
     CrossCorrelogram,
+    DifferenceOrders,
+    UnitRootTest,
+    adf_test,
+    ar_spectrum,
     autocorrelation,
     cross_correlation,
+    difference_orders,
+    kpss_test,
     partial_autocorrelation,
     residual_diagnostics,
 )
@@ -21,7 +30,9 @@ from gridpulse.analysis.algorithms.errors import (
     InvalidInputError,
     MissingDataError,
 )
+from gridpulse.analysis.algorithms.forecasting import AutoARIMA
 from gridpulse.analysis.algorithms.orchid import autoregressive as ar
+from gridpulse.analysis.algorithms.orchid import smoothing as sm
 from gridpulse.analysis.algorithms.orchid import spectral as sp
 from gridpulse.analysis.algorithms.series import HALF_HOUR, HalfHourlySeries
 
@@ -29,6 +40,7 @@ START = datetime(2026, 10, 1, tzinfo=UTC)
 Z_95 = statistics.NormalDist().inv_cdf(0.975)
 MakeSeries = Callable[..., HalfHourlySeries]
 MakeValues = Callable[..., list[float]]
+Regression = Literal["c", "ct"]
 
 VARYING = HalfHourlySeries(START, [math.sin(i) for i in range(20)])
 CORRELOGRAMS: dict[str, Callable[..., Correlogram | CrossCorrelogram]] = {
@@ -37,12 +49,25 @@ CORRELOGRAMS: dict[str, Callable[..., Correlogram | CrossCorrelogram]] = {
     "ccf_response": lambda series, **options: cross_correlation(series, VARYING, **options),
     "ccf_driver": lambda series, **options: cross_correlation(VARYING, series, **options),
 }
+UNIT_ROOT_TESTS: dict[str, Callable[..., UnitRootTest]] = {"adf": adf_test, "kpss": kpss_test}
+# The stationarity diagnostics and the AR spectrum, with options valid for 60 values.
+STATIONARITY_AND_SPECTRA: dict[str, Callable[[HalfHourlySeries], object]] = {
+    "adf": lambda series: adf_test(series, lags=1),
+    "kpss": lambda series: kpss_test(series, lags=1),
+    "difference_orders": difference_orders,
+    "ar_spectrum": lambda series: ar_spectrum(series, order=1),
+}
 
 
 def _demeaned(series: HalfHourlySeries) -> list[float]:
     values = series.complete_values()
     mean = statistics.fmean(values)
     return [value - mean for value in values]
+
+
+def _levels(result: ar.UnitRootTestResult) -> dict[float, float]:
+    """Orchid's critical values, whose float levels it annotates as strings."""
+    return {float(level): value for level, value in result.critical_values.items()}
 
 
 def test_ar1_acf_decays_geometrically_and_pacf_cuts_off(make_series: MakeSeries) -> None:
@@ -299,3 +324,372 @@ def test_residual_diagnostics_validate_lags() -> None:
     for options in invalid:
         with pytest.raises(InvalidInputError):
             residual_diagnostics(residuals, **options)
+
+
+@pytest.mark.parametrize(
+    ("regression", "kpss_null"), [("c", "level stationary"), ("ct", "trend stationary")]
+)
+def test_unit_root_tests_equal_orchid_on_centred_range_scaled_data(
+    make_series: MakeSeries, regression: Regression, kpss_null: str
+) -> None:
+    series = make_series(300, level=0.0, seed=12)  # crosses zero, often negative
+    values = series.complete_values()
+    spread = max(values) - min(values)
+    centre = min(values) + spread / 2
+    scaled = [(value - centre) / spread for value in values]
+    adf = adf_test(series, lags=6, regression=regression)
+    expected = ar.adf_test(scaled, maxlag=6, autolag=None, regression=regression)  # type: ignore[arg-type]
+    assert (adf.test, adf.null_hypothesis, adf.regression) == ("adf", "unit root", regression)
+    assert (adf.statistic, adf.lags, adf.nobs) == (expected.statistic, 6, 293)
+    assert adf.critical_values == _levels(expected)
+    assert list(adf.critical_values) == [0.01, 0.05, 0.1]
+    kpss = kpss_test(series, lags=48, regression=regression)
+    expected = ar.kpss_test(scaled, regression=regression, lags=48)
+    assert (kpss.test, kpss.null_hypothesis, kpss.regression) == ("kpss", kpss_null, regression)
+    assert (kpss.statistic, kpss.lags, kpss.nobs) == (expected.statistic, 48, 300)
+    assert kpss.critical_values == _levels(expected)
+    assert list(kpss.critical_values) == [0.01, 0.025, 0.05, 0.1]
+
+
+@pytest.mark.parametrize("regression", ["c", "ct"])
+@pytest.mark.parametrize("name", list(UNIT_ROOT_TESTS))
+def test_unit_root_statistics_do_not_depend_on_units(
+    synthetic_values: MakeValues, name: str, regression: Regression
+) -> None:
+    test = UNIT_ROOT_TESTS[name]
+    values = synthetic_values(300, seed=5)
+    expected = test(HalfHourlySeries(START, values), lags=6, regression=regression).statistic
+    # Orchid's absolute floors shift its raw ADF and KPSS statistics in units this small, and its
+    # ridges shift ADF by about 1e-4 relative at this offset (3e4 ranges) unless it is centred.
+    for transformed in ([value * 1e-9 for value in values], [value + 1e6 for value in values]):
+        result = test(HalfHourlySeries(START, transformed), lags=6, regression=regression)
+        assert result.statistic == pytest.approx(expected, rel=1e-9)
+
+
+@pytest.mark.parametrize("regression", ["c", "ct"])
+def test_a_random_walk_has_a_unit_root_and_white_noise_does_not(
+    make_series: MakeSeries, regression: Regression
+) -> None:
+    walk = make_series(300, level=0.0, amplitude=0.0, phi=1.0, noise=1.0, seed=3)
+    noise = make_series(300, level=0.0, amplitude=0.0, phi=0.0, noise=1.0, seed=3)
+    assert adf_test(walk, lags=4, regression=regression).rejected_at == ()
+    assert kpss_test(walk, lags=12, regression=regression).rejected_at == (0.01, 0.025, 0.05, 0.1)
+    assert adf_test(noise, lags=4, regression=regression).rejected_at == (0.01, 0.05, 0.1)
+    assert kpss_test(noise, lags=12, regression=regression).rejected_at == ()
+
+
+@pytest.mark.parametrize(
+    ("name", "statistic", "rejected_at"),
+    [
+        ("adf", -3.5, (0.01, 0.05, 0.1)),
+        ("adf", -2.861, (0.1,)),  # the 5% critical value itself
+        ("adf", 5.0, ()),
+        ("kpss", 0.5, (0.05, 0.1)),
+        ("kpss", 0.739, (0.025, 0.05, 0.1)),  # the 1% critical value itself
+        ("kpss", 0.1, ()),
+    ],
+)
+def test_rejected_at_lists_the_levels_whose_critical_values_the_statistic_passes(
+    monkeypatch: pytest.MonkeyPatch,
+    make_series: MakeSeries,
+    name: str,
+    statistic: float,
+    rejected_at: tuple[float, ...],
+) -> None:
+    orchid: Callable[..., ar.UnitRootTestResult] = getattr(ar, f"{name}_test")
+
+    def fixed(*args: object, **kwargs: object) -> ar.UnitRootTestResult:
+        return replace(orchid(*args, **kwargs), statistic=statistic)
+
+    monkeypatch.setattr(ar, f"{name}_test", fixed)
+    assert UNIT_ROOT_TESTS[name](make_series(40), lags=1).rejected_at == rejected_at
+
+
+@pytest.mark.parametrize(
+    ("regression", "n", "largest", "nobs"),
+    [
+        ("c", 31, 13, 17),
+        ("ct", 31, 12, 18),  # the trend column costs a lag
+        ("ct", 120, 48, 71),  # the cost cap
+    ],
+)
+def test_adf_accepts_lags_up_to_the_largest_orchid_runs_unchanged(
+    make_series: MakeSeries, regression: Regression, n: int, largest: int, nobs: int
+) -> None:
+    # Orchid would cap larger lags, or give a statistic of 0 for "insufficient data".
+    series = make_series(n)
+    result = adf_test(series, lags=largest, regression=regression)
+    assert (result.lags, result.nobs) == (largest, nobs)
+    for lags in (-1, largest + 1):
+        with pytest.raises(InvalidInputError) as excinfo:
+            adf_test(series, lags=lags, regression=regression)
+        assert excinfo.type is InvalidInputError
+
+
+@pytest.mark.parametrize("regression", ["c", "ct"])
+def test_kpss_takes_at_most_a_fifth_as_many_lags_as_values(
+    make_series: MakeSeries, regression: Regression
+) -> None:
+    series = make_series(240)
+    assert kpss_test(series, lags=48, regression=regression).lags == 48
+    for lags in (-1, 49):
+        with pytest.raises(InvalidInputError) as excinfo:
+            kpss_test(series, lags=lags, regression=regression)
+        assert excinfo.type is InvalidInputError
+
+
+@pytest.mark.parametrize("name", list(UNIT_ROOT_TESTS))
+@pytest.mark.parametrize(
+    "options",
+    [
+        {"lags": 2.0},
+        {"lags": True},
+        {"lags": 2, "regression": "n"},  # Orchid's ADF drops the constant; its KPSS uses "c"
+        {"lags": 2, "regression": "ctt"},  # Orchid's ADF raises KeyError; its KPSS uses "c"
+        {"lags": 2, "regression": None},
+    ],
+    ids=["float_lags", "bool_lags", "no_constant", "quadratic_trend", "no_regression"],
+)
+def test_unit_root_tests_reject_invalid_options(
+    make_series: MakeSeries, name: str, options: dict[str, object]
+) -> None:
+    with pytest.raises(InvalidInputError) as excinfo:
+        UNIT_ROOT_TESTS[name](make_series(60), **options)
+    assert excinfo.type is InvalidInputError
+
+
+@pytest.mark.parametrize("name", list(UNIT_ROOT_TESTS))
+def test_unit_root_tests_need_30_values(make_series: MakeSeries, name: str) -> None:
+    UNIT_ROOT_TESTS[name](make_series(30), lags=1)
+    with pytest.raises(InsufficientDataError) as excinfo:
+        UNIT_ROOT_TESTS[name](make_series(29), lags=1)
+    assert (excinfo.value.required, excinfo.value.available) == (30, 29)
+
+
+@pytest.mark.parametrize("name", list(STATIONARITY_AND_SPECTRA))
+def test_stationarity_and_spectra_reject_missing_or_constant_values(
+    make_series: MakeSeries, name: str
+) -> None:
+    gappy = list(make_series(60).values)
+    gappy[7] = None
+    with pytest.raises(MissingDataError):
+        STATIONARITY_AND_SPECTRA[name](HalfHourlySeries(START, gappy))
+    with pytest.raises(DegenerateDataError):
+        STATIONARITY_AND_SPECTRA[name](HalfHourlySeries(START, [-25.0] * 60))
+
+
+@pytest.mark.parametrize(
+    ("name", "values"),
+    [
+        ("adf", [1e308, -1e308] * 30),  # the range overflows
+        ("kpss", [1e308, -1e308] * 30),
+        ("difference_orders", [1e308, -1e308] * 30),
+        ("ar_spectrum", [1e160 * math.sin(i) for i in range(60)]),  # Burg's variance overflows
+    ],
+)
+def test_stationarity_and_spectra_report_overflow_as_calculation_error(
+    name: str, values: list[float]
+) -> None:
+    with pytest.raises(CalculationError):
+        STATIONARITY_AND_SPECTRA[name](HalfHourlySeries(START, values))
+
+
+def test_unit_root_tests_report_orchid_failures(
+    monkeypatch: pytest.MonkeyPatch, make_series: MakeSeries
+) -> None:
+    series = make_series(40)
+    insufficient = ar.UnitRootTestResult(
+        "ADF", 0.0, None, 0, 0, {}, "c", "unit root (non-stationary)", False, ["insufficient data"]
+    )
+    monkeypatch.setattr(ar, "adf_test", lambda *args, **kwargs: insufficient)
+    with pytest.raises(CalculationError):
+        adf_test(series, lags=1)
+    kpss: Callable[..., ar.UnitRootTestResult] = ar.kpss_test
+
+    def non_finite(*args: object, **kwargs: object) -> ar.UnitRootTestResult:
+        return replace(kpss(*args, **kwargs), statistic=math.nan)
+
+    monkeypatch.setattr(ar, "kpss_test", non_finite)
+    with pytest.raises(CalculationError):
+        kpss_test(series, lags=1)
+
+    def broken(*args: object, **kwargs: object) -> None:
+        raise ZeroDivisionError("boom")
+
+    monkeypatch.setattr(ar, "kpss_test", broken)
+    with pytest.raises(CalculationError) as excinfo:
+        kpss_test(series, lags=1)
+    assert isinstance(excinfo.value.__cause__, ZeroDivisionError)
+
+
+@pytest.mark.parametrize(
+    ("options", "required"),
+    [
+        ({}, 30),
+        ({"season_length": 48}, 288),  # six seasons to test for a seasonal difference
+        ({"season_length": 3}, 33),  # 30 values left for KPSS after a seasonal difference
+        ({"season_length": 48, "seasonal_differencing": 1}, 78),
+    ],
+    ids=["no_season", "tested_daily_season", "tested_short_season", "seasonal_difference"],
+)
+def test_difference_orders_need_enough_values_for_their_tests(
+    make_series: MakeSeries, options: dict[str, int], required: int
+) -> None:
+    difference_orders(make_series(required), **options)
+    with pytest.raises(InsufficientDataError) as excinfo:
+        difference_orders(make_series(required - 1), **options)
+    assert excinfo.value.required == required
+
+
+@pytest.mark.parametrize(
+    "options",
+    [
+        {"season_length": 2},  # Orchid's seasonal test fires for every series at length 2
+        {"seasonal_differencing": 1},
+        {"season_length": 48, "seasonal_differencing": 0},
+        {"season_length": 48, "seasonal_differencing": 2},
+        {"season_length": 1, "seasonal_differencing": 1},
+        {"season_length": 48.0},
+        {"season_length": 48, "seasonal_differencing": True},
+    ],
+    ids=[
+        "tested_season_of_2",
+        "difference_without_length",
+        "length_without_difference",
+        "two_seasonal_differences",
+        "season_of_1",
+        "float_season",
+        "bool_difference",
+    ],
+)
+def test_difference_orders_validate_the_season_as_auto_arima_does(
+    make_series: MakeSeries, options: dict[str, object]
+) -> None:
+    with pytest.raises(InvalidInputError) as excinfo:
+        AutoARIMA(**options)  # type: ignore[arg-type]
+    assert excinfo.type is InvalidInputError
+    with pytest.raises(InvalidInputError) as excinfo:
+        difference_orders(make_series(300), **options)  # type: ignore[arg-type]
+    assert excinfo.type is InvalidInputError
+
+
+@pytest.mark.parametrize("scale", [1.0, 1e-7])  # Orchid's tests have absolute floors
+def test_white_noise_needs_no_difference_and_a_random_walk_a_regular_one(
+    make_series: MakeSeries, scale: float
+) -> None:
+    noise = make_series(288, level=0.0, amplitude=0.0, phi=0.0, noise=scale)
+    walk = make_series(288, level=0.0, amplitude=0.0, phi=1.0, noise=scale)
+    assert difference_orders(noise) == DifferenceOrders(regular=0, seasonal=0)
+    assert difference_orders(noise, season_length=48) == DifferenceOrders(regular=0, seasonal=0)
+    assert difference_orders(walk) == DifferenceOrders(regular=1, seasonal=0)
+
+
+def test_difference_orders_respect_an_explicit_seasonal_difference(
+    make_series: MakeSeries,
+) -> None:
+    noise = make_series(288, level=0.0, amplitude=0.0, phi=0.0)
+    daily = make_series(288)
+    assert difference_orders(noise, season_length=48, seasonal_differencing=1).seasonal == 1
+    assert difference_orders(daily, season_length=48).seasonal == 1
+    assert difference_orders(daily, seasonal_differencing=0).seasonal == 0
+
+
+def test_an_exact_daily_repeat_needs_only_its_seasonal_difference() -> None:
+    # The seasonal difference is identically zero, which AutoARIMA then rejects as constant.
+    repeat = HalfHourlySeries(START, [float(t % 48) for t in range(78)])
+    orders = difference_orders(repeat, season_length=48, seasonal_differencing=1)
+    assert orders == DifferenceOrders(regular=0, seasonal=1)
+
+
+def test_ar1_spectrum_matches_the_closed_form(make_series: MakeSeries) -> None:
+    series = make_series(2000, level=0.0, amplitude=0.0, phi=0.6, noise=1.0, seed=1)
+    spectrum = ar_spectrum(series, order=1, nfft=16)
+    phi, _, sigma2 = sm.burg(series.complete_values(), 1)
+    assert (spectrum.order, spectrum.coefficients) == (1, tuple(phi))
+    assert spectrum.innovation_variance == sigma2
+    assert spectrum.coefficients[0] == pytest.approx(0.6, abs=0.05)  # Orchid's sign convention
+    assert spectrum.frequencies == pytest.approx([k / 16 for k in range(9)])
+    # One-sided: each frequency strictly between 0 and 0.5 also carries its negative's power.
+    weights = [1.0, *[2.0] * 7, 1.0]
+    expected = [
+        weight * sigma2 / abs(1 - phi[0] * cmath.exp(-2j * math.pi * f)) ** 2
+        for weight, f in zip(weights, spectrum.frequencies, strict=True)
+    ]
+    assert spectrum.density == pytest.approx(expected, rel=1e-12)
+
+
+@pytest.mark.parametrize(
+    ("transform", "factor"),
+    [
+        (lambda value: value * 1e-7, 1e-14),
+        (lambda value: value * 1e3, 1e6),
+        (lambda value: -value, 1.0),
+        (lambda value: value + 1e3, 1.0),
+    ],
+    ids=["x1e-7", "x1e3", "negated", "offset"],
+)
+def test_ar_spectrum_density_scales_with_the_square_of_the_units(
+    make_series: MakeSeries, transform: Callable[[float], float], factor: float
+) -> None:
+    values = make_series(500, level=0.0).complete_values()
+    expected = ar_spectrum(HalfHourlySeries(START, values), order=4, nfft=64)
+    result = ar_spectrum(HalfHourlySeries(START, [transform(v) for v in values]), order=4, nfft=64)
+    assert result.coefficients == pytest.approx(expected.coefficients, rel=1e-9)
+    assert result.innovation_variance == pytest.approx(
+        factor * expected.innovation_variance, rel=1e-9
+    )
+    assert result.density == pytest.approx([factor * d for d in expected.density], rel=1e-9)
+
+
+def test_a_daily_cycle_peaks_at_one_cycle_per_48_half_hours(make_series: MakeSeries) -> None:
+    spectrum = ar_spectrum(make_series(672, seed=3), order=48)
+    assert len(spectrum.frequencies) == len(spectrum.density) == 673
+    peak = max(range(len(spectrum.density)), key=spectrum.density.__getitem__)
+    assert spectrum.frequencies[peak] == pytest.approx(1 / 48)
+
+
+def test_ar_spectrum_validates_order_and_nfft(make_series: MakeSeries) -> None:
+    series = make_series(20)
+    assert ar_spectrum(series, order=9, nfft=2).frequencies == (0.0, 0.5)
+    ar_spectrum(make_series(4), order=1)
+    with pytest.raises(InsufficientDataError):
+        ar_spectrum(make_series(3), order=1)
+    invalid: list[dict[str, object]] = [
+        {"order": 0},
+        {"order": 10},  # beyond n // 2 - 1
+        {"order": 2.0},
+        {"order": True},
+        {"order": 1, "nfft": 1},
+        {"order": 1, "nfft": 64.0},
+    ]
+    for options in invalid:
+        with pytest.raises(InvalidInputError) as excinfo:
+            ar_spectrum(series, **options)  # type: ignore[arg-type]
+        assert excinfo.type is InvalidInputError
+
+
+@pytest.mark.parametrize(
+    ("values", "order"),
+    [
+        ([(-1.0) ** t for t in range(40)], 2),
+        ([50 + 10 * math.sin(2 * math.pi * t / 48) for t in range(672)], 48),
+        ([math.cos(2 * math.pi * t / 48) for t in range(672)], 24),
+    ],
+    ids=["no_innovations", "rounding_innovations", "explosive"],
+)
+def test_ar_spectrum_rejects_an_exactly_predictable_series(values: list[float], order: int) -> None:
+    # Once Burg's recursion predicts a series exactly it runs on rounding errors, which can
+    # leave no innovations, innovations of rounding size or an explosive model.
+    with pytest.raises(DegenerateDataError):
+        ar_spectrum(HalfHourlySeries(START, values), order=order)
+
+
+def test_ar_spectrum_accepts_poles_near_the_unit_circle() -> None:
+    # An AR(2) daily cycle whose poles have modulus 0.99.
+    phi = (2 * 0.99 * math.cos(2 * math.pi / 48), -(0.99**2))
+    rng = random.Random(0)
+    values = [0.0, 0.0]
+    for _ in range(2000):
+        values.append(phi[0] * values[-1] + phi[1] * values[-2] + rng.gauss(0.0, 1.0))
+    spectrum = ar_spectrum(HalfHourlySeries(START, values), order=2)
+    assert spectrum.coefficients == pytest.approx(phi, abs=0.02)

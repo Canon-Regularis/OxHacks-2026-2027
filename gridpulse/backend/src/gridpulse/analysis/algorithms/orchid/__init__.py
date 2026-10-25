@@ -28,4 +28,8 @@ VENDORED_FILES: Final[Mapping[str, tuple[str, str]]] = {
         "algorithms/core/spectral/spectral_template.py",
         "b3310282d9fc0a03c5cbdeba96e8b2ee80ed5f5589a01ed65b4089120ec8b5fd",
     ),
+    "state_space.py": (
+        "algorithms/core/forecasting/state_space/state_space_template.py",
+        "541d66eba3f66eb2650a73ea8d9088487bcb63e8b032d21d629730407156f891",
+    ),
 }

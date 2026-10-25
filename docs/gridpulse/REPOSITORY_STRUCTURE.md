@@ -50,7 +50,7 @@ gridpulse/                        # All application code and operational files
         contract.py                 # Algorithm interface and input columns
         features.py                 # ASOF/latest input frame built in SQL
         service.py                  # Prepare → calculate → check → store/retrieve
-        algorithms/                 # Registered algorithms (see __init__.py) and the Orchid P0 adapters
+        algorithms/                 # Registered algorithms (see __init__.py) and the Orchid adapters
           orchid/                   # Orchid modules vendored verbatim
       agent/
         service.py                  # Optional Gemini orchestration
@@ -119,7 +119,7 @@ For expensive calculations, run analysis after an import and return stored compl
 
 ## Reference code and fixtures
 
-Inspect Orchid, WWW and Components before reuse. Keep reference checkouts outside the application tree; bring selected files into their responsibility folders with licence/attribution, and record upstream revisions in [AGENTS.md](../../AGENTS.md). Orchid's P0 modules are vendored in `analysis/algorithms/orchid/`. No WWW or Components code is included yet.
+Inspect Orchid, WWW and Components before reuse. Keep reference checkouts outside the application tree; bring selected files into their responsibility folders with licence/attribution, and record upstream revisions in [AGENTS.md](../../AGENTS.md). Orchid's P0 and P1 modules are vendored in `analysis/algorithms/orchid/`. No WWW or Components code is included yet.
 
 Synthetic API examples belong in `gridpulse/contracts/examples/` and must be visibly labelled during UI development. Real cached demo data belongs in `gridpulse/data/demo/` with provenance. Raw downloads stay in ignored `gridpulse/data/raw/`.
 
