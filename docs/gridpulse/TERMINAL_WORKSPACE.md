@@ -14,6 +14,8 @@ The Terminal uses one compact toolbar: workspace tabs, date range, Search / Add 
 6. Linked time charts share range/zoom and selected UTC instant. Hover reads cached values locally; click or arrow-key selection loads full period details. The inspector preloads source values for hover. Clicking a whole-run table's period outside the current range opens that day in its linked group.
 7. Use **Workspaces** to rename, duplicate, reset, export/import or save the current view as a reusable preset. Save and search/load presets in Workspaces; they are not part of the content drawer. Built-ins remain unchanged.
 
+Charts provide **Export chart CSV** for their loaded range and series, with UTC timestamps and units. Tables and comparisons provide **Export table CSV** for the selected whole-run table. Missing values export as empty cells; numeric zero stays zero. **Export configuration** in Workspaces remains JSON for restoring layouts and preferences.
+
 A chart accepts at most two overlay unit axes; extra units use separate panes. More than 12 selected outputs require choosing visible outputs in settings. Separate panes scroll when the available tile cannot display them readably. Indexing is explicit (first non-zero value = 100); all-zero series cannot be indexed. Raw values remain in the cursor readout.
 
 Market preset: source chart, period inspector and notes/context. Algorithm preset: algorithm chart, same-run table and notes/context. Generic comparisons choose a recognised error metric when present (MASE, MAE, RMSE), otherwise a numeric column; users can change it. Bar length describes magnitude and does not imply a ranking. Tables retain whole-run coverage when charts zoom.

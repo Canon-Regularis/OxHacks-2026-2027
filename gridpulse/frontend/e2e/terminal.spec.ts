@@ -137,6 +137,18 @@ test('Terminal renders linked data, keeps hover local and saves the workspace', 
   await expect(
     page.getByRole('tab', { name: 'Market investigation', exact: true }),
   ).toBeVisible();
+  const csvDownload = page.waitForEvent('download');
+  await page
+    .getByRole('button', { name: 'Export chart CSV', exact: true })
+    .click();
+  const downloaded = await csvDownload;
+  expect(downloaded.suggestedFilename()).toBe('eisengrau-series.csv');
+  const stream = await downloaded.createReadStream();
+  const chunks = [];
+  for await (const chunk of stream!) chunks.push(chunk);
+  const contents = Buffer.concat(chunks).toString('utf8');
+  expect(contents).toContain('"timestamp_utc"');
+  expect(contents).toContain('"price (GBP/MWh)"');
   const before = requests.length;
   const plot = page.getByRole('slider', { name: 'Chart selected period' });
   await plot.hover({ position: { x: 300, y: 100 } });
