@@ -1,5 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state';
+  import SettingsDrawer from './SettingsDrawer.svelte';
 </script>
 
 <header class="site-header">
@@ -24,15 +25,11 @@
       href="/status"
       aria-current={page.url.pathname === '/status' ? 'page' : undefined}
       >Status</a
-    ><button disabled title="Methods is planned for the MVP"
-      >Methods <span>Soon</span></button
     ><a
       href="/about"
       aria-current={page.url.pathname === '/about' ? 'page' : undefined}
       >About</a
     >
   </nav>
-  <div class="header-status">
-    <span class="status-dot"></span>PUBLIC MARKET DATA
-  </div>
+  <SettingsDrawer />
 </header>

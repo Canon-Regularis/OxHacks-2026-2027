@@ -137,6 +137,18 @@ test('Terminal renders linked data, keeps hover local and saves the workspace', 
   await expect(
     page.getByRole('tab', { name: 'Market investigation', exact: true }),
   ).toBeVisible();
+  const csvDownload = page.waitForEvent('download');
+  await page
+    .getByRole('button', { name: 'Export chart CSV', exact: true })
+    .click();
+  const downloaded = await csvDownload;
+  expect(downloaded.suggestedFilename()).toBe('eisengrau-series.csv');
+  const stream = await downloaded.createReadStream();
+  const chunks = [];
+  for await (const chunk of stream!) chunks.push(chunk);
+  const contents = Buffer.concat(chunks).toString('utf8');
+  expect(contents).toContain('"timestamp_utc"');
+  expect(contents).toContain('"price (GBP/MWh)"');
   const before = requests.length;
   const plot = page.getByRole('slider', { name: 'Chart selected period' });
   await plot.hover({ position: { x: 300, y: 100 } });
@@ -777,6 +789,10 @@ test('Search Add has only content categories and Workspaces owns preset loading'
 }) => {
   await page.goto('/terminal');
   await expect(
+    page.getByRole('navigation', { name: 'Primary navigation' }),
+  ).not.toContainText('Methods');
+
+  await expect(
     page.locator('path[data-terminal-series="price"]'),
   ).toBeVisible();
   await expect(
@@ -799,6 +815,21 @@ test('Search Add has only content categories and Workspaces owns preset loading'
   ).toHaveCount(0);
   await page.getByRole('button', { name: 'Close drawer' }).click();
   await page.getByRole('button', { name: 'Workspaces', exact: true }).click();
+  const manager = page.getByRole('dialog', { name: 'Workspaces', exact: true });
+  await expect(
+    manager.getByRole('button', {
+      name: 'Reset to market preset',
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    manager.getByRole('button', {
+      name: 'Close current workspace',
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(manager.locator('summary')).toHaveCount(0);
+
   await expect(
     page.getByRole('button', { name: 'Market preset', exact: true }),
   ).toBeVisible();
