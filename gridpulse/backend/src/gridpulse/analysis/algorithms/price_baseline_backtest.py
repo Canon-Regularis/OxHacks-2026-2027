@@ -3,7 +3,7 @@
 These are the benchmarks the fitted models must beat. The fold machinery is in ``_backtest``.
 """
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, MutableMapping
 from typing import Any
 
 import pandas as pd
@@ -45,6 +45,7 @@ def run(
     max_folds: int,
     season_length: int,
     models: Mapping[str, Mapping[str, Any]],
+    memo: MutableMapping[str, str] | None = None,
 ) -> AlgorithmResult:
     return _backtest.run_backtest(
         frame,
@@ -54,6 +55,7 @@ def run(
         window=window,
         max_folds=max_folds,
         season_length=season_length,
+        memo=memo,
     )
 
 
@@ -81,6 +83,7 @@ ALGORITHM = Algorithm(
     },
     param_descriptions=_backtest.SETTING_DESCRIPTIONS,
     warmup=WINDOW * HALF_HOUR,
+    memo=True,
     limitations="Benchmarks every other forecaster must beat; point forecasts only are stored. "
     + _backtest.LIMITATIONS,
 )

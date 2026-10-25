@@ -217,6 +217,35 @@ def insert_table(conn: Connection, run_id: int, name: str, data: dict) -> None:
     )
 
 
+MEMO_KEEP_DAYS = 7
+
+
+def load_memo(conn: Connection, namespace: str) -> dict[str, str]:
+    """Every stored memo entry of one namespace: key -> value."""
+    rows = conn.execute("SELECT key, value FROM gridpulse.analysis_memo WHERE namespace = %s", (namespace,))
+    return dict(rows.fetchall())
+
+
+def save_memo(
+    conn: Connection, algorithm_id: str, namespace: str, new: dict[str, str], reused: Iterable[str]
+) -> None:
+    """Store new entries, mark reused ones as used now, and drop entries unused for a week."""
+    conn.execute(
+        "UPDATE gridpulse.analysis_memo SET used_at = now() WHERE namespace = %s AND key = ANY(%s)",
+        (namespace, list(reused)),
+    )
+    with conn.cursor() as cur:
+        cur.executemany(
+            "INSERT INTO gridpulse.analysis_memo (namespace, key, algorithm_id, value) VALUES (%s, %s, %s, %s)"
+            " ON CONFLICT (namespace, key) DO UPDATE SET value = EXCLUDED.value, used_at = now()",
+            [(namespace, key, algorithm_id, value) for key, value in new.items()],
+        )
+    conn.execute(
+        "DELETE FROM gridpulse.analysis_memo WHERE used_at < now() - make_interval(days => %s)",
+        (MEMO_KEEP_DAYS,),
+    )
+
+
 def table_names(conn: Connection, run_id: int) -> list[str]:
     rows = conn.execute(
         "SELECT name FROM gridpulse.analysis_tables WHERE run_id = %s ORDER BY name", (run_id,)

@@ -55,13 +55,14 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--to", dest="to_date", type=date.fromisoformat, required=True)
     p.add_argument("--cutoff", type=_aware, help="use only data available at this instant")
     p.add_argument("--param", type=_param, action="append", default=[], help="override a parameter: name=value")
+    p.add_argument("--no-memo", action="store_true", help="refit everything instead of reusing stored backtest folds")
 
     commands.add_parser("algorithms", help="list registered algorithms")
 
     p = commands.add_parser("refresh", help="rerun algorithms whose results are missing or stale")
     p.add_argument("algorithms", nargs="*", metavar="ALGORITHM", help="algorithm ids (default: all)")
     p.add_argument("--through", type=date.fromisoformat, help="last settlement day (default: latest complete)")
-    p.add_argument("--force", action="store_true", help="rerun even if up to date")
+    p.add_argument("--force", action="store_true", help="rerun even if up to date, refitting everything")
 
     args = parser.parse_args(argv)
 
@@ -78,7 +79,9 @@ def main(argv: list[str] | None = None) -> None:
     elif args.command == "analyse":
         start, end = range_utc(args.from_date, args.to_date)
         with _connect() as conn:
-            run_id = run_algorithm(conn, ALGORITHMS[args.algorithm], start, end, dict(args.param), args.cutoff)
+            run_id = run_algorithm(
+                conn, ALGORITHMS[args.algorithm], start, end, dict(args.param), args.cutoff, reuse=not args.no_memo
+            )
         print(f"run {run_id} succeeded")
 
     elif args.command == "refresh":

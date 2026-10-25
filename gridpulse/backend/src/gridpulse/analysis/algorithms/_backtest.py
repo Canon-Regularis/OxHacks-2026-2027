@@ -6,10 +6,15 @@ periods into the frame) and origins advance by ``horizon``, so every target peri
 forecast per model, made only from prices before its origin. Folds go through
 ``evaluation.backtest_folds`` one at a time, so a missing price excludes just the folds whose
 training window or targets contain it (status "missing_data") instead of the whole run. Every
-(model, origin) fit is independent, so they run in ``_parallel``'s process pool.
+(model, origin) fit is independent, so they run in ``_parallel``'s process pool. A fold is a
+function of its model, its prices and the fold settings alone, so ``memo`` keeps them, as JSON,
+under a hash of exactly those: a rerun a day later reuses every fold but the newest.
 """
 
-from collections.abc import Callable, Iterator, Mapping, Sequence
+import hashlib
+import json
+from collections.abc import Callable, Iterator, Mapping, MutableMapping, Sequence
+from contextlib import suppress
 from dataclasses import dataclass, replace
 from datetime import datetime
 from functools import partial
@@ -27,7 +32,7 @@ from gridpulse.analysis.algorithms.errors import (
     InvalidInputError,
     MissingDataError,
 )
-from gridpulse.analysis.algorithms.forecasting import Forecast, Forecaster
+from gridpulse.analysis.algorithms.forecasting import Forecast, Forecaster, PredictionInterval
 from gridpulse.analysis.algorithms.series import HALF_HOUR, HalfHourlySeries
 from gridpulse.analysis.contract import AlgorithmResult
 
@@ -136,9 +141,12 @@ def run_backtest(
     max_folds: int,
     season_length: int,
     fold_params: bool = False,
+    memo: MutableMapping[str, str] | None = None,
 ) -> AlgorithmResult:
     """Backtest every forecaster on ``frame["price_gbp_mwh"]``: forecast series for the range
-    after the first ``WINDOW`` rows, and the metrics, by_horizon, folds (and fold_params) tables."""
+    after the first ``WINDOW`` rows, and the metrics, by_horizon, folds (and fold_params) tables.
+
+    Folds found in ``memo`` are reused and the others are fitted and added to it."""
     horizon = require_int("horizon", horizon, minimum=1)
     window = require_int("window", window, minimum=1, maximum=WINDOW)
     max_folds = require_int("max_folds", max_folds, minimum=1)
@@ -151,11 +159,19 @@ def run_backtest(
             f"{days:g} days or raise max_folds"
         )
     spans = [series.window(origin - window, origin + horizon) for origin in origins]
+    settings = (window, horizon, season_length)
+    tasks = [(f, span) for f in forecasters.values() for span in spans]
+    keys = [_fold_key(forecaster, span, *settings) for forecaster, span in tasks]
+    memo = {} if memo is None else memo
+    known = {key: fold for key in keys if key in memo and (fold := _decoded(memo[key])) is not None}
+    missing = [i for i, key in enumerate(keys) if key not in known]
     fit = partial(_fold, window=window, horizon=horizon, season_length=season_length)
-    fitted = iter(
-        _parallel.run_all(fit, [(f, span) for f in forecasters.values() for span in spans])
-    )
-    folds = {name: [next(fitted) for _ in spans] for name in forecasters}
+    for i, fold in zip(missing, _parallel.run_all(fit, [tasks[i] for i in missing]), strict=True):
+        known[keys[i]] = fold
+        with suppress(TypeError):  # a param JSON cannot hold: refit it next time instead
+            memo[keys[i]] = _encoded(fold)
+    ordered = iter(known[key] for key in keys)
+    folds = {name: [next(ordered) for _ in spans] for name in forecasters}
     tables = {
         "metrics": pd.DataFrame(
             [_metrics(name, model_folds) for name, model_folds in folds.items()],
@@ -225,6 +241,104 @@ def _fold(
         fold.actual,
         fold.scores,
     )
+
+
+# Bump when _Fold, Forecast or what a fold computes changes shape, so old entries are not reused.
+_FOLD_FORMAT = 1
+
+
+def _fold_key(
+    forecaster: Forecaster, span: HalfHourlySeries, window: int, horizon: int, season_length: int
+) -> str:
+    """A hash of everything a fold depends on: the model and its settings (a frozen dataclass's
+    repr), its prices and their start, the fold settings and the interval levels."""
+    inputs = [
+        _FOLD_FORMAT, repr(forecaster), span.start.isoformat(), list(span.values),
+        window, horizon, season_length, list(LEVELS),
+    ]  # fmt: skip
+    return hashlib.sha256(json.dumps(inputs).encode()).hexdigest()
+
+
+def _encoded(fold: _Fold) -> str:
+    """The fold as JSON; floats keep their exact value (``repr`` round-trips)."""
+    forecast = fold.forecast
+    return json.dumps(
+        {
+            "origin": fold.origin.isoformat(),
+            "train_start": fold.train_start.isoformat(),
+            "train_size": fold.train_size,
+            "status": fold.status,
+            "message": fold.message,
+            "actual": fold.actual,
+            "scores": fold.scores,
+            "forecast": None
+            if forecast is None
+            else {
+                "source": forecast.source,
+                "params": _tagged(forecast.params),
+                "origin": forecast.origin.isoformat(),
+                "mean": forecast.mean,
+                "intervals": [[i.level, i.lower, i.upper] for i in forecast.intervals],
+                "interval_method": forecast.interval_method,
+                "warnings": forecast.warnings,
+            },
+        }
+    )
+
+
+def _decoded(text: str) -> _Fold | None:
+    """The fold ``_encoded`` wrote, or None for anything else, which is then refitted."""
+    try:
+        data = json.loads(text)
+        raw = data["forecast"]
+        forecast = None
+        if raw is not None:
+            forecast = Forecast(
+                source=raw["source"],
+                params=_untagged(raw["params"]),
+                origin=datetime.fromisoformat(raw["origin"]),
+                mean=tuple(raw["mean"]),
+                intervals=tuple(
+                    PredictionInterval(level, tuple(lower), tuple(upper))
+                    for level, lower, upper in raw["intervals"]
+                ),
+                interval_method=raw["interval_method"],
+                residuals=(),
+                warnings=tuple(raw["warnings"]),
+            )
+        return _Fold(
+            datetime.fromisoformat(data["origin"]),
+            datetime.fromisoformat(data["train_start"]),
+            data["train_size"],
+            data["status"],
+            data["message"],
+            forecast,
+            tuple(data["actual"]),
+            data["scores"],
+        )
+    except (ValueError, KeyError, TypeError):
+        return None
+
+
+def _tagged(value: object) -> object:
+    """Forecast.params in JSON, with tuples and mappings tagged so they come back as such."""
+    if isinstance(value, tuple):
+        return {"tuple": [_tagged(item) for item in value]}
+    if isinstance(value, Mapping):
+        return {"mapping": {str(key): _tagged(item) for key, item in value.items()}}
+    if value is None or isinstance(value, (bool, int, float, str)):
+        return value
+    raise TypeError(f"cannot store {type(value).__name__} in a fold")
+
+
+def _untagged(value: Any) -> Any:
+    if isinstance(value, dict):
+        if set(value) == {"tuple"}:
+            return tuple(_untagged(item) for item in value["tuple"])
+        if set(value) == {"mapping"}:
+            return {key: _untagged(item) for key, item in value["mapping"].items()}
+        raise ValueError(f"unknown tagged value {sorted(value)}")
+    return value
 
 
 def _ok(folds: Sequence[_Fold]) -> list[tuple[_Fold, Forecast]]:

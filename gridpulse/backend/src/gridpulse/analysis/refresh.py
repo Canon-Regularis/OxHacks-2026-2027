@@ -81,7 +81,8 @@ def refresh(
     through: date | None = None,
     force: bool = False,
 ) -> list[Outcome]:
-    """Bring each algorithm up to date, in order; a failure is recorded and the rest continue."""
+    """Bring each algorithm up to date, in order; a failure is recorded and the rest continue.
+    `force` reruns every algorithm from scratch, ignoring stored memo entries."""
     through = through or latest_complete_day(conn)
     if through is None:
         raise RuntimeError("No settlement prices are loaded, so there is nothing to refresh.")
@@ -95,7 +96,7 @@ def refresh(
         else:
             start, end = range_utc(from_date, to_date)
             try:
-                run_id = service.run_algorithm(conn, algorithm, start, end)
+                run_id = service.run_algorithm(conn, algorithm, start, end, reuse=not force)
                 outcome = Outcome(algorithm.id, from_date, to_date, "succeeded", run_id, reason, 0.0)
             except Exception as exc:  # run_algorithm has stored the failure on its run
                 detail = f"{reason}; {type(exc).__name__}: {exc}"

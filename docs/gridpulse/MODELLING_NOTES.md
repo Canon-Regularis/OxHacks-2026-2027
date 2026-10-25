@@ -71,7 +71,22 @@ Outputs are unchanged, so no algorithm versions moved. On the refresh windows to
 The pool only helps with more than one vCPU. A 1-vCPU VPS keeps only the in-process trims, which save about 7 s. Rejected options:
 
 - **Warm-starting each fold from the previous fold's parameters.** `ARIMA.fit` takes no start values; only the lower-level `css_estimate` does. `ETSForecaster` has none. Either change would alter results and need version bumps.
-- **Caching folds across refreshes.** After one new day, 55 of 56 folds are unchanged, so a cache would save the most. The algorithm contract forbids file access, though, so a cache would have to live in `service`/`refresh`.
+
+### Reusing folds between runs (memo)
+
+After one new day, 55 of a backtest's 56 origins see the same prices as in the previous run. The three backtests declare `memo=True` (see `analysis/contract.py`), so `run` also takes `memo`, a dict in which each fold is stored as JSON. Each fold is keyed by a hash of its model and settings, its prices with their start time, the fold settings and the interval levels. A run fits only the folds it does not find. A revised price changes the key of every fold that contains it, so those folds are refitted.
+
+The algorithm stays pure. `service.run_algorithm` loads the entries before the run and saves new ones in the same transaction as the results. Entries live in `gridpulse.analysis_memo` (migration 005), in a namespace that hashes the algorithm id, its version and every source file of the algorithms package, Orchid included. Any code change therefore starts afresh. Entries unused for 7 days are deleted on save, which keeps about 1 to 3 MB per backtest. `gridpulse refresh --force` and `gridpulse analyse --no-memo` ignore stored entries but still save new ones. Deleting rows only makes the next run slower.
+
+This was checked on Tiger dev in a transaction that was rolled back. Each backtest was run to 22 October, then to 23 October with the memo on one worker, then to 23 October from scratch on four. The two 23 October runs stored identical results and tables. Wall time of `run_algorithm` in seconds, including loading, the memo and storage:
+
+| Algorithm | Fresh, 4 workers | Memo, 1 worker |
+|---|---|---|
+| `price_forecast_backtest` | 31.0 | 3.1 |
+| `price_regression_backtest` | 9.9 | 1.9 |
+| `price_baseline_backtest` | 3.1 | 2.2 |
+
+A routine refresh therefore no longer needs more than one vCPU. The pool still matters for the first run after a code change or a version bump.
 
 ## Open questions and next steps
 

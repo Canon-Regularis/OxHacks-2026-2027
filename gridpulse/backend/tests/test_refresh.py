@@ -79,7 +79,8 @@ def test_refresh_reruns_only_stale_algorithms_and_survives_failures(monkeypatch)
     stale = {"price_forecast_backtest": "no run", "price_day_ahead_forecast": "no run"}
     monkeypatch.setattr(r, "stale_reason", lambda conn, algorithm, *days: stale.get(algorithm.id))
 
-    def run_algorithm(conn, algorithm, start, end):
+    def run_algorithm(conn, algorithm, start, end, reuse):
+        assert reuse  # stored backtest folds are reused unless forced
         if algorithm.id == "price_forecast_backtest":
             raise ValueError("boom")
         return 41
@@ -91,6 +92,13 @@ def test_refresh_reruns_only_stale_algorithms_and_survives_failures(monkeypatch)
     assert "ValueError: boom" in outcomes["price_forecast_backtest"].detail
     assert (outcomes["price_day_ahead_forecast"].status, outcomes["price_day_ahead_forecast"].run_id) == ("succeeded", 41)
     assert outcomes["price_rolling_signals"].status == "current"
+
+
+def test_forced_refresh_refits_from_scratch(monkeypatch):
+    reused = []
+    monkeypatch.setattr(r.service, "run_algorithm", lambda conn, a, start, end, reuse: reused.append(reuse) or 41)
+    r.refresh(None, [FORECAST], through=date(2026, 10, 23), force=True)
+    assert reused == [False]
 
 
 def test_refresh_needs_prices(monkeypatch):
