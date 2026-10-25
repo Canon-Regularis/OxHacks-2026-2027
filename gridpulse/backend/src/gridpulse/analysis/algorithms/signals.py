@@ -1,4 +1,4 @@
-"""Causal rolling features backed by Orchid (P0 #3, #4, #5).
+"""Causal rolling features backed by Orchid (P0 #3, #4, #5; P1 #19).
 
 Each function returns a series with its input's start and length. ``output[t]`` depends
 only on inputs up to ``t`` and is ``None`` while its window is incomplete or touches a
@@ -34,6 +34,24 @@ def trailing_weighted_mean(series: HalfHourlySeries, weights: Sequence[float]) -
     """Weights run oldest to newest: the last one applies to the newest value."""
     checked = list(require_weights(weights))
     return _per_run(series, len(checked) - 1, lambda run: sm.weighted_moving_average(run, checked))
+
+
+def trailing_savitzky_golay(series: HalfHourlySeries, window: int, degree: int) -> HalfHourlySeries:
+    """The newest point of the least-squares polynomial of ``degree`` (0 to 3) fitted to each
+    trailing ``window``, of more than ``degree + 1`` values so that the fit smooths.
+
+    Degree 0 is the trailing mean; higher degrees follow trends with less lag but more noise.
+    """
+    require_int("degree", degree, minimum=0, maximum=3)
+    require_int("window", window, minimum=degree + 2)
+    # The newest fitted value weights the window by the newest row of the hat matrix, which
+    # is symmetric, so that row is the fit to the newest unit vector: one solve, not one per
+    # weight.
+    design = fb.trend_features(window, degree, 1 - window)
+    with orchid_errors("least squares"):
+        weights = fb.matvec(design, fb.lstsq(design, [0.0] * (window - 1) + [1.0]))
+    taps = weights[::-1]  # lfilter's first tap multiplies the newest value
+    return _per_run(series, window - 1, lambda run: sp.lfilter(taps, [1.0], run))
 
 
 def exponential_moving_average(
