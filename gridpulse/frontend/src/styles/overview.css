@@ -543,7 +543,17 @@ select:focus-visible,
   color: var(--muted-foreground);
 }
 .about-spacer {
+  position: relative;
   margin: 0 -48px;
+}
+@media (min-width: 768px) {
+  .about-spacer::after {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    left: 50%;
+    border-left: 1px solid var(--border);
+  }
 }
 .about-pixel-section {
   width: auto;
@@ -583,7 +593,13 @@ select:focus-visible,
   font-size: 13px;
 }
 .about-story {
+  position: relative;
+  isolation: isolate;
   padding: 64px 0;
+  border-bottom: 1px solid var(--border);
+}
+.about-story:last-child {
+  border-bottom: 0;
 }
 .about-story h2 {
   font-size: 32px;

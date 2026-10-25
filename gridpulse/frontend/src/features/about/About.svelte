@@ -3,6 +3,7 @@
   import { useSettings, reducedMotion } from '$lib/state/settings.svelte';
   const settings = useSettings();
   import Hero from './Hero.svelte';
+  import DotBackground from '$lib/vendor/kcpc/backgrounds/dot-background/dot-background.svelte';
   import TextShimmer from '$lib/vendor/kcpc/text/text-shimmer/text-shimmer.svelte';
   import Card from '$lib/vendor/kcpc/primitives/card/card.svelte';
   let Pixels = $state<
@@ -54,7 +55,10 @@
         <p>{section.description}</p></Card
       >{/each}
   </div>
-  <div class="flex flex-row md:h-36 h-28 border-b border-border about-spacer">
+  <div
+    class="flex flex-row md:h-36 h-28 border-b border-border about-spacer"
+    aria-hidden="true"
+  >
     <div class="flex-1 md:pr-12 pr-8"></div>
     <div
       class="md:w-full w-fit max-w-6xl md:border-x border-l border-border"
@@ -97,6 +101,11 @@
     </section>
   </div>
   <section class="about-story" aria-labelledby="about-models-heading">
+    <DotBackground
+      class="about-story-dots absolute inset-0 -z-10 pointer-events-none"
+      mask={20}
+      dotsClassName="opacity-30"
+    />
     <div>
       <p class="eyebrow">LOOK BEYOND THE FORECAST</p>
       <h2 id="about-models-heading">Put every model to the test.</h2>
@@ -116,6 +125,11 @@
     </div>
   </section>
   <section class="about-data about-story" aria-labelledby="about-data-heading">
+    <DotBackground
+      class="about-story-dots absolute inset-0 -z-10 pointer-events-none"
+      mask={20}
+      dotsClassName="opacity-30"
+    />
     <div class="about-data-copy">
       <p class="eyebrow">DATA BEHIND THE ANALYSIS</p>
       <h2 id="about-data-heading">Trace every result to its source.</h2>
@@ -155,6 +169,11 @@
     </div>
   </section>
   <section class="about-story" aria-labelledby="about-workspace-heading">
+    <DotBackground
+      class="about-story-dots absolute inset-0 -z-10 pointer-events-none"
+      mask={20}
+      dotsClassName="opacity-30"
+    />
     <div>
       <p class="eyebrow">CONTINUE THE INVESTIGATION</p>
       <h2 id="about-workspace-heading">Pick up where you left off.</h2>
