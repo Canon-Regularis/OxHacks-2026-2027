@@ -2,6 +2,7 @@
   import '../styles/app.css';
   import '../styles/overview.css';
   import '../styles/settings.css';
+  import '../styles/learn.css';
   import { onMount, setContext } from 'svelte';
   import { page } from '$app/state';
   import SiteHeader from '../components/layout/SiteHeader.svelte';
