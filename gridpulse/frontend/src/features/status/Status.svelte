@@ -1,5 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { useSettings } from '$lib/state/settings.svelte';
+  import { formatDateTime } from '$lib/state/settings';
+  const settings = useSettings();
   import { api } from '$lib/api';
   import type { Catalog, Health } from '$lib/types';
   import InfoTooltip from '../../components/ui/InfoTooltip.svelte';
@@ -54,14 +57,8 @@
       .map((a) => `${a.id}: ${a.note}`),
   ]);
 
-  const utc = (iso: string | null) =>
-    iso
-      ? new Date(iso).toLocaleString('en-GB', {
-          timeZone: 'UTC',
-          dateStyle: 'medium',
-          timeStyle: 'short',
-        }) + ' UTC'
-      : '—';
+  const timestampLabel = (iso: string | null) =>
+    iso ? formatDateTime(iso, settings.timeDisplay) : '—';
 
   async function refresh() {
     controller?.abort();
@@ -201,7 +198,9 @@
           <thead
             ><tr
               ><th>Dataset</th><th>State</th><th>Loaded</th><th
-                >Coverage (UTC)</th
+                >Coverage ({settings.timeDisplay === 'utc'
+                  ? 'UTC'
+                  : 'UK local'})</th
               ><th class="num">Rows</th></tr
             ></thead
           >
@@ -216,8 +215,14 @@
                     >{WORDS[d.level]}</span
                   >{#if d.note}<small>{d.note}</small>{/if}</td
                 >
-                <td title={utc(d.loadedUtc)}>{ageLabel(d.loadedAgeHours)}</td>
-                <td>{utc(d.firstUtc)} → {utc(d.lastUtc)}</td>
+                <td title={timestampLabel(d.loadedUtc)}
+                  >{ageLabel(d.loadedAgeHours)}</td
+                >
+                <td
+                  >{timestampLabel(d.firstUtc)} → {timestampLabel(
+                    d.lastUtc,
+                  )}</td
+                >
                 <td class="num"
                   >{d.rows === null ? '—' : d.rows.toLocaleString('en-GB')}</td
                 >
@@ -244,7 +249,9 @@
                     >{WORDS[a.level]}</span
                   >{#if a.note}<small>{a.note}</small>{/if}</td
                 >
-                <td title={utc(a.finishedUtc)}>{ageLabel(a.ageHours)}</td>
+                <td title={timestampLabel(a.finishedUtc)}
+                  >{ageLabel(a.ageHours)}</td
+                >
               </tr>
             {/each}
           </tbody>

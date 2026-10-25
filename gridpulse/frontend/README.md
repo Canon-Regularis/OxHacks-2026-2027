@@ -69,3 +69,13 @@ Start with the [API reference](../../docs/gridpulse/FRONTEND_API.md) and [algori
 ## Terminal workspace
 
 See [Terminal usage and extension seams](../../docs/gridpulse/TERMINAL_WORKSPACE.md) and the [implementation plan](../../docs/gridpulse/TERMINAL_IMPLEMENTATION_PLAN.md). `/explore` redirects to `/terminal`. The page discovers stored algorithms through the shared catalogue and uses the canonical types in `src/lib/types.ts`. It supports docked snapping tiles, linked groups, source/algorithm overlays, tables/comparisons, notes, local workspaces/presets, import/export, recovery and compact navigation. Computation submission and agent execution remain deferred.
+
+## Workspace settings
+
+The app uses a dark theme. The navbar gear opens a keyboard-accessible modal drawer on every page. Preferences apply immediately and persist in `gridpulse:settings:v1`: UTC or UK local time, device/reduced motion, Overview chart gridlines, standard/bold Overview chart lines, and whether to remember the current view. UK time labels include BST/GMT, including the repeated clock-change hour; settlement dates and API requests retain their original meaning.
+
+The root layout owns settings and saved-view persistence for all routes, with storage events synchronising tabs. Turning off **Remember my view** removes the saved view while keeping the current session's selection; reloading starts with the latest day and default properties. **Reset settings** restores all settings and view defaults. Browser storage failures leave the current session usable. Market values are never saved as preferences.
+
+`src/lib/state/settings.ts` holds validated defaults and timestamp formatting; `settings.svelte.ts` provides per-layout reactive state. `SettingsDrawer.svelte` uses a native modal dialog with focus wrapping, Escape/backdrop dismissal and focus restoration. Presentation styles live in `src/styles/settings.css`. On narrow screens, disabled planned navigation items yield space to active pages and the gear. Automated checks cover storage corruption/denial, reloads, cross-tab updates, clock changes, chart behavior, keyboard focus, and mobile layouts.
+
+Terminal retains its own workspace and per-widget chart preferences. The navbar time display applies to Overview and Status; Terminal time labels follow its existing workspace settings.

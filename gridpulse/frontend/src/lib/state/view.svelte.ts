@@ -10,7 +10,7 @@ export interface ViewPreference {
   scanMetric: string;
 }
 const KEY = 'gridpulse:view:v1';
-function initial(): ViewPreference {
+export function initialViewPreference(): ViewPreference {
   return {
     version: 1,
     date: null,
@@ -40,7 +40,7 @@ export function readPreference(
   } catch {
     /* Browsers can disable storage or retain an older format. */
   }
-  return initial();
+  return initialViewPreference();
 }
 export function writePreference(
   storage: Pick<Storage, 'setItem'>,
@@ -53,6 +53,6 @@ export function writePreference(
   }
 }
 export function createViewState() {
-  const state = $state<ViewPreference>(initial());
+  const state = $state<ViewPreference>(initialViewPreference());
   return state;
 }
