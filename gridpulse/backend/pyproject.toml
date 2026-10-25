@@ -35,6 +35,8 @@ gridpulse = "gridpulse.cli:main"
 where = ["src"]
 
 [tool.pytest.ini_options]
+# Spawned test workers must import their targets with either pytest entry point.
+pythonpath = ["."]
 testpaths = ["tests"]
 addopts = ["--import-mode=importlib", "--strict-markers", "--strict-config", "-ra"]
 xfail_strict = true
