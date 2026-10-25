@@ -3,9 +3,9 @@
 </script>
 
 <svelte:head
-  ><title>About — Eisengrau</title><meta
+  ><title>About - Eisengrau</title><meta
     name="description"
-    content="Inspect published GB electricity forecasts, actual readings and settlement prices with Eisengrau. Learn about the data sources, daily view and analysis scope."
+    content="Analyse Great Britain’s electricity data with forecasting algorithms, backtests, rolling signals and diagnostics. Explore linked charts, tables and stored results in Eisengrau Terminal."
   /></svelte:head
 >
 <a class="skip-link" href="#about-main">Skip to About content</a><About />

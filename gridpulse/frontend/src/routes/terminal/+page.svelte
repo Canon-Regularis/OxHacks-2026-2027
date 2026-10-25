@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head
-  ><title>Terminal — Eisengrau</title><meta
+  ><title>Terminal - Eisengrau</title><meta
     name="description"
     content="A modular electricity-market research terminal with linked charts, stored algorithm results and saved workspaces."
   /></svelte:head

@@ -4,6 +4,7 @@
   import type { Catalog } from '$lib/types';
   import type { Widget, Binding, LinkContext } from '../model/types';
   import { loadWidget, TerminalError, type WidgetData } from '../data/client';
+  import { seriesCsv, tableCsv, downloadCsv } from '../data/export';
   import { isWidgetType } from '../model/document';
   import Chart from './Chart.svelte';
   import ResultTable from './ResultTable.svelte';
@@ -126,6 +127,23 @@
     <button onclick={() => retry++}>Retry widget</button>
   </div>
 {:else if data}
+  {#if widget.type === 'chart' && data.t.length && Object.keys(data.columns).length}
+    <button
+      onclick={() =>
+        downloadCsv(
+          seriesCsv(data!),
+          `eisengrau-series${data?.run ? `-run-${data.run.run_id}` : ''}.csv`,
+        )}>Export chart CSV</button
+    >
+  {:else if (widget.type === 'table' || widget.type === 'comparison') && table}
+    <button
+      onclick={() =>
+        downloadCsv(
+          tableCsv(table!),
+          `eisengrau-${tableName.replace(/[^a-zA-Z0-9_-]/g, '_')}${data?.run ? `-run-${data.run.run_id}` : ''}.csv`,
+        )}>Export table CSV</button
+    >
+  {/if}
   {#if data.warnings.length}<details class="terminal-warnings" open>
       <summary
         >{data.warnings.length} data warning{data.warnings.length === 1

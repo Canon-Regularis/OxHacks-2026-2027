@@ -522,6 +522,7 @@ select:focus-visible,
   max-width: 500px;
 }
 .about-cards {
+  padding-top: 36px;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
@@ -581,14 +582,14 @@ select:focus-visible,
   border-radius: 4px;
   font-size: 13px;
 }
-.about-definition {
+.about-story {
   padding: 64px 0;
 }
-.about-definition h2 {
+.about-story h2 {
   font-size: 32px;
   margin: 12px 0 24px;
 }
-.about-definition p:not(.eyebrow) {
+.about-story p:not(.eyebrow) {
   font-size: 14px;
   color: var(--muted-foreground);
   line-height: 1.8;
@@ -860,7 +861,7 @@ select:focus-visible,
   .about-pixel-copy {
     padding-block: 70px;
   }
-  .about-definition {
+  .about-story {
     padding: 44px 0;
   }
   .about-pixel-copy h2 {

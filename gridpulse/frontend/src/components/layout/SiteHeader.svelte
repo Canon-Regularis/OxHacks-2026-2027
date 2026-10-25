@@ -21,8 +21,6 @@
       href="/terminal"
       aria-current={page.url.pathname === '/terminal' ? 'page' : undefined}
       >Terminal</a
-    ><button disabled title="Methods is planned for the MVP"
-      >Methods <span>Soon</span></button
     ><a
       href="/about"
       aria-current={page.url.pathname === '/about' ? 'page' : undefined}

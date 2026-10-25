@@ -1116,8 +1116,7 @@
           >Replace with imported configuration</button
         ><button onclick={() => (imported = null)}>Cancel import</button>
       </div>{/if}
-    <details>
-      <summary>Reset / close workspace</summary>
+    <div class="terminal-workspace-actions">
       <p class="terminal-hint">These actions can be undone.</p>
       <button
         onclick={() => {
@@ -1139,5 +1138,5 @@
           drawer = null;
         }}>Close current workspace</button
       >
-    </details>
+    </div>
   </Drawer>{/if}
