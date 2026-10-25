@@ -1,10 +1,13 @@
-"""Backtests and accuracy and interval metrics backed by Orchid (P0 #1, #12, #13)."""
+"""Backtests, accuracy and interval metrics and Diebold-Mariano tests backed by Orchid.
+
+Families P0 #1, #12, #13 and P1 #25.
+"""
 
 import math
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
-from statistics import fmean
+from statistics import fmean, pvariance
 from typing import Literal
 
 from gridpulse.analysis.algorithms._checks import (
@@ -31,10 +34,12 @@ from gridpulse.analysis.algorithms.forecasting import (
 from gridpulse.analysis.algorithms.orchid import autoregressive as ar
 from gridpulse.analysis.algorithms.series import HalfHourlySeries
 
+_MIN_DM_ERRORS = 30
 # Orchid clamps smaller scales and denominators to this, silently distorting the result.
 _ORCHID_EPS = 1e-12
 
 FoldStatus = Literal["ok", "insufficient_data", "degenerate_data", "failed"]
+Loss = Literal["squared", "absolute"]
 
 
 def mae(actual: Sequence[float], predicted: Sequence[float]) -> float:
@@ -132,6 +137,63 @@ def msis(
     a, low, high = _intervals(actual, lower, upper)
     y_train = _training(training, m, squared=False)
     return _call(ar.msis, a, low, high, y_train=y_train, seasonality=m, level=checked)
+
+
+@dataclass(frozen=True)
+class DieboldMariano:
+    """A Diebold-Mariano test with the Harvey-Leybourne-Newbold small-sample correction.
+
+    A positive statistic means ``errors_a`` have the larger mean loss, so the forecast behind
+    ``errors_b`` was the more accurate. The two-sided p-value comes from Student's t with
+    n - 1 degrees of freedom; below about 1e-16 it is reported as 0.0, because Orchid computes
+    1 - CDF. ``horizon`` is the one used, and ``warnings`` say why when it is not the one
+    requested.
+    """
+
+    statistic: float
+    p_value: float
+    horizon: int
+    loss: Loss
+    warnings: tuple[str, ...]
+
+
+def diebold_mariano(
+    errors_a: Sequence[float],
+    errors_b: Sequence[float],
+    *,
+    horizon: int = 1,
+    loss: Loss = "squared",
+) -> DieboldMariano:
+    """Test whether two forecasts of the same targets have equal expected loss.
+
+    The errors, at least 30 of each, must be aligned target by target and in time order;
+    ``horizon`` is at most n // 2. Errors of ``horizon``-step forecasts are autocorrelated to
+    lag ``horizon - 1``, so the variance of the mean loss differential sums its
+    autocovariances to that lag. Where that sum is not positive (at most 1e-12 of the
+    variance), horizon 1 is used, as in R's ``dm.test``. For backtest errors at lead ``L`` (1
+    for each fold's first forecast period) from origins ``step`` apart, pass
+    ``horizon=ceil(L / step)``: errors from origins fewer than ``L`` periods apart share
+    shocks. ``DegenerateDataError`` means the loss differential is constant to within 1e-12
+    of the largest loss.
+    """
+    if loss not in ("squared", "absolute"):
+        raise InvalidInputError(f"loss must be 'squared' or 'absolute', got {loss!r}")
+    if len(errors_a) == len(errors_b) < _MIN_DM_ERRORS:  # before _arrays, which needs only 1
+        raise InsufficientDataError(_MIN_DM_ERRORS, len(errors_a), what="forecast errors")
+    a, b = _arrays(errors_a=errors_a, errors_b=errors_b)
+    require_int("horizon", horizon, minimum=1, maximum=len(a) // 2)
+    power = 2 if loss == "squared" else 1
+    a, b = _scaled_errors(a, b, power)
+    warnings: tuple[str, ...] = ()
+    # With the differential at unit variance, Orchid's 1e-12 floor is 1e-12 of the variance.
+    if _long_run_variance(_differential(a, b, power), horizon) <= _ORCHID_EPS:
+        warnings = (f"the long-run variance at horizon {horizon} is not positive; used horizon 1",)
+        horizon = 1
+    with orchid_errors("diebold_mariano"):
+        result = ar.diebold_mariano(a, b, horizon=horizon, loss=loss)
+    if not all(map(math.isfinite, (result.statistic, result.pvalue))):
+        raise CalculationError("Orchid diebold_mariano returned non-finite values")
+    return DieboldMariano(result.statistic, result.pvalue, horizon, loss, warnings)
 
 
 @dataclass(frozen=True)
@@ -396,3 +458,44 @@ def _step_scores(
         upper = [band.upper[step] for band in bands]
         scores[f"coverage_{level:g}"] = empirical_coverage(actual, lower, upper)
     return scores
+
+
+def _scaled_errors(
+    a: Sequence[float], b: Sequence[float], power: int
+) -> tuple[list[float], list[float]]:
+    """``a`` and ``b`` divided by the factor that gives their loss differential unit variance.
+
+    Orchid floors the long-run variance at an absolute 1e-12. Dividing by the largest error
+    alone would leave the differential's variance below that whenever a few errors dominate
+    the losses. The differential scales with the errors to the power ``power``.
+    """
+    peak = max(abs(value) for value in (*a, *b))
+    if peak == 0:
+        raise DegenerateDataError("every forecast error is zero")
+    a, b = [value / peak for value in a], [value / peak for value in b]  # every loss is <= 1
+    differential = _differential(a, b, power)
+    # Rounding alone spreads a constant differential over about 1e-16 of the largest loss.
+    if max(differential) - min(differential) <= 1e-12:
+        raise DegenerateDataError(
+            "the loss differential is constant to within 1e-12 of the largest loss"
+        )
+    unit = math.pow(pvariance(differential), 0.5 / power)
+    return [value / unit for value in a], [value / unit for value in b]
+
+
+def _differential(a: Sequence[float], b: Sequence[float], power: int) -> list[float]:
+    """The loss of ``a`` minus the loss of ``b`` at each target, as Orchid computes it."""
+    return [abs(x) ** power - abs(y) ** power for x, y in zip(a, b, strict=True)]
+
+
+def _long_run_variance(differential: Sequence[float], horizon: int) -> float:
+    """Orchid's estimate, which can be negative: the variance plus twice the autocovariances
+    to lag ``horizon - 1``, each about the overall mean, divided by n and unweighted."""
+    n = len(differential)
+    mean = math.fsum(differential) / n
+    centred = [value - mean for value in differential]
+    autocovariances = [
+        math.fsum(x * y for x, y in zip(centred[lag:], centred[: n - lag], strict=True)) / n
+        for lag in range(horizon)
+    ]
+    return autocovariances[0] + 2 * math.fsum(autocovariances[1:])
