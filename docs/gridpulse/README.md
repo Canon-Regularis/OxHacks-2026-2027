@@ -42,7 +42,7 @@ Visual polish is a core goal. Prioritise a coherent overview and useful interact
 
 ## Analysis scope
 
-No ML model training is part of this build: the classical forecasters (issue #6) re-estimate their statistical parameters (up to 64 regression coefficients) on every call, and no fitted model is persisted or reused. Do not promise classifier probabilities, learned thresholds, calibration or SHAP explanations. The algorithm owner defines supported calculations, required history, parameters, score meanings and runtime constraints. Suggested dashboard signals are candidates until that contract is confirmed.
+No ML model training is part of this build: the classical statistical methods (issues #6 and #7) estimate their parameters from the data on each call (at most 64 coefficients per regression equation). The only reuse is of structural-model parameters, fitted in a batch job and passed to the filter, smoother or forecaster. Do not promise classifier probabilities, learned thresholds, calibration or SHAP explanations. The algorithm owner defines supported calculations, required history, parameters, score meanings and runtime constraints. Suggested dashboard signals are candidates until that contract is confirmed.
 
 Keep retrospective observations distinguishable from forecasts. If presenting an alert as having been available historically, use only inputs published by its declared analysis cutoff. Otherwise label the view as retrospective analysis.
 

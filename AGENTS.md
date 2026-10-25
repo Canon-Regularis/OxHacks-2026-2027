@@ -17,7 +17,7 @@ Use this file as repository-wide guidance when working on GridPulse. It records 
 
 | Source | Intended use | Location / status |
 |---|---|---|
-| **Orchid** | Backend algorithm implementations, adapted behind GridPulse interfaces | [Orchid](https://github.com/Orthant-Research-Group/orchid) (private), local `../orchid/`, cloned revision `ca8fc92`; P0 modules vendored in `gridpulse/backend/src/gridpulse/analysis/algorithms/orchid/`. No licence file upstream: confirm terms before this repository is made public |
+| **Orchid** | Backend algorithm implementations, adapted behind GridPulse interfaces | [Orchid](https://github.com/Orthant-Research-Group/orchid) (private), local `../orchid/`, cloned revision `ca8fc92`; P0 and P1 modules vendored in `gridpulse/backend/src/gridpulse/analysis/algorithms/orchid/`. No licence file upstream: confirm terms before this repository is made public |
 | **WWW** | Main website template, page structure and layout reference | [WWW](https://github.com/orthant-kcpc/www), local `../www/`, cloned revision `b16a659`; KCPC app: `apps/kcpc/` |
 | **Components** | Reusable styling and UI components for frontend polish | [Components](https://github.com/orthant-kcpc/components), local `../components/`, cloned revision `9626af5` |
 | **Existing exporter** | Fetch Elexon data and write CSVs for ingestion | Being implemented by a teammate; sample files, schema and code location pending |
@@ -27,7 +27,7 @@ The three reference repositories are cloned as siblings of this repository under
 
 ## Orchid modules in use
 
-The Orchid → GridPulse catalogue and architecture are in issue #3. Its P0 methods (issue #6) come from four Orchid modules, vendored verbatim. Their SHA-256 digests are recorded in `orchid/__init__.py`:
+The Orchid → GridPulse catalogue and architecture are in issue #3. Its P0 (issue #6) and P1 (issue #7) methods come from five Orchid modules, vendored verbatim. Their SHA-256 digests are recorded in `orchid/__init__.py`:
 
 | Vendored file | Upstream path (`algorithms/core/…`) |
 |---|---|
@@ -35,10 +35,11 @@ The Orchid → GridPulse catalogue and architecture are in issue #3. Its P0 meth
 | `forecasting_baseline.py` | `forecasting/baseline/forecasting_baseline_template.py` |
 | `smoothing.py` | `forecasting/smoothing/smoothing_template.py` |
 | `spectral.py` | `spectral/spectral_template.py` |
+| `state_space.py` | `forecasting/state_space/state_space_template.py` |
 
-Each module's upstream `_stress_test.py` is ported to `gridpulse/backend/tests/analysis/orchid/`, with only the import lines changed. GridPulse code calls Orchid only through the adapters in `analysis/algorithms/`, which use one canonical implementation per method; see [algorithms and analysis contracts](docs/gridpulse/ALGORITHMS_AND_ANALYSIS.md). `state_space_template.py` is left for the P1 work (#7). Do not edit vendored files: change Orchid upstream and re-vendor.
+Each module's upstream `_stress_test.py` is ported to `gridpulse/backend/tests/analysis/orchid/`, with only the import lines changed. GridPulse code calls Orchid only through the adapters in `analysis/algorithms/`, which use one canonical implementation per method; see [algorithms and analysis contracts](docs/gridpulse/ALGORITHMS_AND_ANALYSIS.md). Do not edit vendored files: change Orchid upstream and re-vendor.
 
-**LightGBM status:** the vendored modules contain no LightGBM or other classifier, and the P0 port adds none. The team's candidate list explicitly includes LightGBM classification and logistic regression, both of which require fitted models for predictive use. Library reuse alone does not eliminate fitting. If the MVP must avoid training, omit these methods unless suitable already-fitted artifacts exist and their applicability is established. No such artifacts have been confirmed.
+**LightGBM status:** the vendored modules contain no LightGBM or other classifier, and the P0 and P1 ports add none. The team's candidate list explicitly includes LightGBM classification and logistic regression, both of which require fitted models for predictive use. Library reuse alone does not eliminate fitting. If the MVP must avoid training, omit these methods unless suitable already-fitted artifacts exist and their applicability is established. No such artifacts have been confirmed.
 
 ## Candidate algorithms and scope checks
 
@@ -73,7 +74,7 @@ The Gemini extension should support animated view changes during investigations.
 ## Integration agreements still needed
 
 1. Obtain real CSV samples and agree identifiers, units, publication/delivery timestamps and revision handling.
-2. Orchid P0 methods are integrated (#6). Select P1–P3 methods (#7, #8, #10) that are compatible with the no-training constraint and the available data.
+2. Orchid P0 and P1 methods are integrated (#6, #7). Select P2–P3 methods (#8, #10) that are compatible with the no-training constraint and the available data.
 3. Agree algorithm adapters and frontend API response examples before parallel implementation.
 4. Identify reusable WWW/Components files and preserve upstream attribution.
 5. Keep credentials out of documentation, source control and frontend code. Use server-side configuration and placeholder examples only.
