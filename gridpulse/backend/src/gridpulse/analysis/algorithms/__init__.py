@@ -11,11 +11,14 @@ from gridpulse.analysis.algorithms import (
     example_correlation,
     price_baseline_backtest,
     price_day_ahead_forecast,
+    price_decomposition,
     price_driver_correlograms,
     price_forecast_backtest,
+    price_p1_backtest,
     price_regression_backtest,
     price_residual_diagnostics,
     price_rolling_signals,
+    price_stationarity,
 )
 
 ALGORITHMS = {
@@ -31,5 +34,8 @@ ALGORITHMS = {
         price_driver_correlograms.ALGORITHM,
         price_residual_diagnostics.ALGORITHM,
         calendar_fourier_terms.ALGORITHM,
+        price_p1_backtest.ALGORITHM,
+        price_decomposition.ALGORITHM,
+        price_stationarity.ALGORITHM,
     ]
 }

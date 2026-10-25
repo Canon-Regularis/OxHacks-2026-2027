@@ -1,0 +1,619 @@
+{
+  "_fixture": "Synthetic example for UI development; not real data. by_horizon truncated to lead steps 1 and 48; folds and fold_params truncated.",
+  "run": {
+    "run_id": 31,
+    "algorithm_id": "price_p1_backtest",
+    "algorithm_version": "0.1.0",
+    "params": {
+      "horizon": 48,
+      "window": 1344,
+      "max_folds": 60,
+      "season_length": 48,
+      "models": {
+        "seasonal_naive": {
+          "season_length": 48
+        },
+        "theta": {
+          "season_length": 48,
+          "theta": 2.0,
+          "seasonal_model": "additive"
+        },
+        "ar": {
+          "p": 2
+        },
+        "discount_dlm": {
+          "trend": "level",
+          "discount": 0.95,
+          "variance_discount": 1.0,
+          "prior_periods": 48
+        },
+        "structural": {
+          "trend": "level"
+        },
+        "ensemble": {
+          "members": [
+            "theta",
+            "ar",
+            "discount_dlm"
+          ],
+          "method": "mean"
+        }
+      },
+      "dm_benchmark": "seasonal_naive",
+      "dm_leads": [
+        1,
+        48
+      ],
+      "dm_loss": "absolute"
+    },
+    "overrides": {},
+    "datasets": {
+      "elexon_system_prices": "2026-10-24T14:10:00Z"
+    },
+    "range_start_utc": "2026-08-31T23:00:00Z",
+    "range_end_utc": "2026-10-23T23:00:00Z",
+    "cutoff_utc": null,
+    "finished_at_utc": "2026-10-25T09:12:00Z"
+  },
+  "tables": {
+    "metrics": {
+      "description": "Scores per model, pooled over the ok folds; MASE, RMSSE and MSIS averaged per fold",
+      "columns": [
+        "model",
+        "interval_method",
+        "n_ok_folds",
+        "n_excluded_folds",
+        "mae_gbp_mwh",
+        "rmse_gbp_mwh",
+        "wmape",
+        "smape",
+        "mase",
+        "rmsse",
+        "coverage_80",
+        "interval_score_80",
+        "msis_80",
+        "coverage_95",
+        "interval_score_95",
+        "msis_95",
+        "pinball_q10_gbp_mwh",
+        "pinball_q90_gbp_mwh"
+      ],
+      "rows": [
+        [
+          "seasonal_naive",
+          "seasonal-random-walk",
+          53,
+          0,
+          49.4,
+          61.1,
+          0.567,
+          0.713,
+          1.02,
+          1.0,
+          0.794,
+          212.0,
+          4.39,
+          0.948,
+          281.0,
+          5.82,
+          10.7,
+          10.5
+        ],
+        [
+          "theta",
+          "analytic",
+          53,
+          0,
+          47.4,
+          58.2,
+          0.544,
+          0.744,
+          0.979,
+          0.925,
+          0.944,
+          286.0,
+          5.9,
+          0.989,
+          425.0,
+          8.77,
+          15.2,
+          13.3
+        ],
+        [
+          "ar",
+          "analytic",
+          53,
+          0,
+          41.0,
+          50.8,
+          0.471,
+          0.551,
+          0.849,
+          0.824,
+          0.794,
+          175.0,
+          3.63,
+          0.954,
+          230.0,
+          4.76,
+          9.2,
+          8.3
+        ],
+        [
+          "discount_dlm",
+          "student-t",
+          53,
+          0,
+          45.2,
+          56.3,
+          0.518,
+          0.57,
+          0.935,
+          0.915,
+          0.739,
+          200.0,
+          4.15,
+          0.915,
+          268.0,
+          5.56,
+          10.7,
+          9.3
+        ],
+        [
+          "structural",
+          "analytic",
+          53,
+          0,
+          54.4,
+          66.7,
+          0.624,
+          0.773,
+          1.12,
+          1.07,
+          0.941,
+          308.0,
+          6.36,
+          0.988,
+          458.0,
+          9.46,
+          17.5,
+          13.3
+        ],
+        [
+          "ensemble",
+          "quantile-averaging",
+          53,
+          0,
+          39.8,
+          49.5,
+          0.457,
+          0.541,
+          0.824,
+          0.805,
+          0.911,
+          196.0,
+          4.06,
+          0.986,
+          281.0,
+          5.82,
+          10.5,
+          9.2
+        ]
+      ]
+    },
+    "by_horizon": {
+      "description": "MAE, RMSE and 80%/95% coverage per model and lead step",
+      "columns": [
+        "model",
+        "horizon_step",
+        "lead_hours",
+        "mae_gbp_mwh",
+        "rmse_gbp_mwh",
+        "coverage_80",
+        "coverage_95"
+      ],
+      "rows": [
+        [
+          "seasonal_naive",
+          1,
+          0.5,
+          51.5,
+          59.1,
+          0.811,
+          0.981
+        ],
+        [
+          "seasonal_naive",
+          48,
+          24.0,
+          48.8,
+          57.4,
+          0.792,
+          0.962
+        ],
+        [
+          "theta",
+          1,
+          0.5,
+          20.0,
+          25.7,
+          0.811,
+          0.925
+        ],
+        [
+          "theta",
+          48,
+          24.0,
+          48.8,
+          57.1,
+          1.0,
+          1.0
+        ],
+        [
+          "ar",
+          1,
+          0.5,
+          21.7,
+          26.5,
+          0.774,
+          0.943
+        ],
+        [
+          "ar",
+          48,
+          24.0,
+          35.5,
+          44.0,
+          0.849,
+          1.0
+        ],
+        [
+          "discount_dlm",
+          1,
+          0.5,
+          40.3,
+          51.7,
+          0.774,
+          0.943
+        ],
+        [
+          "discount_dlm",
+          48,
+          24.0,
+          43.6,
+          53.1,
+          0.774,
+          0.943
+        ],
+        [
+          "structural",
+          1,
+          0.5,
+          21.6,
+          27.0,
+          0.811,
+          0.943
+        ],
+        [
+          "structural",
+          48,
+          24.0,
+          48.8,
+          57.2,
+          1.0,
+          1.0
+        ],
+        [
+          "ensemble",
+          1,
+          0.5,
+          23.2,
+          29.0,
+          0.868,
+          0.981
+        ],
+        [
+          "ensemble",
+          48,
+          24.0,
+          39.3,
+          47.0,
+          1.0,
+          1.0
+        ]
+      ]
+    },
+    "folds": {
+      "description": "Every forecast origin per model with its status; excluded folds carry a message",
+      "columns": [
+        "model",
+        "origin_utc",
+        "train_start_utc",
+        "train_size",
+        "status",
+        "message",
+        "mae_gbp_mwh"
+      ],
+      "rows": [
+        [
+          "theta",
+          "2026-08-31T23:00:00Z",
+          "2026-08-03T23:00:00Z",
+          1344,
+          "ok",
+          null,
+          35.0
+        ],
+        [
+          "theta",
+          "2026-09-01T23:00:00Z",
+          "2026-08-04T23:00:00Z",
+          1344,
+          "ok",
+          null,
+          45.0
+        ],
+        [
+          "structural",
+          "2026-08-31T23:00:00Z",
+          "2026-08-03T23:00:00Z",
+          1344,
+          "ok",
+          null,
+          48.2
+        ],
+        [
+          "structural",
+          "2026-09-01T23:00:00Z",
+          "2026-08-04T23:00:00Z",
+          1344,
+          "ok",
+          null,
+          45.3
+        ]
+      ]
+    },
+    "fold_params": {
+      "description": "Fitted parameters per model and origin (Theta's alpha and drift, AR coefficients, the DLM's observation variance, structural variances and likelihood)",
+      "columns": [
+        "model",
+        "origin_utc",
+        "parameter",
+        "value"
+      ],
+      "rows": [
+        [
+          "theta",
+          "2026-08-31T23:00:00Z",
+          "theta",
+          2.0
+        ],
+        [
+          "theta",
+          "2026-08-31T23:00:00Z",
+          "alpha",
+          0.903
+        ],
+        [
+          "theta",
+          "2026-08-31T23:00:00Z",
+          "drift",
+          0.0108
+        ],
+        [
+          "ar",
+          "2026-08-31T23:00:00Z",
+          "ar.L1",
+          0.882
+        ],
+        [
+          "ar",
+          "2026-08-31T23:00:00Z",
+          "ar.L2",
+          -0.0174
+        ],
+        [
+          "ar",
+          "2026-08-31T23:00:00Z",
+          "intercept",
+          10.6
+        ],
+        [
+          "ar",
+          "2026-08-31T23:00:00Z",
+          "sigma2",
+          596.0
+        ],
+        [
+          "structural",
+          "2026-08-31T23:00:00Z",
+          "log_likelihood",
+          -6240.0
+        ],
+        [
+          "structural",
+          "2026-08-31T23:00:00Z",
+          "aic",
+          12500.0
+        ],
+        [
+          "structural",
+          "2026-08-31T23:00:00Z",
+          "bic",
+          12500.0
+        ],
+        [
+          "structural",
+          "2026-08-31T23:00:00Z",
+          "variance.level",
+          562.0
+        ],
+        [
+          "structural",
+          "2026-08-31T23:00:00Z",
+          "variance.irregular",
+          39.1
+        ]
+      ]
+    },
+    "dm_tests": {
+      "description": "Diebold-Mariano test of each model against the benchmark at each chosen lead step: mean losses in GBP/MWh (absolute) or its square (squared), statistic (positive when the model was more accurate) and p-value",
+      "columns": [
+        "model",
+        "benchmark",
+        "horizon_step",
+        "lead_hours",
+        "loss",
+        "n",
+        "mean_loss_model",
+        "mean_loss_benchmark",
+        "statistic",
+        "p_value",
+        "status",
+        "message"
+      ],
+      "rows": [
+        [
+          "theta",
+          "seasonal_naive",
+          1,
+          0.5,
+          "absolute",
+          53,
+          20.0,
+          51.5,
+          6.42,
+          4.2e-08,
+          "ok",
+          null
+        ],
+        [
+          "ar",
+          "seasonal_naive",
+          1,
+          0.5,
+          "absolute",
+          53,
+          21.7,
+          51.5,
+          6.49,
+          3.2e-08,
+          "ok",
+          null
+        ],
+        [
+          "discount_dlm",
+          "seasonal_naive",
+          1,
+          0.5,
+          "absolute",
+          53,
+          40.3,
+          51.5,
+          2.05,
+          0.045,
+          "ok",
+          null
+        ],
+        [
+          "structural",
+          "seasonal_naive",
+          1,
+          0.5,
+          "absolute",
+          53,
+          21.6,
+          51.5,
+          6.29,
+          6.7e-08,
+          "ok",
+          null
+        ],
+        [
+          "ensemble",
+          "seasonal_naive",
+          1,
+          0.5,
+          "absolute",
+          53,
+          23.2,
+          51.5,
+          6.28,
+          7.1e-08,
+          "ok",
+          null
+        ],
+        [
+          "theta",
+          "seasonal_naive",
+          48,
+          24.0,
+          "absolute",
+          53,
+          48.8,
+          48.8,
+          -0.0603,
+          0.95,
+          "ok",
+          null
+        ],
+        [
+          "ar",
+          "seasonal_naive",
+          48,
+          24.0,
+          "absolute",
+          53,
+          35.5,
+          48.8,
+          2.96,
+          0.0047,
+          "ok",
+          null
+        ],
+        [
+          "discount_dlm",
+          "seasonal_naive",
+          48,
+          24.0,
+          "absolute",
+          53,
+          43.6,
+          48.8,
+          1.08,
+          0.29,
+          "ok",
+          null
+        ],
+        [
+          "structural",
+          "seasonal_naive",
+          48,
+          24.0,
+          "absolute",
+          53,
+          48.8,
+          48.8,
+          0.0602,
+          0.95,
+          "ok",
+          null
+        ],
+        [
+          "ensemble",
+          "seasonal_naive",
+          48,
+          24.0,
+          "absolute",
+          53,
+          39.3,
+          48.8,
+          3.13,
+          0.0029,
+          "ok",
+          null
+        ]
+      ]
+    }
+  }
+}

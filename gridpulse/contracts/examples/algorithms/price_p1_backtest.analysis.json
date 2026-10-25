@@ -1,0 +1,545 @@
+{
+  "_fixture": "Synthetic example for UI development; not real data. Six 30-minute points from one evening peak.",
+  "algorithm": {
+    "id": "price_p1_backtest",
+    "version": "0.1.0",
+    "description": "Day-ahead imbalance price from Theta, AR(2), a discount DLM, a local-level structural model and their ensemble, against a daily seasonal naive benchmark, scored by a rolling-origin backtest with Diebold-Mariano tests.",
+    "inputs": [
+      "price_gbp_mwh"
+    ],
+    "datasets": [
+      "elexon_system_prices"
+    ],
+    "outputs": {
+      "seasonal_naive_forecast": "GBP/MWh",
+      "theta_forecast": "GBP/MWh",
+      "ar_forecast": "GBP/MWh",
+      "discount_dlm_forecast": "GBP/MWh",
+      "structural_forecast": "GBP/MWh",
+      "ensemble_forecast": "GBP/MWh",
+      "theta_lower_80": "GBP/MWh",
+      "theta_upper_80": "GBP/MWh",
+      "theta_lower_95": "GBP/MWh",
+      "theta_upper_95": "GBP/MWh",
+      "ar_lower_80": "GBP/MWh",
+      "ar_upper_80": "GBP/MWh",
+      "ar_lower_95": "GBP/MWh",
+      "ar_upper_95": "GBP/MWh",
+      "discount_dlm_lower_80": "GBP/MWh",
+      "discount_dlm_upper_80": "GBP/MWh",
+      "discount_dlm_lower_95": "GBP/MWh",
+      "discount_dlm_upper_95": "GBP/MWh",
+      "structural_lower_80": "GBP/MWh",
+      "structural_upper_80": "GBP/MWh",
+      "structural_lower_95": "GBP/MWh",
+      "structural_upper_95": "GBP/MWh",
+      "ensemble_lower_80": "GBP/MWh",
+      "ensemble_upper_80": "GBP/MWh",
+      "ensemble_lower_95": "GBP/MWh",
+      "ensemble_upper_95": "GBP/MWh"
+    },
+    "tables": {
+      "metrics": "Scores per model, pooled over the ok folds; MASE, RMSSE and MSIS averaged per fold",
+      "by_horizon": "MAE, RMSE and 80%/95% coverage per model and lead step",
+      "folds": "Every forecast origin per model with its status; excluded folds carry a message",
+      "fold_params": "Fitted parameters per model and origin (Theta's alpha and drift, AR coefficients, the DLM's observation variance, structural variances and likelihood)",
+      "dm_tests": "Diebold-Mariano test of each model against the benchmark at each chosen lead step: mean losses in GBP/MWh (absolute) or its square (squared), statistic (positive when the model was more accurate) and p-value"
+    },
+    "params": {
+      "horizon": 48,
+      "window": 1344,
+      "max_folds": 60,
+      "season_length": 48,
+      "models": {
+        "seasonal_naive": {
+          "season_length": 48
+        },
+        "theta": {
+          "season_length": 48,
+          "theta": 2.0,
+          "seasonal_model": "additive"
+        },
+        "ar": {
+          "p": 2
+        },
+        "discount_dlm": {
+          "trend": "level",
+          "discount": 0.95,
+          "variance_discount": 1.0,
+          "prior_periods": 48
+        },
+        "structural": {
+          "trend": "level"
+        },
+        "ensemble": {
+          "members": [
+            "theta",
+            "ar",
+            "discount_dlm"
+          ],
+          "method": "mean"
+        }
+      },
+      "dm_benchmark": "seasonal_naive",
+      "dm_leads": [
+        1,
+        48
+      ],
+      "dm_loss": "absolute"
+    },
+    "param_descriptions": {
+      "horizon": "Periods forecast from each origin, which is also the step between origins (48 = one day ahead, once a day)",
+      "window": "Settled periods each fit uses, ending at the origin; at most 1344 (28 days)",
+      "max_folds": "Most origins a run may use; a longer range fails instead of running for hours (60 = about 60 days at horizon 48)",
+      "season_length": "Seasonal period in half-hours used to scale MASE, RMSSE and MSIS (48 = daily)",
+      "models": "Settings of each model; the names match the output prefixes and the model column of the tables",
+      "dm_benchmark": "Model every other model is tested against in dm_tests",
+      "dm_leads": "Lead steps tested in dm_tests, each at most horizon (1 = 30 minutes ahead, 48 = 24 hours ahead)",
+      "dm_loss": "Loss the Diebold-Mariano test compares: absolute (as MAE) or squared (as RMSE)"
+    },
+    "limitations": "Out-of-sample: each forecast uses only prices settled before its origin, and every model is refitted at every origin. Origins step by elapsed half-hours, so they shift by an hour of local time across a clock change. Intervals are model-based; WMAPE and sMAPE are fractions. A fold with a missing price in its window or targets is excluded, not imputed. Not a probability of a price spike or a trading signal. The seasonal naive's intervals are scored but not stored as series. The ensemble averages each interval bound (quantile averaging), which does not recalibrate coverage. Diebold-Mariano p-values test equal accuracy over these folds only; with about 56 errors per lead and heavy-tailed prices they are approximate, and testing several models and leads at once makes some small p-values likely by chance.",
+    "latest_run": {
+      "run_id": 31,
+      "algorithm_id": "price_p1_backtest",
+      "algorithm_version": "0.1.0",
+      "params": {
+        "horizon": 48,
+        "window": 1344,
+        "max_folds": 60,
+        "season_length": 48,
+        "models": {
+          "seasonal_naive": {
+            "season_length": 48
+          },
+          "theta": {
+            "season_length": 48,
+            "theta": 2.0,
+            "seasonal_model": "additive"
+          },
+          "ar": {
+            "p": 2
+          },
+          "discount_dlm": {
+            "trend": "level",
+            "discount": 0.95,
+            "variance_discount": 1.0,
+            "prior_periods": 48
+          },
+          "structural": {
+            "trend": "level"
+          },
+          "ensemble": {
+            "members": [
+              "theta",
+              "ar",
+              "discount_dlm"
+            ],
+            "method": "mean"
+          }
+        },
+        "dm_benchmark": "seasonal_naive",
+        "dm_leads": [
+          1,
+          48
+        ],
+        "dm_loss": "absolute"
+      },
+      "overrides": {},
+      "datasets": {
+        "elexon_system_prices": "2026-10-24T14:10:00Z"
+      },
+      "range_start_utc": "2026-08-31T23:00:00Z",
+      "range_end_utc": "2026-10-23T23:00:00Z",
+      "cutoff_utc": null,
+      "finished_at_utc": "2026-10-25T09:12:00Z"
+    }
+  },
+  "run": {
+    "run_id": 31,
+    "algorithm_id": "price_p1_backtest",
+    "algorithm_version": "0.1.0",
+    "params": {
+      "horizon": 48,
+      "window": 1344,
+      "max_folds": 60,
+      "season_length": 48,
+      "models": {
+        "seasonal_naive": {
+          "season_length": 48
+        },
+        "theta": {
+          "season_length": 48,
+          "theta": 2.0,
+          "seasonal_model": "additive"
+        },
+        "ar": {
+          "p": 2
+        },
+        "discount_dlm": {
+          "trend": "level",
+          "discount": 0.95,
+          "variance_discount": 1.0,
+          "prior_periods": 48
+        },
+        "structural": {
+          "trend": "level"
+        },
+        "ensemble": {
+          "members": [
+            "theta",
+            "ar",
+            "discount_dlm"
+          ],
+          "method": "mean"
+        }
+      },
+      "dm_benchmark": "seasonal_naive",
+      "dm_leads": [
+        1,
+        48
+      ],
+      "dm_loss": "absolute"
+    },
+    "overrides": {},
+    "datasets": {
+      "elexon_system_prices": "2026-10-24T14:10:00Z"
+    },
+    "range_start_utc": "2026-08-31T23:00:00Z",
+    "range_end_utc": "2026-10-23T23:00:00Z",
+    "cutoff_utc": null,
+    "finished_at_utc": "2026-10-25T09:12:00Z"
+  },
+  "from": "2026-10-22",
+  "to": "2026-10-22",
+  "resolution": "30m",
+  "t": [
+    "2026-10-22T15:00:00Z",
+    "2026-10-22T15:30:00Z",
+    "2026-10-22T16:00:00Z",
+    "2026-10-22T16:30:00Z",
+    "2026-10-22T17:00:00Z",
+    "2026-10-22T17:30:00Z"
+  ],
+  "indicators": {
+    "seasonal_naive_forecast": {
+      "label": "seasonal_naive_forecast",
+      "unit": "GBP/MWh",
+      "values": [
+        144.8,
+        72.1,
+        65.6,
+        74.1,
+        105.5,
+        97.9
+      ]
+    },
+    "theta_forecast": {
+      "label": "theta_forecast",
+      "unit": "GBP/MWh",
+      "values": [
+        76.1,
+        84.9,
+        75.3,
+        77.9,
+        89.8,
+        82.7
+      ]
+    },
+    "ar_forecast": {
+      "label": "ar_forecast",
+      "unit": "GBP/MWh",
+      "values": [
+        84.6,
+        84.6,
+        84.7,
+        84.7,
+        84.8,
+        84.8
+      ]
+    },
+    "discount_dlm_forecast": {
+      "label": "discount_dlm_forecast",
+      "unit": "GBP/MWh",
+      "values": [
+        69.0,
+        69.0,
+        69.0,
+        69.0,
+        69.0,
+        69.0
+      ]
+    },
+    "structural_forecast": {
+      "label": "structural_forecast",
+      "unit": "GBP/MWh",
+      "values": [
+        30.5,
+        30.5,
+        30.5,
+        30.5,
+        30.5,
+        30.5
+      ]
+    },
+    "ensemble_forecast": {
+      "label": "ensemble_forecast",
+      "unit": "GBP/MWh",
+      "values": [
+        76.6,
+        79.5,
+        76.3,
+        77.2,
+        81.2,
+        78.8
+      ]
+    },
+    "theta_lower_80": {
+      "label": "theta_lower_80",
+      "unit": "GBP/MWh",
+      "values": [
+        -84.3,
+        -78.0,
+        -89.9,
+        -89.7,
+        -80.0,
+        -89.4
+      ]
+    },
+    "theta_upper_80": {
+      "label": "theta_upper_80",
+      "unit": "GBP/MWh",
+      "values": [
+        236.6,
+        247.7,
+        240.5,
+        245.4,
+        259.6,
+        254.7
+      ]
+    },
+    "theta_lower_95": {
+      "label": "theta_lower_95",
+      "unit": "GBP/MWh",
+      "values": [
+        -169.3,
+        -164.2,
+        -177.4,
+        -178.3,
+        -169.9,
+        -180.5
+      ]
+    },
+    "theta_upper_95": {
+      "label": "theta_upper_95",
+      "unit": "GBP/MWh",
+      "values": [
+        321.5,
+        333.9,
+        327.9,
+        334.1,
+        349.5,
+        345.8
+      ]
+    },
+    "ar_lower_80": {
+      "label": "ar_lower_80",
+      "unit": "GBP/MWh",
+      "values": [
+        20.4,
+        20.5,
+        20.5,
+        20.6,
+        20.6,
+        20.7
+      ]
+    },
+    "ar_upper_80": {
+      "label": "ar_upper_80",
+      "unit": "GBP/MWh",
+      "values": [
+        148.7,
+        148.8,
+        148.8,
+        148.9,
+        148.9,
+        149.0
+      ]
+    },
+    "ar_lower_95": {
+      "label": "ar_lower_95",
+      "unit": "GBP/MWh",
+      "values": [
+        -13.5,
+        -13.5,
+        -13.4,
+        -13.4,
+        -13.3,
+        -13.3
+      ]
+    },
+    "ar_upper_95": {
+      "label": "ar_upper_95",
+      "unit": "GBP/MWh",
+      "values": [
+        182.7,
+        182.8,
+        182.8,
+        182.9,
+        182.9,
+        182.9
+      ]
+    },
+    "discount_dlm_lower_80": {
+      "label": "discount_dlm_lower_80",
+      "unit": "GBP/MWh",
+      "values": [
+        7.3,
+        7.2,
+        7.1,
+        7.0,
+        7.0,
+        6.9
+      ]
+    },
+    "discount_dlm_upper_80": {
+      "label": "discount_dlm_upper_80",
+      "unit": "GBP/MWh",
+      "values": [
+        130.8,
+        130.9,
+        131.0,
+        131.0,
+        131.1,
+        131.2
+      ]
+    },
+    "discount_dlm_lower_95": {
+      "label": "discount_dlm_lower_95",
+      "unit": "GBP/MWh",
+      "values": [
+        -25.5,
+        -25.6,
+        -25.7,
+        -25.8,
+        -25.9,
+        -26.0
+      ]
+    },
+    "discount_dlm_upper_95": {
+      "label": "discount_dlm_upper_95",
+      "unit": "GBP/MWh",
+      "values": [
+        163.6,
+        163.7,
+        163.8,
+        163.9,
+        164.0,
+        164.1
+      ]
+    },
+    "structural_lower_80": {
+      "label": "structural_lower_80",
+      "unit": "GBP/MWh",
+      "values": [
+        -141.7,
+        -144.3,
+        -146.8,
+        -149.3,
+        -151.8,
+        -154.2
+      ]
+    },
+    "structural_upper_80": {
+      "label": "structural_upper_80",
+      "unit": "GBP/MWh",
+      "values": [
+        202.8,
+        205.3,
+        207.9,
+        210.4,
+        212.8,
+        215.2
+      ]
+    },
+    "structural_lower_95": {
+      "label": "structural_lower_95",
+      "unit": "GBP/MWh",
+      "values": [
+        -232.9,
+        -236.9,
+        -240.7,
+        -244.5,
+        -248.3,
+        -252.0
+      ]
+    },
+    "structural_upper_95": {
+      "label": "structural_upper_95",
+      "unit": "GBP/MWh",
+      "values": [
+        293.9,
+        297.9,
+        301.7,
+        305.6,
+        309.3,
+        313.0
+      ]
+    },
+    "ensemble_lower_80": {
+      "label": "ensemble_lower_80",
+      "unit": "GBP/MWh",
+      "values": [
+        -18.9,
+        -16.8,
+        -20.8,
+        -20.7,
+        -17.5,
+        -20.6
+      ]
+    },
+    "ensemble_upper_80": {
+      "label": "ensemble_upper_80",
+      "unit": "GBP/MWh",
+      "values": [
+        172.0,
+        175.8,
+        173.4,
+        175.1,
+        179.9,
+        178.3
+      ]
+    },
+    "ensemble_lower_95": {
+      "label": "ensemble_lower_95",
+      "unit": "GBP/MWh",
+      "values": [
+        -69.4,
+        -67.7,
+        -72.2,
+        -72.5,
+        -69.7,
+        -73.3
+      ]
+    },
+    "ensemble_upper_95": {
+      "label": "ensemble_upper_95",
+      "unit": "GBP/MWh",
+      "values": [
+        222.6,
+        226.8,
+        224.8,
+        226.9,
+        232.1,
+        231.0
+      ]
+    }
+  },
+  "warnings": [],
+  "tables": [
+    "metrics",
+    "by_horizon",
+    "folds",
+    "fold_params",
+    "dm_tests"
+  ]
+}
