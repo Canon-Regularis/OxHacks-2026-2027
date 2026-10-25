@@ -105,3 +105,54 @@ def test_single_day_evidence_retains_settlement_resolution(monkeypatch):
     result=tools.read(pool,spec,SimpleNamespace(max_range_days=3660))
     assert result['resolution']=='30m'
     assert observed==['30m']
+
+
+def test_comparison_cannot_use_source_series_without_an_algorithm_table():
+    view=Decision.model_validate({'view':{'from_date':'2026-02-01','to_date':'2026-03-31','widgets':[{'key':'bad','type':'comparison','title':'Wind and demand','series':['wind','demand']}]}}).view
+    with pytest.raises(ValueError,match='algorithm'):
+        tools.validate_view(view,[])
+
+
+def test_algorithm_table_requires_a_named_available_table():
+    view=Decision.model_validate({'view':{'from_date':'2026-02-01','to_date':'2026-03-31','widgets':[{'key':'bad','type':'table','title':'Results','algorithm':'calendar_fourier_terms','run_id':49}]}}).view
+    with pytest.raises(ValueError,match='table'):
+        tools.validate_view(view,[{'data':{'run_id':49,'algorithm':'calendar_fourier_terms'}}])
+
+
+def test_invalid_widget_is_corrected_before_emitting_a_view(monkeypatch):
+    class Fake:
+        calls=0
+        async def decide(self,messages):
+            self.calls+=1
+            if self.calls==1:
+                return Decision.model_validate({'view':{'from_date':'2026-02-01','to_date':'2026-03-31','widgets':[{'key':'bad','type':'comparison','title':'Wind and demand','series':['wind','demand']}]}})
+            assert 'Application widget validation rejected' in messages[-1]['content']
+            return Decision.model_validate({'answer':'Wind and demand share MW; use a time-series chart.','view':{'from_date':'2026-02-01','to_date':'2026-03-31','widgets':[{'key':'chart','type':'chart','title':'Wind and demand','series':['wind','demand']}]}})
+    turn=Turn(turn_id='repair',conversation='chat',workspace_id='ws',revision='v',message='Visualise wind and demand',snapshot={})
+    async def run():
+        return [e async for e in service.investigate(turn,None,SimpleNamespace(max_range_days=3660),'session',Fake())]
+    events=asyncio.run(run())
+    views=[e['view'] for e in events if e['type']=='view']
+    assert len(views)==1 and views[0]['widgets'][0]['type']=='chart'
+    assert any(e['type']=='progress' and 'compatibility' in e['message'] for e in events)
+
+
+def test_empty_final_answer_gets_one_presentation_repair():
+    class Fake:
+        calls=0
+        async def decide(self,messages):
+            self.calls+=1
+            if self.calls==1: return Decision()
+            assert 'cannot be empty' in messages[-1]['content']
+            return Decision(answer='I can prepare a wind and demand chart using the selected dates.')
+    turn=Turn(turn_id='explain',conversation='chat',workspace_id='ws',revision='v',message='Show wind and demand',snapshot={})
+    async def run():
+        return [e async for e in service.investigate(turn,None,SimpleNamespace(max_range_days=3660),'session',Fake())]
+    events=asyncio.run(run())
+    assert next(e['text'] for e in events if e['type']=='answer').startswith('I can prepare')
+
+
+def test_chart_unit_limit_is_checked_before_the_view_reaches_the_browser():
+    view=Decision.model_validate({'view':{'from_date':'2026-02-01','to_date':'2026-03-31','widgets':[{'key':'mixed','type':'chart','title':'Too many axes','series':['price','wind','niv']}]}}).view
+    with pytest.raises(ValueError,match='two distinct units'):
+        tools.validate_view(view,[])

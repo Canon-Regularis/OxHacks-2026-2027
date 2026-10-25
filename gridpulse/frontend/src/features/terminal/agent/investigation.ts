@@ -64,6 +64,11 @@ export async function investigate({
           minimums: MINIMUM,
           max_widgets: LIMITS.widgets,
           max_chart_units: 2,
+          layout_modes: {
+            research:
+              'Wide chart-first layout with a compact chat area and supporting tabs',
+            preserve: 'Explicit user-requested placement and resizing',
+          },
           horizontal_steps: 24,
           vertical_steps: 16,
         },
@@ -73,6 +78,7 @@ export async function investigate({
     },
     signal,
     (event) => {
+      if (event.type === 'started' && event.model) chat.model = event.model;
       if (event.type === 'progress')
         chat.status = event.message ?? 'Investigating…';
       if (event.type === 'evidence' && event.evidence) {

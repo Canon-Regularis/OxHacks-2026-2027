@@ -35,3 +35,19 @@ def test_repeated_invalid_decisions_fail_without_executing(monkeypatch):
     with pytest.raises(ProviderError):
         asyncio.run(provider.decide([{'role':'user','content':'Hello'}]))
     assert len(calls)==2
+
+
+def test_openrouter_uses_only_its_key_and_requests_json_with_bounded_reasoning(monkeypatch):
+    calls=[]
+    async def post(self,url,**kwargs):
+        calls.append((url,kwargs))
+        return response({'answer':'Ready'})
+    monkeypatch.setattr(httpx.AsyncClient,'post',post)
+    settings=SimpleNamespace(agent_provider='openrouter',openrouter_api_key='router-test',cwave_api_key='do-not-use',agent_base_url='https://openrouter.ai/api/v1',agent_model='openai/gpt-5.4-mini',agent_max_tokens=1500,agent_reasoning_effort='low')
+    assert asyncio.run(Provider(settings).decide([{'role':'user','content':'Hello'}])).answer=='Ready'
+    url,request=calls[0]
+    assert url=='https://openrouter.ai/api/v1/chat/completions'
+    assert request['headers']['Authorization']=='Bearer router-test'
+    assert request['json']['response_format']=={'type':'json_object'}
+    assert request['json']['reasoning']=={'effort':'low','exclude':True}
+    assert 'temperature' not in request['json']

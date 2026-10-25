@@ -41,7 +41,11 @@
 
 <div class="terminal-chat">
   <div class="terminal-chat-controls">
-    <span>AI · Kimi</span><button onclick={onnew}>New chat</button><button
+    <span title={chat.model}
+      >AI{chat.model
+        ? ` · ${chat.model.split('/').at(-1)}`
+        : ' assistant'}</span
+    ><button onclick={onnew}>New chat</button><button
       disabled={busy}
       onclick={onclear}>Clear</button
     ><button disabled={!canUndo} onclick={onundo}>↶ Go back</button>

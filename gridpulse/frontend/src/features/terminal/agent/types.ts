@@ -13,9 +13,12 @@ export interface ViewWidget {
   relative_to: string | null;
   position: Position;
   size_step?: number | null;
+  metric?: string;
+  category?: string;
   notes: string;
 }
 export interface View {
+  layout_mode?: 'research' | 'preserve';
   version: 1;
   from_date: string;
   to_date: string;
@@ -57,6 +60,7 @@ export interface Conversation {
   status: string;
   error: string;
   confirmation: Confirmation | null;
+  model?: string;
   states: Workspace[];
 }
 export const conversation = (): Conversation => ({
@@ -70,6 +74,7 @@ export const conversation = (): Conversation => ({
 export interface AgentEvent {
   version: number;
   turn_id: string;
+  model?: string;
   sequence?: number;
   type: string;
   text?: string;

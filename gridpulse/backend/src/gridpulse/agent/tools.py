@@ -73,6 +73,7 @@ def read(pool, spec, settings):
                 value["sample_note"] = "Only first 24 points shown; not full-range statistics."
             if spec.tool == "tables":
                 for table in value["tables"].values():
+                    table["numeric_columns"] = [column for i, column in enumerate(table["columns"]) if any(type(row[i]) in (int, float) for row in table["rows"])]
                     table["total_rows"] = len(table["rows"])
                     table["rows"] = table["rows"][:30]
             if len(json.dumps(value)) > 45000:
@@ -87,7 +88,13 @@ def capabilities():
         "version": 1,
         "series": [{"id": sid, "label": s.label, "unit": s.unit, "kind": s.kind} for sid, s in SERIES.items()],
         "algorithms": [analysis.algorithm_info(a).model_dump(mode="json") for a in ALGORITHMS.values()],
-        "widgets": ["chart", "table", "comparison", "inspector", "context"],
+        "widgets": {
+            "chart": {"bindings": ["source series", "stored algorithm outputs"], "use": "Time-series lines on a wide horizontal chart; combine wind and demand (MW), price may use a second GBP/MWh axis."},
+            "table": {"bindings": ["source series", "named stored algorithm table"], "use": "Raw source data rows with UTC timestamps and units, OR an exact named algorithm table. Source tables do not need an algorithm."},
+            "comparison": {"bindings": ["named stored algorithm table"], "use": "Horizontal bars comparing a VERIFIED numeric metric column across categories. Never use for raw wind/demand series. Read tables first; select table and metric."},
+            "inspector": {"bindings": ["linked selected settlement period"], "use": "Period details only after a chart point is selected; not a general summary card. Avoid adding an empty inspector."},
+            "context": {"bindings": ["notes"], "use": "Concise editable notes with meaningful nonempty text, not a live statistic card."},
+        },
     }
 
 
@@ -104,12 +111,47 @@ def validate_view(view, evidence):
             runs[data["run_id"]] = data["algorithm"]
         for run in data.get("runs", []):
             runs[run["run_id"]] = run["algorithm_id"]
+    inspected_tables = {}
+    for item in evidence:
+        data = item["data"]
+        if data.get("run") and data.get("tables") and isinstance(data["tables"], dict):
+            inspected_tables[data["run"]["run_id"]] = data["tables"]
     for widget in view.widgets:
         if any(s not in SERIES for s in widget.series):
             raise ValueError("View references an unknown series.")
+        if not widget.algorithm and (widget.table or any(output not in widget.series for output in widget.outputs)):
+            raise ValueError("Source widgets use source IDs for outputs and no named algorithm table; leave table empty.")
+        if widget.type in {"chart", "table"} and not widget.algorithm and not widget.series:
+            raise ValueError(f"A {widget.type} needs source series or a valid algorithm binding.")
+        if widget.type == "comparison" and not widget.algorithm:
+            raise ValueError("Comparison widgets need a stored algorithm table, not raw source series. Use chart or table for wind/demand.")
         if widget.algorithm:
             algo = ALGORITHMS.get(widget.algorithm)
             if not algo or runs.get(widget.run_id) != widget.algorithm:
                 raise ValueError("Inspect a stored run before displaying its results.")
             if any(output not in algo.outputs for output in widget.outputs) or (widget.table and widget.table not in algo.tables):
                 raise ValueError("View references unknown algorithm outputs.")
+            if widget.type == "chart" and not algo.outputs and not widget.series:
+                raise ValueError("This algorithm has tables only; choose a named table widget instead of an empty chart.")
+            if widget.type in {"table", "comparison"} and (not widget.table or widget.table not in algo.tables):
+                raise ValueError("This algorithm widget requires an exact available table name; use chart for time-series outputs.")
+            if widget.type == "comparison":
+                table = inspected_tables.get(widget.run_id, {}).get(widget.table)
+                if not table:
+                    raise ValueError("Read the algorithm table before choosing a comparison metric.")
+                numeric = table.get("numeric_columns") or [column for i, column in enumerate(table["columns"]) if any(type(row[i]) in (int, float) for row in table["rows"])]
+                if not numeric or (widget.metric and widget.metric not in numeric):
+                    raise ValueError("Comparison requires an available numeric metric column.")
+                widget.metric = widget.metric or next((name for name in ("mase", "mae_gbp_mwh", "rmse_gbp_mwh", "score") if name in numeric), numeric[0])
+                if widget.category and widget.category not in table["columns"]:
+                    raise ValueError("Unknown comparison category column.")
+                widget.category = widget.category or next((name for name in table["columns"] if name not in numeric), table["columns"][0])
+
+        if widget.type == "chart":
+            algo = ALGORITHMS.get(widget.algorithm) if widget.algorithm else None
+            sources = widget.series if algo or not widget.outputs else [sid for sid in widget.series if sid in widget.outputs]
+            units = {SERIES[sid].unit for sid in sources}
+            if algo:
+                units.update(algo.outputs[key] for key in (widget.outputs or list(algo.outputs)))
+            if len(units) > 2:
+                raise ValueError("A chart supports at most two distinct units; split this into aligned charts.")

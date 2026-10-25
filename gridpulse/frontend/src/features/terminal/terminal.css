@@ -1048,6 +1048,7 @@
   overscroll-behavior: contain;
 }
 .terminal-chat-messages article {
+  max-width: 80ch;
   margin: 0 0 14px;
   padding: 10px;
   border-left: 2px solid #a2c7b8;
@@ -1126,6 +1127,7 @@
 }
 @media (prefers-reduced-motion: no-preference) {
   .terminal-chat-messages article {
+    max-width: 80ch;
     animation: chat-arrive 0.18s ease-out;
   }
   @keyframes chat-arrive {

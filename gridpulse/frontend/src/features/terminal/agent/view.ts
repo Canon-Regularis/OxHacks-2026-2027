@@ -13,6 +13,7 @@ import {
 } from '../model/types';
 import { findStack, fits, mapNode } from '../layout/engine';
 import type { View } from './types';
+import { researchLayout } from './layout';
 
 export const revision = (workspace: Workspace) => JSON.stringify(workspace);
 /** Send metadata, not full notes, style maps or fetched data, to the model. */
@@ -99,6 +100,12 @@ export function compileView(
     );
     ws = next.workspaces.find((w) => w.id === next.active)!;
   }
+  const research = view.layout_mode !== 'preserve';
+  if (research && ws.layout) {
+    // Collect into a safe scratch stack; the trusted planner assigns final geometry.
+    const ids = Object.keys(ws.widgets);
+    ws.layout = { kind: 'stack', id: uid(), widgets: ids, active: ids[0] };
+  }
   const commands: WorkspaceAction[] = [];
   const keys = new Map<string, string>();
   const existing = new Set<string>();
@@ -155,18 +162,47 @@ export function compileView(
       throw new Error('AI references unavailable data or an unpinned run.');
     if (
       !Array.isArray(spec.outputs) ||
-      spec.outputs.some(
-        (id) => !algorithm || !Object.hasOwn(algorithm.outputs, id),
+      spec.outputs.some((id) =>
+        algorithm
+          ? !Object.hasOwn(algorithm.outputs, id)
+          : !spec.series.includes(id),
       ) ||
       (spec.table &&
         (!algorithm || !Object.hasOwn(algorithm.tables, spec.table)))
     )
       throw new Error('AI references unknown algorithm results.');
-    const selectedOutputs = spec.outputs.length
-      ? spec.outputs
-      : Object.keys(algorithm?.outputs ?? {});
+    if (
+      spec.type === 'chart' &&
+      !Object.keys(algorithm?.outputs ?? {}).length &&
+      !spec.series.length
+    )
+      throw new Error('A chart needs source series or a stored algorithm run.');
+    if (spec.type === 'table' && !algorithm && !spec.series.length)
+      throw new Error('A source data table needs at least one source series.');
+    if (
+      (spec.type === 'comparison' || (spec.type === 'table' && algorithm)) &&
+      (!algorithm ||
+        !spec.table ||
+        !Object.hasOwn(algorithm.tables, spec.table))
+    )
+      throw new Error(
+        'This widget needs a stored algorithm and a named result table.',
+      );
+    if (spec.type === 'comparison' && !spec.metric)
+      throw new Error('A comparison needs a verified numeric table metric.');
+    const selectedOutputs = algorithm
+      ? spec.outputs.length
+        ? spec.outputs
+        : Object.keys(algorithm.outputs)
+      : [];
+    const selectedSources =
+      !algorithm && spec.outputs.length
+        ? spec.series.filter((id) => spec.outputs.includes(id))
+        : spec.series;
     const units = new Set([
-      ...spec.series.map((id) => catalog.series.find((s) => s.id === id)!.unit),
+      ...selectedSources.map(
+        (id) => catalog.series.find((s) => s.id === id)!.unit,
+      ),
       ...selectedOutputs.map((id) => algorithm!.outputs[id]),
     ]);
     if (spec.type === 'chart' && units.size > 2)
@@ -211,11 +247,14 @@ export function compileView(
           ? [...spec.outputs, ...spec.series.map((id) => 'source:' + id)]
           : spec.outputs,
       table: spec.table,
+      metric: spec.metric ?? '',
+      category: spec.category ?? '',
       notes: spec.notes,
     });
-    const reference = spec.relative_to
-      ? (keys.get(spec.relative_to) ?? spec.relative_to)
-      : target;
+    const reference =
+      !research && spec.relative_to
+        ? (keys.get(spec.relative_to) ?? spec.relative_to)
+        : target;
     // Advance one private draft instead of replaying prior placement commands.
     // Splits allocate fresh node IDs: replay would invalidate subsequent targets.
     next = applyActions(next, commands, size);
@@ -243,7 +282,7 @@ export function compileView(
           type: 'widget.move',
           id,
           target: destination,
-          position: spec.position,
+          position: research ? 'tab' : spec.position,
         });
     } else
       commands.push({
@@ -251,13 +290,13 @@ export function compileView(
         widget,
         binding,
         target: destination,
-        position: spec.position,
+        position: research ? 'tab' : spec.position,
       });
     target = id;
   }
   next = applyActions(next, commands, size);
   for (const spec of view.widgets) {
-    if (spec.size_step == null) continue;
+    if (research || spec.size_step == null) continue;
     const id = keys.get(spec.key)!;
     const live = next.workspaces.find((w) => w.id === next.active)!;
     const leaf = findStack(live.layout, id);
@@ -277,7 +316,13 @@ export function compileView(
       );
   }
   ws = next.workspaces.find((w) => w.id === next.active)!;
-  if (view.background_chat && ws.widgets[chat] && target && target !== chat) {
+  if (
+    !research &&
+    view.background_chat &&
+    ws.widgets[chat] &&
+    target &&
+    target !== chat
+  ) {
     const destination = findStack(ws.layout, target)!;
     next = applyActions(
       next,
@@ -289,7 +334,13 @@ export function compileView(
     );
   }
   ws = next.workspaces.find((w) => w.id === next.active)!;
-  if (view.background_chat && ws.layout && target && ws.widgets[chat]) {
+  if (
+    !research &&
+    view.background_chat &&
+    ws.layout &&
+    target &&
+    ws.widgets[chat]
+  ) {
     const leaf = findStack(ws.layout, target);
     ws.layout = mapNode(ws.layout, leaf!, (node) =>
       node.kind === 'stack'
@@ -305,6 +356,14 @@ export function compileView(
         : node,
     );
   }
+  if (research)
+    ws.layout = researchLayout(
+      ws,
+      size,
+      view.widgets.map((spec) => keys.get(spec.key)!),
+      chat,
+      view.background_chat,
+    );
   if (!fits(ws.layout, ws, size) && size.width >= 850)
     throw new Error(
       'Workspace has no room at readable minimum sizes. Remove widgets or request a new workspace.',

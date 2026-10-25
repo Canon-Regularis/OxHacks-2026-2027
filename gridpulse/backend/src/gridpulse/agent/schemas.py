@@ -43,10 +43,13 @@ class ViewWidget(Strict):
     relative_to: str | None = Field(default=None, max_length=100)
     position: Literal["left", "right", "top", "bottom", "tab"] = "right"
     size_step: int | None = Field(default=None, ge=1, le=23, description="Optional parent divider step: horizontal 1..23 out of 24, vertical 1..15 out of 16; measures the first child share.")
+    metric: str = Field(default="", max_length=100)
+    category: str = Field(default="", max_length=100)
     notes: str = Field(default="", max_length=2000)
 
 
 class View(Dates):
+    layout_mode: Literal["research", "preserve"] = "research"
     version: Literal[1] = 1
     widgets: list[ViewWidget] = Field(max_length=12)
     remove: list[str] = Field(default_factory=list, max_length=12)

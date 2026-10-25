@@ -1,0 +1,73 @@
+{
+  "from_date": "2026-02-01",
+  "to_date": "2026-03-31",
+  "layout_mode": "research",
+  "version": 1,
+  "widgets": [
+    {
+      "key": "main_chart",
+      "existing": null,
+      "type": "chart",
+      "title": "Wind, demand and imbalance price",
+      "series": [
+        "wind",
+        "demand",
+        "price"
+      ],
+      "algorithm": null,
+      "run_id": null,
+      "outputs": [],
+      "table": "",
+      "group": "A",
+      "relative_to": null,
+      "position": "right",
+      "size_step": null,
+      "metric": "",
+      "category": "",
+      "notes": ""
+    },
+    {
+      "key": "wind_demand_table",
+      "existing": null,
+      "type": "table",
+      "title": "Wind and demand data table",
+      "series": [
+        "wind",
+        "demand"
+      ],
+      "algorithm": null,
+      "run_id": null,
+      "outputs": [],
+      "table": "",
+      "group": "A",
+      "relative_to": null,
+      "position": "right",
+      "size_step": null,
+      "metric": "",
+      "category": "",
+      "notes": "Raw source series table for the selected date range. Units: MW."
+    },
+    {
+      "key": "source_note",
+      "existing": null,
+      "type": "context",
+      "title": "Notes",
+      "series": [],
+      "algorithm": null,
+      "run_id": null,
+      "outputs": [],
+      "table": "",
+      "group": "A",
+      "relative_to": null,
+      "position": "right",
+      "size_step": null,
+      "metric": "",
+      "category": "",
+      "notes": "Source-data-only workspace. Wind and demand are plotted together in MW; imbalance price is shown alongside in GBP/MWh. No computations or stored runs were used."
+    }
+  ],
+  "remove": [],
+  "background_chat": false,
+  "new_workspace": false,
+  "name": "Wind, demand and imbalance price \u2014 Feb to Mar 2026"
+}

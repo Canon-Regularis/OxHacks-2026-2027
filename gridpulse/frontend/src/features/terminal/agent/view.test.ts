@@ -16,7 +16,7 @@ const catalog: Catalog = {
 };
 import type { Catalog } from '$lib/types';
 import { createDocument } from '../model/document';
-import { createWidget } from '../model/types';
+import { createWidget, type Layout } from '../model/types';
 import { compileView, persistentDocument } from './view';
 import type { View } from './types';
 const range = { from: '2026-10-25', to: '2026-10-25' };
@@ -115,9 +115,17 @@ it('keeps chat exactly second in a setup stack and carries it into an explicit n
   view.background_chat = true;
   view.widgets[0].position = 'tab';
   const result = compileView(doc, view, catalog, size, chat.id);
-  const stack = result.workspaces[0].layout!;
-  expect(stack.kind).toBe('stack');
-  if (stack.kind === 'stack') expect(stack.widgets[1]).toBe(chat.id);
+  const findChat = (node: Layout): Extract<Layout, { kind: 'stack' }> | null =>
+    node.kind === 'stack'
+      ? node.widgets.includes(chat.id)
+        ? node
+        : null
+      : (findChat(node.children[0]) ?? findChat(node.children[1]));
+  const stack = findChat(result.workspaces[0].layout!)!;
+  expect(stack.widgets[1]).toBe(chat.id);
+  expect(result.workspaces[0].widgets[stack.active].title).toBe(
+    'Price evidence',
+  );
   view.new_workspace = true;
   const branched = compileView(doc, view, catalog, size, chat.id);
   expect(branched.workspaces).toHaveLength(2);
@@ -210,6 +218,7 @@ it('places multiple new charts relative to one another in one atomic AI view', (
     ],
   };
   const view = intent();
+  view.layout_mode = 'preserve';
   view.widgets.push({
     ...view.widgets[0],
     key: 'wind',
@@ -248,4 +257,57 @@ it('preserves the original workspace if a later chart in an AI batch fails', () 
     compileView(doc, view, catalog, { width: 1800, height: 1200 }, 'chat'),
   ).toThrow(/unavailable data/);
   expect(JSON.stringify(doc)).toBe(before);
+});
+
+it('accepts source-series output selections instead of treating them as algorithm keys', () => {
+  const view = intent();
+  view.widgets[0].outputs = ['price'];
+  const result = compileView(
+    createDocument(range),
+    view,
+    catalog,
+    size,
+    'chat',
+  );
+  expect(
+    Object.values(result.workspaces[0].widgets).find(
+      (w) => w.title === 'Price evidence',
+    )!.settings.outputs,
+  ).toEqual(['price']);
+});
+
+it('compiles the captured OpenRouter research view including an unbound explanation widget', async () => {
+  const fixture =
+    await import('../../../../../contracts/agent/view.openrouter.example.json');
+  const sources: Catalog = {
+    ...catalog,
+    series: [
+      ...catalog.series,
+      { id: 'wind', label: 'Wind', unit: 'MW', kind: 'forecast', datasets: [] },
+      {
+        id: 'demand',
+        label: 'Demand',
+        unit: 'MW',
+        kind: 'forecast',
+        datasets: [],
+      },
+    ],
+  };
+  const result = compileView(
+    createDocument(range),
+    JSON.parse(JSON.stringify(fixture.default)),
+    sources,
+    { width: 1400, height: 850 },
+    'chat',
+  );
+  expect(
+    Object.values(result.workspaces[0].widgets).some(
+      (w) => w.type === 'context' && w.title === 'Notes',
+    ),
+  ).toBe(true);
+  expect(
+    Object.values(result.workspaces[0].widgets).some(
+      (w) => w.type === 'table' && w.title === 'Wind and demand data table',
+    ),
+  ).toBe(true);
 });

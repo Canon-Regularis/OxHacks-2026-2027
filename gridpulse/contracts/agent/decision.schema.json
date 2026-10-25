@@ -93,6 +93,15 @@
           "title": "To Date",
           "type": "string"
         },
+        "layout_mode": {
+          "default": "research",
+          "enum": [
+            "research",
+            "preserve"
+          ],
+          "title": "Layout Mode",
+          "type": "string"
+        },
         "version": {
           "const": 1,
           "default": 1,
@@ -279,6 +288,18 @@
           "default": null,
           "description": "Optional parent divider step: horizontal 1..23 out of 24, vertical 1..15 out of 16; measures the first child share.",
           "title": "Size Step"
+        },
+        "metric": {
+          "default": "",
+          "maxLength": 100,
+          "title": "Metric",
+          "type": "string"
+        },
+        "category": {
+          "default": "",
+          "maxLength": 100,
+          "title": "Category",
+          "type": "string"
         },
         "notes": {
           "default": "",

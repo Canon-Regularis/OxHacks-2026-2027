@@ -1286,3 +1286,74 @@ test('AI renders a February–March investigation with charts placed relative to
     ).toHaveCount(0);
   expect(errors).toEqual([]);
 });
+
+test('AI source data tables render wind and demand rows instead of an algorithm placeholder', async ({
+  page,
+}) => {
+  await page.route('**/api/agent/turns/stream', async (route) => {
+    const turn = route.request().postDataJSON();
+    const events = [
+      {
+        type: 'view',
+        workspace_id: turn.workspace_id,
+        revision: turn.revision,
+        view: {
+          version: 1,
+          from_date: date,
+          to_date: date,
+          widgets: [
+            {
+              key: 'data',
+              existing: null,
+              type: 'table',
+              title: 'Wind and demand data',
+              series: ['wind', 'demand'],
+              algorithm: null,
+              run_id: null,
+              outputs: [],
+              table: '',
+              group: 'A',
+              relative_to: null,
+              position: 'tab',
+              notes: '',
+            },
+          ],
+          remove: [],
+          background_chat: false,
+          new_workspace: false,
+          name: 'Data',
+        },
+      },
+      { type: 'completed' },
+    ];
+    await route.fulfill({
+      contentType: 'text/event-stream',
+      body: events
+        .map(
+          (event, i) =>
+            `data: ${JSON.stringify({ version: 1, turn_id: turn.turn_id, sequence: i + 1, ...event })}\n\n`,
+        )
+        .join(''),
+    });
+  });
+  await page.goto('/terminal');
+  await page.getByRole('button', { name: '✦ AI', exact: true }).click();
+  await page
+    .getByRole('textbox', { name: 'Message AI' })
+    .fill('Show a table of wind and demand');
+  await page.getByRole('button', { name: 'Send ↗', exact: true }).click();
+  await page
+    .getByRole('tab', { name: 'Wind and demand data', exact: true })
+    .click();
+  await expect(
+    page.getByRole('columnheader', { name: /Wind forecast/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('columnheader', { name: /National demand/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByText('Choose an algorithm binding in widget settings.', {
+      exact: true,
+    }),
+  ).toHaveCount(0);
+});

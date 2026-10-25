@@ -38,10 +38,13 @@ class Settings(BaseSettings):
     query_timeout_seconds: int = 15
 
     # Terminal agent. Provider credentials and proxy token never leave the server.
+    openrouter_api_key: str = ""
     cwave_api_key: str = ""
+    agent_provider: Literal["openrouter", "canopywave"] = "openrouter"
+    agent_reasoning_effort: Literal["none", "low", "medium"] = "low"
     agent_access_token: str = ""
-    agent_base_url: str = "https://inference.canopywave.io/v1"
-    agent_model: str = "moonshotai/kimi-k2.6"
+    agent_base_url: str = "https://openrouter.ai/api/v1"
+    agent_model: str = "openai/gpt-5.4-mini"
     agent_max_tokens: int = 5000
     agent_turn_timeout_seconds: int = 180
     agent_job_timeout_seconds: int = 90

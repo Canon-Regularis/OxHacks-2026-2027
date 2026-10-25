@@ -15,17 +15,26 @@ class Provider:
 
     async def decide(self, messages: list[dict]) -> Decision:
         settings = self.settings
-        if not settings.cwave_api_key:
-            raise ProviderError("AI is not configured on the backend (CWAVE_API_KEY).")
+        provider = getattr(settings, "agent_provider", "canopywave")
+        key = settings.openrouter_api_key if provider == "openrouter" else settings.cwave_api_key
+        if not key:
+            variable = "OPENROUTER_API_KEY" if provider == "openrouter" else "CWAVE_API_KEY"
+            raise ProviderError(f"AI is not configured on the backend ({variable}).")
         request_messages = list(messages)
         async with httpx.AsyncClient(timeout=60) as client:
             while True:
                 try:
+                    payload = {"model": settings.agent_model, "messages": request_messages, "max_tokens": settings.agent_max_tokens}
+                    if provider == "openrouter":
+                        payload.update({"response_format": {"type": "json_object"},
+                                        "reasoning": {"effort": settings.agent_reasoning_effort, "exclude": True},
+                                        "provider": {"require_parameters": True}})
+                    else:
+                        payload["temperature"] = 0.2
                     response = await client.post(
                         settings.agent_base_url.rstrip("/") + "/chat/completions",
-                        headers={"Authorization": f"Bearer {settings.cwave_api_key}"},
-                        json={"model": settings.agent_model, "messages": request_messages,
-                              "max_tokens": settings.agent_max_tokens, "temperature": 0.2},
+                        headers={"Authorization": f"Bearer {key}"},
+                        json=payload,
                     )
                     response.raise_for_status()
                     choice = response.json()["choices"][0]
