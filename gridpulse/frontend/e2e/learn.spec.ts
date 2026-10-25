@@ -59,11 +59,13 @@ test('sources show real catalogue fields, distinguish stored-only data and filte
   await expect(missing).toContainText('Reanalysis');
   await expect(missing).toContainText('No catalogue chart series');
   await expect(missing).toContainText('Not supplied');
-  const clock = page.locator('tbody tr').filter({ hasText: 'clock_fixture' });
+  const clock = page
+    .locator('.sources-table tbody tr')
+    .filter({ hasText: 'clock_fixture' });
   await expect(clock.getByRole('cell').last()).toHaveText('0');
   await page.getByLabel('Search datasets').fill('elexon_system_prices');
   await expect(page.locator('.sources-table tbody tr')).toHaveCount(1);
-  await expect(page.locator('tbody')).toContainText('GBP/MWh');
+  await expect(page.locator('.sources-table tbody')).toContainText('GBP/MWh');
   await page.getByLabel('Search datasets').fill('nothing_matches');
   await expect(
     page.getByText('No matching datasets.', { exact: true }),
@@ -92,7 +94,9 @@ test('source timestamps honour UK clock changes without conflating the repeated 
   );
   await catalogueRoutes(page);
   await page.goto('/sources');
-  const clock = page.locator('tbody tr').filter({ hasText: 'clock_fixture' });
+  const clock = page
+    .locator('.sources-table tbody tr')
+    .filter({ hasText: 'clock_fixture' });
   await expect(clock).toContainText('01:30 BST');
   await expect(clock).toContainText('01:30 GMT');
 });
@@ -167,6 +171,9 @@ test('new pages and navigation fit narrow screens while the dataset table scroll
   await catalogueRoutes(page);
   for (const path of ['/sources', '/quick-start']) {
     await page.goto(path);
+    await expect(page.locator('.site-footer')).toHaveCount(
+      path === '/sources' ? 0 : 1,
+    );
     for (const width of [1440, 768, 390, 320]) {
       await page.setViewportSize({ width, height: 900 });
       const nav = page.getByRole('navigation', { name: 'Primary navigation' });
@@ -195,4 +202,25 @@ test('new pages and navigation fit narrow screens while the dataset table scroll
         });
     }
   }
+});
+
+test('quick start exposes the same Terminal keyboard reference', async ({
+  page,
+}) => {
+  await page.goto('/quick-start');
+  await page
+    .getByRole('navigation', { name: 'Tutorial steps' })
+    .getByRole('link', { name: /Keyboard shortcuts/ })
+    .click();
+  const reference = page.getByRole('region', {
+    name: 'Keep the keys close.',
+    exact: true,
+  });
+  await expect(reference).toBeInViewport();
+  await expect(
+    reference.getByRole('table', { name: 'Workspace', exact: true }),
+  ).toContainText('Open Search / Add');
+  await expect(
+    reference.getByRole('table', { name: 'Layout', exact: true }),
+  ).toContainText('snap step');
 });

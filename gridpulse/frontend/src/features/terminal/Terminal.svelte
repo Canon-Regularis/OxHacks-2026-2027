@@ -627,6 +627,12 @@
         external = true;
     };
     const key = (e: KeyboardEvent) => {
+      if (
+        e.defaultPrevented ||
+        e.isComposing ||
+        document.querySelector('dialog[open]')
+      )
+        return;
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         drawer = 'add';
@@ -639,7 +645,9 @@
         e.key.toLowerCase() === 'z' &&
         !(
           e.target instanceof HTMLInputElement ||
-          e.target instanceof HTMLTextAreaElement
+          e.target instanceof HTMLTextAreaElement ||
+          e.target instanceof HTMLSelectElement ||
+          (e.target instanceof HTMLElement && e.target.isContentEditable)
         )
       ) {
         e.preventDefault();

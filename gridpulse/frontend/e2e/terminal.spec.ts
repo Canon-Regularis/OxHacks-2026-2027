@@ -934,3 +934,60 @@ test('widget group badges switch groups without opening settings', async ({
     .click();
   await expect(compactBadge).toContainText('B');
 });
+
+test('keyboard reference is accessible in settings and modal shortcuts cannot change the workspace behind it', async ({
+  page,
+}) => {
+  await page.goto('/terminal');
+  await expect(
+    page.locator('path[data-terminal-series="price"]'),
+  ).toBeVisible();
+  await page
+    .getByRole('button', { name: 'Open settings', exact: true })
+    .click();
+  const settings = page.getByRole('dialog', { name: 'Settings', exact: true });
+  const help = settings.getByRole('button', {
+    name: 'Keyboard shortcuts',
+    exact: true,
+  });
+  await help.click();
+  await expect(help).toHaveAttribute('aria-expanded', 'true');
+  await expect(
+    settings.getByRole('heading', {
+      name: 'Terminal keyboard shortcuts',
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    settings.getByRole('table', { name: 'Charts', exact: true }),
+  ).toContainText('Home / End');
+  await page.keyboard.press('Control+k');
+  await expect(settings).toBeVisible();
+  await expect(
+    page.getByRole('dialog', { name: 'Search / Add', exact: true }),
+  ).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await expect(settings).not.toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Open settings', exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press('Control+k');
+  await expect(
+    page.getByRole('dialog', { name: 'Search / Add', exact: true }),
+  ).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(
+    page.getByRole('dialog', { name: 'Search / Add', exact: true }),
+  ).toHaveCount(0);
+  const tabs = page
+    .getByRole('tablist', { name: 'Workspaces', exact: true })
+    .getByRole('tab');
+  await page
+    .getByRole('button', { name: 'New blank workspace', exact: true })
+    .click();
+  await expect(tabs).toHaveCount(2);
+  await page.keyboard.press('Control+z');
+  await expect(tabs).toHaveCount(1);
+  await page.keyboard.press('Control+Shift+z');
+  await expect(tabs).toHaveCount(2);
+});

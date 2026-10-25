@@ -78,7 +78,7 @@ See [Terminal usage and extension seams](../../docs/gridpulse/TERMINAL_WORKSPACE
 
 ## Workspace settings
 
-The app uses a dark theme. The navbar gear opens a keyboard-accessible modal drawer on every page. Preferences apply immediately and persist in `gridpulse:settings:v1`: UTC or UK local time, device/reduced motion, Overview chart gridlines, standard/bold Overview chart lines, and whether to remember the current view. UK time labels include BST/GMT, including the repeated clock-change hour; settlement dates and API requests retain their original meaning.
+The app uses a dark theme. The navbar gear opens a keyboard-accessible modal drawer on every page. Preferences apply immediately and persist in `gridpulse:settings:v1`: UTC or UK local time, device/reduced motion, pastel orange/red/green accent, Overview chart gridlines, standard/bold Overview chart lines, and whether to remember the current view. UK time labels include BST/GMT, including the repeated clock-change hour; settlement dates and API requests retain their original meaning.
 
 The root layout owns settings and saved-view persistence for all routes, with storage events synchronising tabs. Turning off **Remember my view** removes the saved view while keeping the current session's selection; reloading starts with the latest day and default properties. **Reset settings** restores all settings and view defaults. Browser storage failures leave the current session usable. Market values are never saved as preferences.
 
@@ -97,3 +97,9 @@ About introduces Eisengrau as a workspace for algorithmic analysis of GB electri
 `/quick-start` is a four-step static Terminal walkthrough. Its four screenshots under `static/quick-start/` were captured from the real local app; capture dates, date range and stored run are recorded in `features/quick-start/capture.json`. Images can be opened at full size. To recapture them, run `node scripts/capture-quick-start.mjs` against a local frontend/backend with an available `price_naive_backtest` run (`LOCAL_PREVIEW_URL` overrides the default `http://127.0.0.1:5174`). The script uses an isolated browser context and does not change the user's workspace. Screenshots illustrate a saved investigation rather than current data.
 
 Both pages use `styles/learn.css` for KCPC-style editorial headings, neutral borders and the shared pastel-orange accent. Browser tests cover catalogue fields, unknown/empty data, errors/retry, filtering, clock-change labels, mobile navigation and tutorial images/anchors. Unit tests cover dataset/series joins and chronological coverage bounds.
+
+## Accent preferences and keyboard help
+
+Settings includes three pastel accent choices: orange (default), red and green. `ACCENTS` in `lib/state/settings.ts` defines the allowed palette. The version-1 settings normaliser defaults older/invalid accent values to orange without discarding other preferences. The root layout applies `--site-accent` and the legacy `--orange` UI alias; chart-series colours remain tied to their metrics and widget settings. Accent changes persist, sync across tabs and reset with other settings. About’s PixelBlast uses the chosen accent without remounting.
+
+**Settings → Keyboard shortcuts** opens a reference inside the settings drawer. The same `components/help/TerminalShortcuts.svelte` reference appears in Quick Start. It documents Search/Add, undo/redo, chart selection, snapped divider resizing and group-picker controls. Terminal global shortcuts pause while a native modal dialog is open; text fields retain native undo. Data Sources, like Terminal, omits the shared site footer.

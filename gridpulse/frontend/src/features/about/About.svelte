@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { ACCENTS } from '$lib/state/settings';
   import { useSettings, reducedMotion } from '$lib/state/settings.svelte';
   const settings = useSettings();
   import Hero from './Hero.svelte';
@@ -70,7 +71,7 @@
   >
     <div class="absolute inset-0" aria-hidden="true">
       {#if Pixels && !reduced}<Pixels
-          color="#e6b080"
+          color={ACCENTS[settings.accent].color}
           speed={0.35}
           patternDensity={1.8}
           edgeFade={0.7}

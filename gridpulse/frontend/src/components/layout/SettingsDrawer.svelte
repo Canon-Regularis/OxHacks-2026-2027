@@ -1,9 +1,12 @@
 <script lang="ts">
   import { getContext, onMount } from 'svelte';
+  import TerminalShortcuts from '../help/TerminalShortcuts.svelte';
   import { useSettings } from '$lib/state/settings.svelte';
+  import { ACCENTS, type Accent } from '$lib/state/settings';
   const settings = useSettings();
   const reset = getContext<() => void>('gridpulse:reset');
   let mounted = $state(false);
+  let showShortcuts = $state(false);
   onMount(() => {
     mounted = true;
   });
@@ -68,7 +71,10 @@
   class="settings-drawer"
   aria-labelledby="settings-title"
   aria-describedby="settings-description"
-  onclose={() => trigger.focus()}
+  onclose={() => {
+    showShortcuts = false;
+    trigger.focus();
+  }}
   onclick={dismissBackdrop}
   onkeydown={trapFocus}
 >
@@ -108,6 +114,32 @@
         ></select
       ></label
     >
+    <fieldset class="settings-accents">
+      <legend>Accent colour</legend>
+      <div class="settings-accent-options">
+        {#each Object.entries(ACCENTS) as [id, accent]}
+          <label
+            class="settings-accent-choice"
+            class:active={settings.accent === id}
+          >
+            <input
+              type="radio"
+              name="accent-colour"
+              value={id as Accent}
+              bind:group={settings.accent}
+              aria-label={accent.label}
+            />
+            <span
+              class="settings-accent-swatch"
+              style:background={accent.color}
+              aria-hidden="true"
+            ></span>
+            <span>{accent.label.replace('Pastel ', '')}</span>
+          </label>
+        {/each}
+      </div>
+      <p>Chart series keep consistent colours.</p>
+    </fieldset>
     <label class="settings-toggle"
       ><span>Chart gridlines</span><input
         type="checkbox"
@@ -137,6 +169,28 @@
         bind:checked={settings.rememberView}
       /></label
     >
+  </div>
+  <div class="settings-help">
+    <button
+      class="quiet-button"
+      aria-expanded={showShortcuts}
+      aria-controls="settings-shortcuts"
+      onclick={() => (showShortcuts = !showShortcuts)}
+      >Keyboard shortcuts</button
+    >
+    <section
+      id="settings-shortcuts"
+      class="settings-shortcuts"
+      hidden={!showShortcuts}
+      aria-labelledby="settings-shortcuts-heading"
+    >
+      <h3 id="settings-shortcuts-heading">Terminal keyboard shortcuts</h3>
+      <p>
+        Use these on the Terminal page. Tab moves between controls; Shift + Tab
+        moves back.
+      </p>
+      <TerminalShortcuts />
+    </section>
   </div>
   <div class="settings-reset">
     <button class="quiet-button" onclick={reset}>Reset settings</button>

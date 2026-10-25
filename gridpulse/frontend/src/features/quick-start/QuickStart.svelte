@@ -1,10 +1,12 @@
 <script lang="ts">
   import capture from './capture.json';
+  import TerminalShortcuts from '../../components/help/TerminalShortcuts.svelte';
   const steps = [
     { id: 'start', number: '01', label: 'Start with the data' },
     { id: 'analysis', number: '02', label: 'Add an algorithm' },
     { id: 'workspace', number: '03', label: 'Make the view yours' },
     { id: 'save', number: '04', label: 'Save & export' },
+    { id: 'shortcuts', number: '⌨', label: 'Keyboard shortcuts' },
   ];
   const day = (value: string) =>
     new Date(value).toLocaleDateString('en-GB', {
@@ -267,6 +269,19 @@
             >
           </figcaption>
         </figure>
+      </section>
+      <section
+        class="quick-shortcuts"
+        id="shortcuts"
+        aria-labelledby="quick-shortcuts-heading"
+      >
+        <p class="learn-eyebrow">KEYBOARD REFERENCE</p>
+        <h2 id="quick-shortcuts-heading">Keep the keys close.</h2>
+        <p>
+          Find this reference any time in Settings → Keyboard shortcuts. These
+          controls apply while Terminal is open.
+        </p>
+        <TerminalShortcuts />
       </section>
       <p class="quick-capture-note">
         Screenshots are examples captured from the app using real stored data

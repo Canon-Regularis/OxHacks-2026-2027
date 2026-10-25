@@ -4,6 +4,8 @@ Terminal is Eisengrau's docked research workspace at `/terminal`. The old `/expl
 
 ## User workflow
 
+Open the navbar gear and choose **Keyboard shortcuts** for the current key reference; it is also in Quick Start. Ctrl/Cmd+K opens Search/Add, Ctrl/Cmd+Z undoes workspace changes, and Shift adds redo. Focused charts support arrow keys and Home/End; focused dividers resize by snapped arrow-key steps. Global workspace shortcuts do not act behind the app settings modal or take undo away from text fields.
+
 The Terminal uses one compact toolbar: workspace tabs, date range, Search / Add and Workspaces. Its title block and site footer are omitted to leave more space for tiles; other pages retain their footer.
 
 1. Open **Search / Add** (Ctrl/Cmd+K). Choose **Data**, **Algorithms** or **Widgets**, then search that category. Data opens by default; there is no All tab.

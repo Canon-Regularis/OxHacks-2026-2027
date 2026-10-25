@@ -613,3 +613,19 @@
   color: var(--muted-foreground);
   font-size: 11px;
 }
+
+.quick-shortcuts {
+  scroll-margin-top: 28px;
+  padding-bottom: 32px;
+  margin-bottom: 32px;
+  border-bottom: 1px solid var(--border);
+}
+.quick-shortcuts h2 {
+  margin: 12px 0 20px;
+}
+.quick-shortcuts > p:not(.learn-eyebrow) {
+  color: var(--muted-foreground);
+  font-size: 14px;
+  line-height: 1.8;
+  margin-bottom: 24px;
+}
