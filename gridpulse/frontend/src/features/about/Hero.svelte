@@ -21,14 +21,14 @@
 
 <section class="hero">
   <div class="hero-copy">
-    <p class="eyebrow">GB ELECTRICITY / AI-POWERED ANALYSIS</p>
-    <h1>Follow the market.<br /><span>Inspect the detail.</span></h1>
+    <p class="eyebrow">UK ENERGY / ALGORITHMS &amp; AI</p>
+    <h1>Energy data.<br /><span>Deeper analysis.</span></h1>
     <p class="hero-description">
-      AI-powered investigation of Britain’s electricity market. An AI agent
-      helps you choose the right algorithms and visualise the data you need,
-      from wind and demand to imbalance prices.
+      Explore Great Britain’s electricity market with algorithms for
+      forecasting, backtesting and statistical analysis. Bring wind, demand and
+      imbalance prices together in one research workspace.
     </p>
-    <a class="text-link" href="/">Open the overview <span>↗</span></a>
+    <a class="text-link" href="/terminal">Open Terminal <span>↗</span></a>
   </div>
   <div class="hero-globe" aria-hidden="true">
     {#if Globe && ready}<Globe
@@ -43,6 +43,6 @@
         coastColor={globeColor}
         halftoneDotColor="#a1a1a1"
       />{/if}
-    <span class="globe-caption">GREAT BRITAIN / CONNECTED ENERGY</span>
+    <span class="globe-caption">GREAT BRITAIN / ELECTRICITY ANALYSIS</span>
   </div>
 </section>

@@ -39,6 +39,17 @@ test('About, its decorative bands, header and footer fill the viewport', async (
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
+    const divider = await page.locator('.about-page .hero').evaluate((hero) => {
+      const style = getComputedStyle(hero);
+      return { width: style.borderBottomWidth, style: style.borderBottomStyle };
+    });
+    expect(divider).toEqual({ width: '1px', style: 'solid' });
+    if (width === 1440 || width === 390) {
+      await page.screenshot({
+        path: test.info().outputPath(`about-${width}.png`),
+        fullPage: true,
+      });
+    }
   }
 });
 

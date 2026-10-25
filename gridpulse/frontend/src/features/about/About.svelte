@@ -23,21 +23,24 @@
   const sections = [
     {
       number: '01',
-      title: 'Observe the market',
+      label: 'THE ALGORITHMS',
+      title: 'Explore the methods',
       description:
-        'Choose a settlement day and compare imbalance price, forecast and actual wind, forecast and actual demand, residual demand and net imbalance volume. Select one to five properties, with up to two unit axes on a shared chart.',
+        'Compare ARIMA, exponential smoothing, regression and baseline forecasts through stored backtest results. Examine forecast errors, rolling price signals and correlations to see where patterns hold and where models struggle.',
     },
     {
       number: '02',
-      title: 'Scan every half-hour',
+      label: 'THE WORKSPACE',
+      title: 'Build your investigation',
       description:
-        'Hover, tap or use the keyboard to inspect a half-hour across the chart, summary cards and magnifying day scan. The scan follows your chosen property and supports 46, 48 and 50-period days. Your view preferences are remembered.',
+        'Use Terminal to bring source data and algorithm outputs into linked charts, tables and comparisons. Arrange your workspace, inspect the same period across views, save your findings and export chart or table data as CSV.',
     },
     {
       number: '03',
-      title: 'See the whole day',
+      label: 'AI ASSISTANCE · IN DEVELOPMENT',
+      title: 'From questions to evidence',
       description:
-        'Day at a glance summarises the selected properties’ daily averages, price extremes, negative-price duration and peak forecast demand. These daily statistics stay fixed while you inspect individual periods; missing readings are excluded and price coverage is shown.',
+        'An AI agent is being added to help you choose suitable algorithms and assemble the visualisations for your question. Its role is to guide investigations using the app’s data and analysis tools, with the supporting results kept in view.',
     },
   ];
 </script>
@@ -46,7 +49,7 @@
   <Hero />
   <div class="about-cards">
     {#each sections as section}<Card class="about-card"
-        ><span class="eyebrow">{section.number} / IN OVERVIEW</span>
+        ><span class="eyebrow">{section.number} / {section.label}</span>
         <h3>{section.title}</h3>
         <p>{section.description}</p></Card
       >{/each}
@@ -73,78 +76,86 @@
     <section
       class="pointer-events-none relative z-10 max-w-4xl mx-auto px-6 about-pixel-copy"
     >
-      <p class="eyebrow">FROM CONDITIONS TO CONTEXT</p>
+      <p class="eyebrow">FROM DATA TO ANALYSIS</p>
       <h2>
         <TextShimmer
-          text="Follow the evidence."
+          text="Find patterns. Test ideas."
           color="var(--orange)"
           shineColor="rgba(255,235,216,.9)"
           disabled={reduced}
         />
       </h2>
       <p>
-        Follow a price spike, a negative-price period or a change in wind and
-        demand. Keep the same half-hour in view across every selected property,
-        then step back to the day’s summary.
+        Compare forecasts with settled prices, explore how wind and demand move
+        with the market, and inspect the errors behind each model. Bring the
+        evidence together in linked charts and tables.
       </p>
       <div class="pointer-events-auto">
-        <a class="about-cta" href="/">Open the overview <span>↗</span></a>
+        <a class="about-cta" href="/terminal">Explore Terminal <span>↗</span></a
+        >
       </div>
     </section>
   </div>
   <section class="about-definition">
     <div class="about-definition-copy">
-      <p class="eyebrow">KNOW THE DIFFERENCE</p>
+      <p class="eyebrow">UNDERSTAND THE MARKET</p>
       <h2>What is imbalance?</h2>
       <p>
-        A participant's imbalance is the difference between the electricity it
-        contracted to generate or use and what it actually generated or used,
-        after settlement adjustments. The imbalance price is used to settle that
-        surplus or shortfall.
+        Electricity participants contract to generate or use energy. Their
+        imbalance is the difference between that contracted position and what
+        they actually generate or use, after settlement adjustments. The
+        imbalance price settles the resulting surplus or shortfall.
       </p>
       <p>
-        Residual demand is a different metric: our forecast demand minus
-        forecast wind. It is not a measure of system imbalance.
+        Eisengrau lets you analyse that price alongside wind, demand and net
+        imbalance volume. Residual demand is shown separately as forecast demand
+        minus forecast wind, so you can investigate changing conditions without
+        confusing it with a participant’s imbalance.
       </p>
       <a
         href="https://www.elexon.co.uk/bsc/settlement/imbalance-pricing/"
         target="_blank"
         rel="noreferrer"
-        class="text-link">Read Elexon's explanation ↗</a
+        class="text-link">Explore imbalance pricing ↗</a
       >
     </div>
   </section>
-  <section class="about-data" aria-label="Public market data">
+  <section class="about-data" aria-label="Data behind the analysis">
     <div>
-      <p class="eyebrow">PUBLIC MARKET DATA</p>
+      <p class="eyebrow">DATA BEHIND THE ANALYSIS</p>
     </div>
     <div class="about-data-copy">
       <p>
-        The market series use publicly available Elexon and NESO data, served
-        through Eisengrau’s backend from Tiger Data. Wind and demand forecasts
-        are published source forecasts, with the latest version issued before
-        delivery selected for each period. They are separate from actual
-        generation and demand readings.
+        Elexon and NESO provide the GB electricity series used in Eisengrau:
+        imbalance prices, wind and demand forecasts, available actual readings
+        and net imbalance volume. Overview gives you a daily starting point;
+        Terminal brings those series together with the statistical analysis.
       </p>
       <p>
-        Prices are retrospective settlement values. Actual demand can arrive
-        later, and wind forecast and outturn coverage can differ. Missing
-        readings stay missing; units, source notes and data freshness help you
-        interpret what is available. This is an inspection view, not a claim
-        that every value was known at the time.
+        Algorithms are computed on the backend and their completed results are
+        stored in Tiger Data. In Terminal, you can inspect each run’s version,
+        settings, coverage and source data, then compare its outputs without
+        rerunning a calculation every time you change a chart.
+      </p>
+      <p>
+        Forecasts and actual readings stay distinct, missing data remains
+        visible, and each method carries its assumptions and limitations.
+        Backtests show how forecasts performed on historical data; correlations
+        describe relationships between series. Both help you assess the evidence
+        behind an analysis.
       </p>
       <div class="about-source-links">
         <a
           class="text-link"
           href="https://bmrs.elexon.co.uk/"
           target="_blank"
-          rel="noreferrer">Elexon Insights ↗</a
+          rel="noreferrer">Elexon electricity data ↗</a
         >
         <a
           class="text-link"
           href="https://www.neso.energy/data-portal"
           target="_blank"
-          rel="noreferrer">NESO Data Portal ↗</a
+          rel="noreferrer">NESO electricity data ↗</a
         >
       </div>
     </div>

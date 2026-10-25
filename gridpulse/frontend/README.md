@@ -79,3 +79,7 @@ The root layout owns settings and saved-view persistence for all routes, with st
 `src/lib/state/settings.ts` holds validated defaults and timestamp formatting; `settings.svelte.ts` provides per-layout reactive state. `SettingsDrawer.svelte` uses a native modal dialog with focus wrapping, Escape/backdrop dismissal and focus restoration. Presentation styles live in `src/styles/settings.css`. On narrow screens, disabled planned navigation items yield space to active pages and the gear. Automated checks cover storage corruption/denial, reloads, cross-tab updates, clock changes, chart behavior, keyboard focus, and mobile layouts.
 
 Terminal retains its own workspace and per-widget chart preferences. The navbar time display applies to Overview and Status; Terminal time labels follow its existing workspace settings.
+
+## About page narrative
+
+About introduces Eisengrau as a workspace for algorithmic analysis of GB electricity data. Terminal is the primary destination for forecasts, backtests, rolling signals, correlations and diagnostics; Overview is the daily starting point. About describes stored results, linked views and CSV exports, and labels AI assistance as in development while the agent remains a placeholder. Keep that status aligned with the deployed implementation.

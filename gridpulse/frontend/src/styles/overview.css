@@ -522,6 +522,7 @@ select:focus-visible,
   max-width: 500px;
 }
 .about-cards {
+  padding-top: 36px;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
