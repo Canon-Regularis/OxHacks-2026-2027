@@ -134,8 +134,8 @@ select {
 }
 .site-header {
   height: 84px;
-  max-width: 1500px;
-  margin: auto;
+  max-width: none;
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 60px;
@@ -727,8 +727,8 @@ select {
   line-height: 1.7;
 }
 .site-footer {
-  max-width: 1440px;
-  margin: auto;
+  max-width: none;
+  margin: 0;
   padding: 28px 48px;
   display: flex;
   justify-content: space-between;

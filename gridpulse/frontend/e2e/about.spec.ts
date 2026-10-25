@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('About and its decorative bands fill the viewport at every breakpoint', async ({
+test('About, its decorative bands, header and footer fill the viewport', async ({
   page,
 }) => {
   await page.goto('/about');
@@ -15,6 +15,8 @@ test('About and its decorative bands fill the viewport at every breakpoint', asy
   for (const width of [1920, 1440, 1024, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });
     for (const selector of [
+      '.site-header',
+      '.site-footer',
       '.about-page',
       '.about-spacer',
       '.about-pixel-section',
