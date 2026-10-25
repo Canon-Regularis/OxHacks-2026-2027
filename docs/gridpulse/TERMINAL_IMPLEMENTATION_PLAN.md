@@ -46,7 +46,7 @@ Verified from current code:
 
 ```text
 Shared Eisengrau navigation: Overview | Terminal | Methods | About
-Terminal toolbar: workspace tabs | date range | Search/Add | quick Chart | Workspaces (undo/redo in widget bar)
+Terminal toolbar: workspace tabs | date range | Search/Add | Workspaces (undo/redo in widget bar)
 Widget bar: [Price + wind · A] [Backtest metrics · A] [Period inspector · A]
 Dock canvas: split tiles and tab stacks
 Status strip: mode, freshness, active group and request state
@@ -97,7 +97,7 @@ Each widget stores a group ID or is independent. Groups have a readable name, le
 
 ## 6. Catalogue, run binding and chart builder
 
-The Add drawer searches Data, Algorithms, Widgets and Presets. Support keyboard navigation and meaningful empty results. Only catalogue-registered algorithms appear as usable tools.
+The Add drawer searches the selected Data, Algorithms or Widgets category, defaulting to Data. Workspace presets are created and loaded through Workspaces; no All or Presets tab appears in Search / Add. Support keyboard navigation and meaningful empty results. Only catalogue-registered algorithms appear as usable tools.
 
 Algorithm actions:
 
@@ -238,4 +238,4 @@ The environment template was committed separately with empty server-side credent
 
 The shared action interface is in `model/actions.ts`; UI placement uses the same pure layout engine. Source and algorithm series can coexist in one chart. The inspector uses preloaded values for hover and fetches full publication history on committed selection. This preserves the no-per-hover-request rule without prefetching hundreds of period-detail responses. Tab headers accept insertion before the target tab; keyboard-accessible move settings offer the same placement.
 
-Compact-layout refinement: remove the Terminal title block and its site footer, combine dates and actions into one toolbar, suggest legal menu placements, and offer one-click Chart placement. New splits may minimally rebalance existing snapped dividers while preserving tile order and minimum readable sizes. The revised tests demonstrate four visible charts plus the two supporting widgets on one desktop screen.
+Compact-layout refinement: remove the Terminal title block and its site footer, combine dates and actions into one toolbar, automatically place added content into a legal split, with presets managed separately in Workspaces. New splits may minimally rebalance existing snapped dividers while preserving tile order and minimum readable sizes. The revised tests demonstrate four visible charts plus the two supporting widgets on one desktop screen.

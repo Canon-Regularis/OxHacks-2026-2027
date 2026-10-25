@@ -66,6 +66,7 @@
     cursor = $state<Record<string, string>>({});
   let widgetStatus = $state<Record<string, string>>({});
   let placementNote = $state('');
+  let presetSearch = $state('');
   let pending = $state<{ widget: Widget; binding?: Binding } | null>(null),
     target = $state(''),
     placement = $state<Position>('tab'),
@@ -297,12 +298,22 @@
     maximised = null;
     focused = null;
   }
-  function add(
-    type: WidgetType,
-    source?: string,
-    algorithm?: string,
-    automatic = false,
-  ) {
+  function loadPreset(id: string) {
+    mutate((_ws, d) => {
+      if (d.workspaces.length >= LIMITS.workspaces)
+        throw new Error('Maximum 16 workspaces.');
+      const saved = d.presets?.find((p) => p.id === id);
+      if (!saved) return;
+      const next = duplicateWorkspace(saved);
+      next.name = saved.name;
+      d.workspaces.push(next);
+      d.active = next.id;
+    });
+    drawer = null;
+    focused = null;
+    maximised = null;
+  }
+  function add(type: WidgetType, source?: string, algorithm?: string) {
     if (!workspace) return;
     if (widgets.length >= LIMITS.widgets) {
       notice =
@@ -344,7 +355,7 @@
       target = suggestion.widget;
       placement = suggestion.position;
     }
-    if (automatic && suggestion) {
+    if (suggestion) {
       finishAdd();
       return;
     }
@@ -745,11 +756,6 @@
         <button class="terminal-primary" onclick={() => (drawer = 'add')}
           >＋ Search / Add <kbd>⌘ K</kbd></button
         >
-        <button
-          title="Add a chart in available space beside the focused tile or the next suitable tile"
-          onclick={() => add('chart', undefined, undefined, true)}
-          disabled={workspace.locked}>＋ Chart</button
-        >
         <button onclick={() => (drawer = 'manage')}>Workspaces</button>
       </div>
     </div>
@@ -906,26 +912,7 @@
 {#if drawer === 'add' && catalog}<Drawer
     title="Search / Add"
     onclose={() => (drawer = null)}
-    ><Catalogue
-      {catalog}
-      savedPresets={doc?.presets ?? []}
-      onsaved={(id) => {
-        mutate((_ws, d) => {
-          if (d.workspaces.length >= LIMITS.workspaces)
-            throw new Error('Maximum 16 workspaces.');
-          const saved = d.presets?.find((p) => p.id === id);
-          if (!saved) return;
-          const next = duplicateWorkspace(saved);
-          next.name = saved.name;
-          d.workspaces.push(next);
-          d.active = next.id;
-        });
-        drawer = null;
-      }}
-      onadd={add}
-      onalgorithm={algorithm}
-      onpreset={(kind) => newWorkspace(kind)}
-    /></Drawer
+    ><Catalogue {catalog} onadd={add} onalgorithm={algorithm} /></Drawer
   >
 {:else if drawer === 'settings' && selectedWidget && workspace && catalog}<Drawer
     title="Widget settings"
@@ -1064,21 +1051,39 @@
             saved.name = `${ws.name} (${suffix++})`;
           d.presets = [...(d.presets ?? []), saved];
         });
-        notice = 'Saved as a reusable preset in Search / Add.';
+        notice = 'Saved as a reusable preset in Workspaces.';
       }}>Save current view as preset</button
     >
-    {#if doc.presets?.length}<details>
-        <summary>Saved presets ({doc.presets.length})</summary
-        >{#each doc.presets as saved}<div class="terminal-action-row">
-            <span>{saved.name}</span><button
-              onclick={() =>
-                mutate(
-                  (_ws, d) =>
-                    (d.presets = d.presets?.filter((p) => p.id !== saved.id)),
-                )}>Delete preset</button
-            >
-          </div>{/each}
-      </details>{/if}
+    <h3>Saved presets</h3>
+    <input
+      aria-label="Search saved presets"
+      placeholder="Search saved presets…"
+      bind:value={presetSearch}
+    />
+    {#each (doc.presets ?? []).filter((p) => p.name
+        .toLowerCase()
+        .includes(presetSearch.toLowerCase())) as saved}<div
+        class="terminal-action-row"
+      >
+        <button
+          class="terminal-load-preset"
+          onclick={() => loadPreset(saved.id)}>Load preset {saved.name}</button
+        ><button
+          aria-label={`Delete preset ${saved.name}`}
+          onclick={() =>
+            mutate(
+              (_ws, d) =>
+                (d.presets = d.presets?.filter((p) => p.id !== saved.id)),
+            )}>Delete</button
+        >
+      </div>{/each}
+    {#if !(doc.presets ?? []).some((p) => p.name
+        .toLowerCase()
+        .includes(presetSearch.toLowerCase()))}<p class="terminal-hint">
+        {doc.presets?.length
+          ? 'No matching saved presets.'
+          : 'Save the current view as a preset to reuse it later.'}
+      </p>{/if}
     <button onclick={() => exportDoc()}>Export configuration</button>
     <label
       >Import configuration<input

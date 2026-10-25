@@ -18,6 +18,13 @@ const catalog = {
   })),
 };
 const requests: string[] = [];
+async function addChart(page: import('@playwright/test').Page) {
+  await page.getByRole('button', { name: /Search \/ Add/ }).click();
+  await page.getByRole('button', { name: 'Widgets', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Time-series chart Add +', exact: true })
+    .click();
+}
 test.beforeEach(async ({ page }) => {
   requests.length = 0;
   await page.route('**/api/**', async (route) => {
@@ -166,6 +173,7 @@ test('catalogue opens an algorithm workspace with a consistent pinned chart/tabl
   await page
     .getByLabel('Search data algorithms and widgets')
     .fill('price_naive');
+  await page.getByRole('button', { name: 'Algorithms', exact: true }).click();
   await page
     .getByRole('button', { name: 'Open analysis layout', exact: true })
     .click();
@@ -196,10 +204,11 @@ test('placement rejects unreadable splits, supports tabbing and undo', async ({
   await expect(
     page.locator('path[data-terminal-series="price"]'),
   ).toBeVisible();
-  await page.getByRole('button', { name: /Search \/ Add/ }).click();
-  await page.getByLabel('Search data algorithms and widgets').fill('chart');
   await page
-    .getByRole('button', { name: 'Time-series chart Add +', exact: true })
+    .getByRole('button', { name: 'Settings for Time series', exact: true })
+    .click();
+  await page
+    .getByRole('button', { name: 'Duplicate widget', exact: true })
     .click();
   await page
     .getByLabel('Placement destination')
@@ -339,6 +348,7 @@ test('algorithm overlays retain source data and shared units', async ({
   await page
     .getByLabel('Search data algorithms and widgets')
     .fill('price_naive');
+  await page.getByRole('button', { name: 'Algorithms', exact: true }).click();
   await page
     .getByRole('button', { name: 'Add outputs to chart', exact: true })
     .click();
@@ -369,13 +379,9 @@ test('saved presets duplicate into independent workspaces and imports can be und
   await page
     .getByRole('button', { name: 'Save current view as preset', exact: true })
     .click();
-  await page.getByRole('button', { name: 'Close drawer' }).click();
-  await page.getByRole('button', { name: /Search \/ Add/ }).click();
+  await page.getByLabel('Search saved presets').fill('My analysis');
   await page
-    .getByLabel('Search data algorithms and widgets')
-    .fill('My analysis');
-  await page
-    .getByRole('button', { name: 'My analysis Saved preset ↗', exact: true })
+    .getByRole('button', { name: 'Load preset My analysis', exact: true })
     .click();
   await expect(
     page.getByRole('tab', { name: 'My analysis', exact: true }),
@@ -465,6 +471,7 @@ test('uncomputed algorithms stay local and never submit a computation', async ({
   await page
     .getByLabel('Search data algorithms and widgets')
     .fill('price_naive');
+  await page.getByRole('button', { name: 'Algorithms', exact: true }).click();
   await page
     .getByRole('button', { name: 'Open analysis layout', exact: true })
     .click();
@@ -546,6 +553,7 @@ test('a future catalogue algorithm renders without a new frontend adapter', asyn
   await page
     .getByLabel('Search data algorithms and widgets')
     .fill('future_signal');
+  await page.getByRole('button', { name: 'Algorithms', exact: true }).click();
   await page
     .getByRole('button', { name: 'Open analysis layout', exact: true })
     .click();
@@ -658,6 +666,7 @@ test('large chart and table responses remain usable without rendering every tabl
   await page
     .getByLabel('Search data algorithms and widgets')
     .fill('price_naive');
+  await page.getByRole('button', { name: 'Algorithms', exact: true }).click();
   await page
     .getByRole('button', { name: 'Open analysis layout', exact: true })
     .click();
@@ -714,7 +723,7 @@ test('disabled browser storage and external changes do not destroy a working ses
   ).toBeVisible();
 });
 
-test('compact Terminal chrome frees canvas space and quick-add tiles multiple charts', async ({
+test('compact Terminal chrome keeps one content menu and tiles multiple charts', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -738,7 +747,7 @@ test('compact Terminal chrome frees canvas space and quick-add tiles multiple ch
     .locator('.terminal-canvas')
     .evaluate((el) => el.clientHeight);
   expect(height).toBeGreaterThan(700);
-  await page.getByRole('button', { name: '＋ Chart', exact: true }).click();
+  await addChart(page);
   await expect(
     page.getByRole('slider', { name: 'Chart selected period' }),
   ).toHaveCount(2);
@@ -747,8 +756,8 @@ test('compact Terminal chrome frees canvas space and quick-add tiles multiple ch
     b = (await plots.nth(1).boundingBox())!;
   expect(Math.abs(a.y - b.y)).toBeLessThan(2);
   expect(b.x).toBeGreaterThan(a.x + a.width);
-  await page.getByRole('button', { name: '＋ Chart', exact: true }).click();
-  await page.getByRole('button', { name: '＋ Chart', exact: true }).click();
+  await addChart(page);
+  await addChart(page);
   await expect(
     page.getByRole('slider', { name: 'Chart selected period' }),
   ).toHaveCount(4);
@@ -761,4 +770,42 @@ test('compact Terminal chrome frees canvas space and quick-add tiles multiple ch
   await page.screenshot({ path: test.info().outputPath('terminal-dense.png') });
   await page.getByRole('link', { name: 'About', exact: true }).click();
   await expect(page.getByRole('contentinfo')).toHaveCount(1);
+});
+
+test('Search Add has only content categories and Workspaces owns preset loading', async ({
+  page,
+}) => {
+  await page.goto('/terminal');
+  await expect(
+    page.locator('path[data-terminal-series="price"]'),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: '＋ Chart', exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole('button', { name: /Search \/ Add/ }).click();
+  await expect(page.locator('.terminal-filter-tabs button')).toHaveText([
+    'Data',
+    'Algorithms',
+    'Widgets',
+  ]);
+  await expect(page.locator('.terminal-filter-tabs button.active')).toHaveText(
+    'Data',
+  );
+  await expect(
+    page.getByRole('button', { name: 'All', exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: 'Presets', exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole('button', { name: 'Close drawer' }).click();
+  await page.getByRole('button', { name: 'Workspaces', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Market preset', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', {
+      name: 'Save current view as preset',
+      exact: true,
+    }),
+  ).toBeVisible();
 });
