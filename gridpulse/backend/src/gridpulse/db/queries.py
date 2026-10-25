@@ -349,3 +349,35 @@ def dataset_loads(conn: Connection, names: list[str]) -> dict[str, datetime | No
 
 def data_updated_at(conn: Connection) -> datetime | None:
     return conn.execute("SELECT max(loaded_at) FROM raw.dataset_catalog").fetchone()[0]
+
+
+# --- Weather context (retrospective archived forecasts, not proven as-of inputs) -----------------------------
+
+def weather_locations(conn: Connection) -> list[dict]:
+    return _dicts(conn, """
+        SELECT location AS id, initcap(replace(location, '_', ' ')) AS label,
+               min(latitude) AS latitude, min(longitude) AS longitude
+        FROM gridpulse.weather_hourly GROUP BY location ORDER BY location
+    """)
+
+
+def weather_values(conn: Connection, location: str, start: datetime, end: datetime) -> list[dict]:
+    return _dicts(conn, """
+        SELECT time_bucket('1 hour', bucket) AS bucket,
+               avg(temperature_c) AS temperature, avg(pressure_hpa) AS pressure
+        FROM gridpulse.weather_hourly
+        WHERE location = %(location)s AND bucket >= %(start)s AND bucket < %(end)s
+        GROUP BY 1 ORDER BY 1
+    """, {"location": location, "start": start, "end": end})
+
+
+def hourly_weather_prices(conn: Connection, start: datetime, end: datetime) -> list[dict]:
+    # A partial hour must not be treated as a complete hourly price observation.
+    return _dicts(conn, """
+        SELECT time_bucket('1 hour', bucket) AS bucket,
+               CASE WHEN count(price_gbp_mwh) = 2 AND count(DISTINCT bucket) = 2
+                    THEN avg(price_gbp_mwh) END AS price
+        FROM gridpulse.price_30m
+        WHERE bucket >= %(start)s AND bucket < %(end)s
+        GROUP BY 1 ORDER BY 1
+    """, {"start": start, "end": end})

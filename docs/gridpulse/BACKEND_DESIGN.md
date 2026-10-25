@@ -205,3 +205,10 @@ Use one VM in London with Tiger Cloud in the closest region. It runs two environ
 1. **Data modelling** (team decision). Choose which views become continuous aggregates. Decide whether to use TSDF, embedded wind and Open-Meteo, and how to treat hourly WINDFOR. Then decide how algorithms get **publication-time inputs**: forecast versions as published by each origin (P0 layer 2), and a revision definition such as "latest − day-ahead version" (P0 items 3–5). Until then, backtests with forecast inputs are provisional.
 2. **Price revisions.** The loader stores prices "as published at fetch time" (see its catalog note), so later settlement runs are not distinguished.
 3. **The algorithm list** and each algorithm's inputs, outputs and limitations, from Matthew.
+
+
+## Overview weather context
+
+The Overview adds `GET /api/weather/locations` and bounded `GET /api/weather?date=...&location=...`. Migration 004 exposes the existing `raw.openmeteo_previous_runs` records as `gridpulse.weather_hourly`; no source rows are changed. The panel uses archived model forecasts because inspected ERA5 values lagged the latest price date by five days. Source and retrospective limitations are explicit.
+
+Temperature and MSL pressure changes are compared with changes in complete hourly mean prices. `analysis/weather.py` reindexes to UTC hours before differencing, preserving gaps. Each timestamp is an hour end and uses at most 168 trailing hourly differences, with at least 24 finite pairs and nonconstant series for Pearson correlation. Endpoints return all hourly results for a settlement day so pointer movements never trigger database queries. See [the data pipeline](DATA_PIPELINE.md#overview-weather-integration) for details.

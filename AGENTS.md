@@ -22,7 +22,7 @@ Use this file as repository-wide guidance when working on GridPulse. It records 
 | **Components** | Reusable styling and UI components for frontend polish | [Components](https://github.com/orthant-kcpc/components), local `../components/`, cloned revision `9626af5` |
 | **Existing exporter** | Fetch Elexon data and write CSVs for ingestion | Being implemented by a teammate; sample files, schema and code location pending |
 
-The three reference repositories are cloned as siblings of this repository under `/home/david/Documents/Oxhack/`. Revisions above identify the completed clones, not a guarantee that these checkouts will remain unchanged. Orchid's P0 modules are the only reused source files so far (see below). Licence/attribution review remains pending; record applicable terms and exact reused files as integration continues. Inspect compatibility and dependencies before choosing components.
+The three reference repositories are cloned as siblings of this repository under `/home/david/Documents/Oxhack/`. Revisions above identify the completed clones, not a guarantee that these checkouts will remain unchanged. Orchid P0 modules are vendored in `gridpulse/backend/src/gridpulse/analysis/algorithms/orchid/`. Selected frontend source components are vendored with exact paths and revisions in `gridpulse/frontend/src/lib/vendor/kcpc/README.md`. Licence/attribution review remains pending. Inspect compatibility and dependencies before choosing components.
 
 ## Orchid modules in use
 
@@ -60,10 +60,12 @@ Other proposed extensions include a probabilistic scenario engine, an autonomous
 
 ## Confirmed frontend and map direction
 
-**Confirmed frontend scope:** Overview, Explore and Methods are MVP pages. The immediate implementation focus is Overview only. Investigate/Gemini and the synoptic weather map remain extensions.
+**Confirmed frontend scope:** Overview, Explore and Methods are MVP pages. Overview is the current monitoring surface; a read-only About page holds the globe and animated explanations. Explore and Methods remain planned, and Investigate/Gemini and the synoptic weather map remain extensions.
 
 
 Follow [FRONTEND_DESIGN.md](docs/gridpulse/FRONTEND_DESIGN.md). Preserve KCPC responsiveness/theme and requested globe/fade effects; use committee-style motion where appropriate and Software-style cards for sectioned content. Reference repos are selective reuse sources, not a requirement to copy the whole site.
+
+Before changing Overview selection, cards, axes or scan behaviour, read the selection rules in [FRONTEND_DESIGN.md](docs/gridpulse/FRONTEND_DESIGN.md#confirmed-implementation-decisions). Keep the shared metric catalogue as the definition of units and colours.
 
 The Gemini extension should support animated view changes during investigations. The synoptic-map extension should represent wind, pressure, fronts and isobars correctly and allow a separate UK electricity-use/forecast overlay. Exact tools, weather providers and regional-data sources are not selected. Do not promote proposed layouts, API recommendations or scenario-engine ideas into confirmed scope.
 
@@ -79,7 +81,15 @@ Preserve `(settlement_date, settlement_period)` identities, UTC instants and 46/
 
 ## Repository layout
 
-Follow [the repository structure and request flow](docs/gridpulse/REPOSITORY_STRUCTURE.md). Frontend code lives in `gridpulse/frontend/`; Python code in `gridpulse/backend/src/gridpulse/`; SQL migrations in `gridpulse/db/migrations/`; shared API examples in `gridpulse/contracts/`. Algorithms belong in `analysis/algorithms/` and are called through `analysis/service.py`. Keep HTTP, database access and pure calculations separate. Skeleton files are not implemented features.
+Follow [the repository structure and request flow](docs/gridpulse/REPOSITORY_STRUCTURE.md). Frontend code lives in `gridpulse/frontend/`; Python code in `gridpulse/backend/src/gridpulse/`; SQL migrations in `gridpulse/db/migrations/`; shared API examples in `gridpulse/contracts/`. Algorithms belong in `analysis/algorithms/` and are called through `analysis/service.py`. Keep HTTP, database access and pure calculations separate. Overview is now implemented; Gemini and other pages remain unimplemented.
+
+## Frontend presentation convention
+
+When changing dashboards, follow [the compact layout and progressive-disclosure rules](docs/gridpulse/FRONTEND_DESIGN.md#compact-dashboard-and-progressive-disclosure). Keep secondary explanation text in shared hover/focus/tap tooltips, with units, timing and missing/source states visible. Overview fits a desktop screen; long-form content and decorative globe/PixelBlast effects belong on About. Preserve independent price/GW axes and the sequential pastel-orange price scale.
+
+## Overview implementation guidance
+
+Before editing the frontend, read [its README](gridpulse/frontend/README.md) for commands, module responsibilities and the shared view state. Run `npm run check`, `npm run test`, `npm run build` and `npm run test:e2e` from `gridpulse/frontend` after relevant changes. Keep hover local to preloaded data and persist view preferences rather than market values. Update backend schemas, frontend types and tests together when adding weather fields. Never print credential-file contents; root `.env`, downloaded Tiger files and application `.env` are ignored and loaded only by the backend.
 
 ## Related project documents
 

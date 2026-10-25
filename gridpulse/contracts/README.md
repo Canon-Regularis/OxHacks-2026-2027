@@ -37,3 +37,11 @@ Conventions: `from`/`to` are inclusive settlement dates (`YYYY-MM-DD`). Instants
 Every backtest uses `evaluation.backtest`, and its `metrics` table carries every accuracy and interval metric: MAE, RMSE, WMAPE, sMAPE, MASE, RMSSE, coverage, interval score, MSIS and pinball loss. The backtests share column names so the frontend can render them with one component. Run `AutoETS`, `ARIMA`, `AutoARIMA` and every backtest of a fitted model in batch jobs only.
 
 Every example carries a `_fixture` label and contains synthetic values only. Real responses do not have that key. Update examples, `schemas.py` and `frontend/src/lib/types.ts` together.
+
+## Overview weather context
+
+- `GET /api/weather/locations` → `{locations: [{id,label,latitude,longitude}], warnings}`.
+- `GET /api/weather?date=YYYY-MM-DD&location=<id>` → `{location, points, source, warnings, window_hours:168}`.
+- Each point: `t` (completed UTC hour end), `temperature` (°C), `pressure` (MSL hPa), `temperature_change`, `pressure_change`, `price_change` (£/MWh), `temperature_correlation`, `pressure_correlation`, `temperature_samples`, `pressure_samples`.
+
+All numeric values except counts may be null. Correlations compare hourly changes over seven days, require 24 valid pairs and never include future hours. Source is stored Open-Meteo archived forecasts, not verified as-of observations. Unknown locations return `unknown_weather_location` (404); missing migration returns `weather_not_configured` (503). See runtime schemas and weather-analysis tests for the executable contract.

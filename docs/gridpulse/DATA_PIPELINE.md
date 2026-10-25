@@ -1,5 +1,9 @@
 # CSV ingestion and Tiger Data pipeline
 
+## Latest team-reported status
+
+The 15:51 Discord update reports that raw data has been added to the database. This is a team-reported milestone, not a database inspection performed for this documentation update. Confirm actual tables, schema, coverage and publication/version fields before frontend integration. The ingestion flow below remains the required behaviour; it does not imply that nothing has been loaded yet.
+
 ## Source and handoff
 
 Reuse the Elexon API exporter already being implemented by the team. CSV files are the initial handoff into the backend; the dashboard reads through the backend API rather than opening CSVs directly.
@@ -18,11 +22,20 @@ Before implementing the layers, establish:
 - Wind speed/direction and relevant height, spatial resolution, forecast valid time and run/publication metadata.
 - A source of meteorological front geometry, or a separately validated derivation. Wind arrows and pressure contours are not themselves fronts.
 - Genuine regional electricity-use and forecast data with region boundaries/identifiers and coverage. Do not present the existing national series as measured regional demand.
+- Temperature fields where available for the requested time-aligned weather/price comparisons. Any temperature/price relationship must be evaluated rather than assumed proportional.
 - A common time selection and explicit handling of differing spatial and temporal resolutions. Record source, provenance and freshness for each layer.
 
 Weather forecasts must remain distinguishable from observations/reanalysis. For historical investigations, establish what was available at the claimed cutoff; weather-model initialisation time alone does not prove publication availability. Wind speed is not electrical generation and must not be labelled MW without an explicit supported conversion.
 
 No new weather table schema, provider dependency or regional-demand endpoint is approved by this brief. Agree those contracts after verifying source data. See the [frontend brief](FRONTEND_DESIGN.md) for the display requirements.
+
+## Overview weather integration
+
+Database inspection confirmed six stored weather locations. View `gridpulse.weather_hourly` (migration 004) exposes `raw.openmeteo_previous_runs` fields `valid_time`, `location`, `lat`, `lon`, `temperature_2m` and `pressure_msl`. Temperature is Celsius; sea-level pressure is hPa. Existing ERA5 rows were also inspected, but usable reanalysis lagged the latest price day by five days, so the Overview uses labelled archived forecasts without mixing sources.
+
+`GET /api/weather/locations` lists available locations; `GET /api/weather?date=YYYY-MM-DD&location=...` returns one settlement day's completed-hour context and rolling statistics. Each output timestamp is a completed UTC hour end. The hourly price requires both non-null half-hour prices; differences never bridge missing hours. Each temperature/pressure-change correlation uses at most 168 hourly changes ending at that timestamp, with at least 24 finite pairs and nonconstant variables. No future hour enters a selected timestamp's statistics. The results are descriptive, not causal or proof of forecast-time availability.
+
+Both endpoints query the existing Tiger Data records; no external API download or new source rows were introduced. All weather computation remains in the backend; the frontend loads results by day/location and selects them locally on hover. The synoptic-map requirements above remain an extension and need their own spatial data source.
 
 ## Ingestion flow
 

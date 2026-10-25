@@ -236,3 +236,11 @@ tiger-cloud-*credentials*
 
 # Local override for running the deploy stack (gridpulse/deploy/README.md)
 /gridpulse/deploy/docker-compose.override.yml
+
+# Root server credentials provided for local development.
+/.env
+
+# SvelteKit generated output and browser-test artifacts
+.svelte-kit/
+playwright-report/
+test-results/

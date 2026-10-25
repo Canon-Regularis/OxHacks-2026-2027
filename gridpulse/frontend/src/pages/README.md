@@ -1,1 +1,1 @@
-Dashboard screens go here. A screen calls `../lib/api.ts`, owns loading/error/result state and passes data to chart components. Add framework-specific routing when the frontend is bootstrapped.
+SvelteKit page entry points live in `../routes/`. Feature-specific Overview code lives in `../features/overview/`; do not create a parallel routing implementation here.

@@ -14,7 +14,7 @@ python3 -m venv .venv && source .venv/bin/activate
 python -m pip install -e ".[dev]"
 ```
 
-Database: save the credentials file downloaded from Tiger Cloud (`tiger-cloud-<service>-credentials.env`) in the repository root, where it is picked up automatically and gitignored, or set `DATABASE_URL` in `gridpulse/.env` (see `../.env.example`).
+Database: save the credentials file downloaded from Tiger Cloud (`tiger-cloud-<service>-credentials.env`) in the repository root, where it is picked up automatically and gitignored, or set `DATABASE_URL` in root `.env` or `gridpulse/.env` (see `../.env.example`).
 
 ## Commands
 
@@ -34,3 +34,8 @@ Source data is loaded into the `raw` schema by the team's loader; the backend on
 Offline demo: run once with `GRIDPULSE_MODE=record`, click through the demo, then start with `GRIDPULSE_MODE=replay` (no database needed).
 
 Keep routes thin, SQL in `db/queries.py`, orchestration in `analysis/service.py` and calculations in `analysis/algorithms/`. See the [repository structure](../../docs/gridpulse/REPOSITORY_STRUCTURE.md) and [API contract](../contracts/README.md).
+
+
+## Overview weather context
+
+Migration 004 exposes existing archived Open-Meteo records through `gridpulse.weather_hourly`. Routes live in `api/weather.py`; descriptive change/correlation calculations live in `analysis/weather.py`. The API returns completed-hour context so a selected time never consumes a later half-hour price. No model is trained and no external weather request is made. See [the data pipeline](../../docs/gridpulse/DATA_PIPELINE.md#overview-weather-integration) for source and missing-data semantics.

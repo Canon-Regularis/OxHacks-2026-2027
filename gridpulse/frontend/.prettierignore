@@ -1,0 +1,8 @@
+node_modules
+.svelte-kit
+build
+src/lib/vendor
+src/styles/theme.css
+package-lock.json
+test-results
+playwright-report
